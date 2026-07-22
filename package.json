@@ -1,0 +1,21 @@
+{
+  "name": "basketball-sim",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "db",
+    "sim",
+    "frontend",
+    "qa"
+  ],
+  "scripts": {
+    "build": "npm run build -w shared && npm run build -w sim && npm run build -w db && npm run build -w frontend",
+    "test": "npm run test -w qa",
+    "dev": "npm run dev -w frontend",
+    "db:migrate": "npm run migrate -w db",
+    "db:seed": "npm run seed -w db"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
