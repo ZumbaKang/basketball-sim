@@ -22,6 +22,17 @@ picking the next piece of work.
 7. If blocked (needs a product decision, ambiguous spec, or touches a
    contract in `shared/`), leave the item unchecked, add a `_Blocked: why_`
    note under it, and move to the next item instead of guessing.
+8. **Before finishing the run, refill the backlog.** After opening the PR
+   (or after checking off the item, if it merged in the same run), spend a
+   couple minutes thinking about what you just touched: obvious follow-ups,
+   edge cases you deliberately skipped, adjacent gaps in that same domain,
+   or realism/UX issues you noticed while in there. Add **1–3 new
+   checkboxes** to **Now**, **Next**, or **Later** (whichever fits) in the
+   same PR. Each new item must be as concrete and single-PR-sized as the
+   existing ones — name the owning domain, describe the change, and note
+   how it'd be verified. Do not add vague items ("improve X", "polish Y")
+   and do not add more than 3 in one run — the backlog should grow steadily,
+   not turn into noise.
 
 ## Now
 
