@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  displayName  String
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  leagues      League[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model League {
+  id          String   @id @default(cuid())
+  name        String
+  seasonYear  Int
+  ownerUserId String
+  owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  teams       Team[]
+  games       Game[]
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  leagueId     String
+  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  name         String
+  abbreviation String
+  conference   String?
+  players      Player[]
+}
+
+model Player {
+  id         String @id @default(cuid())
+  teamId     String
+  team       Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  name       String
+  position   String
+  overall    Int
+  offense    Int
+  defense    Int
+  shooting   Int
+  rebounding Int
+  playmaking Int
+  stamina    Int
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  homeTeamId String
+  awayTeamId String
+  playedAt  DateTime
+  resultJson String
+}
