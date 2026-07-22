@@ -24,5 +24,5 @@ Use this before merging PRs into `main`.
 
 ## Automations
 
-- [ ] PR Test Gate reported pass (or suite not yet configured — local `npm test` required)
+- [ ] CI (`.github/workflows/ci.yml`) is green on the PR — required to merge, not just advisory
 - [ ] PR Review Gate verdict is Approve
