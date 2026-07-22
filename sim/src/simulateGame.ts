@@ -230,11 +230,24 @@ export function simulateGame(input: SimulateGameInput): GameResult {
     star.ftm += addFtm;
     star.fta = Math.max(star.fta, star.ftm);
     star.pts += addFtm;
+
+    const sum = (key: keyof PlayerGameLine) =>
+      line.players.reduce((acc, p) => acc + (typeof p[key] === "number" ? (p[key] as number) : 0), 0);
+
     return {
       ...line,
-      pts: line.pts + addFtm,
-      ftm: line.ftm + addFtm,
-      fta: Math.max(line.fta + addFtm, line.ftm + addFtm),
+      pts: sum("pts"),
+      reb: sum("reb"),
+      ast: sum("ast"),
+      stl: sum("stl"),
+      blk: sum("blk"),
+      tov: sum("tov"),
+      fgm: sum("fgm"),
+      fga: sum("fga"),
+      tpm: sum("tpm"),
+      tpa: sum("tpa"),
+      ftm: sum("ftm"),
+      fta: sum("fta"),
       players: line.players,
     };
   };
