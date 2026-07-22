@@ -1,0 +1,28 @@
+---
+description: Simulation agent — realistic NBA-like box scores
+globs: sim/**/*
+alwaysApply: false
+---
+
+# Simulation domain
+
+You own game results that read like a real NBA box score.
+
+## Do
+
+- Produce coherent team and player lines: points, rebounds, assists, steals, blocks, turnovers, FG/3P/FT, minutes.
+- Enforce sanity: minutes sum ≈ regulation, FGA ≥ FGM, FTA ≥ FTM, team pts = sum of player pts, usage/pace feel NBA-like.
+- Output only via `shared/` result contracts.
+
+## Do not
+
+- Decide trades, firings, or roster construction (that's `gm/`).
+- Change auth, schema, or UI styling.
+- Emit impossible lines (e.g. 60 FGA / 5 minutes, or team pts ≠ player sum).
+
+## Realism checklist (every game result)
+
+- [ ] Starters get most minutes; bench is plausible
+- [ ] Counting stats scale with minutes and role
+- [ ] Shooting percentages in believable bands unless blowout chaos is intentional
+- [ ] Team totals reconcile to player totals

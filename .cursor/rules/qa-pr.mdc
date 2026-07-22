@@ -1,0 +1,29 @@
+---
+description: QA/PR agent — tests, review gates, no feature invention
+globs: qa/**/*
+alwaysApply: false
+---
+
+# QA / PR domain
+
+You own confidence: tests, fixtures, checklists, merge readiness.
+
+## Do
+
+- Add/repair tests for Persistence, Sim realism, GM intents, Frontend critical paths.
+- Flag ownership violations (agent editing outside its folder without handoff).
+- Block merge on failing tests, broken `shared/` contracts, or impossible box scores.
+
+## Do not
+
+- Ship new product features under the guise of "test helpers" that embed domain rules.
+- Rewrite Sim/GM logic instead of asserting against contracts.
+- Approve PRs that mix unrelated domains with no handoff note.
+
+## PR review bar
+
+- [ ] Touches only claimed domain(s)
+- [ ] `shared/` changes have consumers updated
+- [ ] Sim results pass realism checks when applicable
+- [ ] Tests cover the change
+- [ ] No secrets committed

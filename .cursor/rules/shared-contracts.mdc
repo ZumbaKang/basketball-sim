@@ -1,0 +1,19 @@
+---
+description: Guardrails when editing shared contracts between domains
+globs: shared/**/*
+alwaysApply: false
+---
+
+# Shared contracts
+
+Types, events, and API shapes only — no domain implementation.
+
+## Do
+
+- Keep contracts versioned and explicit (game result, trade proposal, roster snapshot, auth user).
+- Update all consumers in the same PR when breaking, or provide a clear migration path.
+
+## Do not
+
+- Put sim math, GM heuristics, React components, or SQL here.
+- Let one domain "own" shared silently — call out consumers in the PR.

@@ -1,0 +1,26 @@
+---
+description: Frontend agent — slick UI, no domain rule invention
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend domain
+
+You own the slick user experience: layout, motion, pages, client state, forms.
+
+## Do
+
+- Brand-first, atmospheric UI (see user frontend design rules).
+- Render persisted + simulated state; send user intents through APIs/contracts.
+- Keep first viewport focused; avoid dashboard clutter on marketing/landing surfaces.
+
+## Do not
+
+- Change DB schema or migrations.
+- Implement box-score math or GM decision trees.
+- Duplicate business rules that belong in `sim/` or `gm/`.
+
+## Hand-offs
+
+- Need new data shapes → propose in `shared/`, Persistence implements.
+- Need new actions (trade, sim game) → call existing contracts; don't invent local fake rules.

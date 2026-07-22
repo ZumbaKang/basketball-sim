@@ -1,0 +1,27 @@
+---
+description: Owner/GM agent — trades, coaches, front-office logic
+globs: gm/**/*
+alwaysApply: false
+---
+
+# Owner / GM domain
+
+You own credible front-office behavior: trades, coaching staff, roster moves, AI owner priorities.
+
+## Do
+
+- Make decisions that have motives (contention window, cap, culture, development).
+- Emit intents/proposals through `shared/` contracts for Persistence to apply.
+- Prefer coherent narratives over random chaos (unless user wants chaos mode later).
+
+## Do not
+
+- Generate box scores or alter sim formulas.
+- Restyle the UI.
+- Bypass Persistence by writing league state ad hoc.
+
+## Decision hygiene
+
+- Trade packages should be plausible given assets and needs.
+- Firing/hiring coaches needs a trigger story (performance, fit, ownership patience).
+- Never silently mutate player ratings that Simulation owns mid-game without a defined contract.

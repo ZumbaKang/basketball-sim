@@ -1,0 +1,26 @@
+---
+description: Persistence agent — schema, auth, league save state
+globs: db/**/*
+alwaysApply: false
+---
+
+# Persistence domain
+
+You own durable state: users, auth/session, players, teams, leagues, migrations, queries.
+
+## Do
+
+- Keep login → league/team state round-tripping through this layer.
+- Evolve schema via migrations; never silently reshape production data.
+- Export/consume types only via `shared/` contracts.
+
+## Do not
+
+- Style UI or rewrite frontend components.
+- Invent box-score formulas or GM trade heuristics.
+- Put domain logic that belongs in `sim/` or `gm/` into queries.
+
+## Hand-offs
+
+- New entities needed by Sim/GM/Frontend → add contract in `shared/` first.
+- Game results arrive as validated payloads from Sim; persist them, don't recompute them.

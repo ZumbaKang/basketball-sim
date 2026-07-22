@@ -1,0 +1,25 @@
+---
+description: Global multi-agent ownership — stay in your domain
+alwaysApply: true
+---
+
+# Ownership (always)
+
+Read `AGENTS.md` before editing. One domain per task when possible.
+
+| Domain | Folders |
+| --- | --- |
+| Persistence | `db/` |
+| Frontend | `frontend/` |
+| Simulation | `sim/` |
+| Owner/GM | `gm/` |
+| QA | `qa/` |
+| Contracts | `shared/` only |
+
+## Hard rules
+
+- Do not edit another domain's folder unless the user explicitly asks for a cross-domain change.
+- Cross-domain communication goes through `shared/` contracts — no sneaking business logic into UI or schema into sim.
+- Simulation owns box-score numbers. GM owns front-office intents. Persistence owns saved truth. Frontend owns presentation.
+- Prefer invoking the matching skill under `.cursor/skills/` for domain work.
+- QA agents review and test; they do not invent product features.
