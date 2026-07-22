@@ -27,9 +27,28 @@ function round1(n: number): number {
 }
 
 function allocateMinutes(players: Player[], rng: () => number): Map<string, number> {
-  const sorted = [...players].sort((a, b) => b.ratings.overall - a.ratings.overall);
+  const sorted = [...players].sort(
+    (a, b) =>
+      (a.rotationOrder ?? 99) - (b.rotationOrder ?? 99) ||
+      b.ratings.overall - a.ratings.overall,
+  );
   const minutes = new Map<string, number>();
   if (sorted.length === 0) return minutes;
+
+  // Honor targetMinutes when present and roughly sum to team minutes
+  const withTargets = sorted.filter((p) => (p.targetMinutes ?? 0) > 0);
+  if (withTargets.length >= 5) {
+    const raw = new Map(withTargets.map((p) => [p.id, p.targetMinutes]));
+    const total = [...raw.values()].reduce((a, b) => a + b, 0) || 1;
+    const scale = 240 / total;
+    for (const [id, m] of raw) {
+      minutes.set(id, round1(clamp(m * scale + (rng() - 0.5) * 2, 4, 40)));
+    }
+    const assigned = [...minutes.values()].reduce((a, b) => a + b, 0);
+    const top = withTargets[0]!;
+    minutes.set(top.id, round1((minutes.get(top.id) ?? 0) + (240 - assigned)));
+    return minutes;
+  }
 
   const starters = sorted.slice(0, Math.min(5, sorted.length));
   const bench = sorted.slice(5);

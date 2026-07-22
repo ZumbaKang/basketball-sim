@@ -39,7 +39,7 @@ export default function HomePage() {
         Basketball league sim
       </p>
       <h1 className="brand">TIPOFF</h1>
-      <p className="tagline">Your league waits exactly where you left it. Play a game. Read the box score like the real thing.</p>
+      <p className="tagline">Pick a franchise. Run the season. Trade with AI owners. Read every box score like the real thing.</p>
 
       <div className="cta-row">
         <button type="button" className={`btn ${mode === "register" ? "btn-primary" : "btn-secondary"}`} onClick={() => setMode("register")}>

@@ -5,12 +5,13 @@
     "shared",
     "db",
     "sim",
+    "gm",
     "frontend",
     "qa"
   ],
   "scripts": {
-    "build": "npm run build -w shared && npm run build -w sim && npm run build -w db && npm run build -w frontend",
-    "test": "npm run test -w sim && npm run test -w db && npm run test -w qa",
+    "build": "npm run build -w shared && npm run build -w sim && npm run build -w gm && npm run build -w db && npm run build -w frontend",
+    "test": "npm run test -w sim && npm run test -w gm && npm run test -w db && npm run test -w qa",
     "dev": "npm run dev -w frontend",
     "db:migrate": "npm run migrate -w db",
     "db:seed": "npm run seed -w db"

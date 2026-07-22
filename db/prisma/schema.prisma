@@ -32,9 +32,19 @@ model League {
   seasonYear  Int
   ownerUserId String
   owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  userTeamId  String?
+  phase       String   @default("regular")
+  day         Int      @default(1)
+  salaryCap   Int      @default(140000000)
   createdAt   DateTime @default(now())
   teams       Team[]
   games       Game[]
+  schedule    ScheduledGame[]
+  news        NewsItem[]
+  draftPicks  DraftPick[]
+  champions   SeasonChampion[]
+  awards      Award[]
+  freeAgents  Player[] @relation("FreeAgents")
 }
 
 model Team {
@@ -43,31 +53,161 @@ model Team {
   league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   name         String
   abbreviation String
-  conference   String?
+  conference   String
+  division     String
+  wins         Int      @default(0)
+  losses       Int      @default(0)
+  gmDirection  String   @default("window")
   players      Player[]
+  contracts    Contract[]
+  homeGames    ScheduledGame[] @relation("HomeTeam")
+  awayGames    ScheduledGame[] @relation("AwayTeam")
+  seasonStats  TeamSeasonStat[]
+  draftPicks   DraftPick[]     @relation("PickOwner")
 }
 
 model Player {
-  id         String @id @default(cuid())
-  teamId     String
-  team       Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  name       String
-  position   String
-  overall    Int
-  offense    Int
-  defense    Int
-  shooting   Int
-  rebounding Int
-  playmaking Int
-  stamina    Int
+  id            String   @id @default(cuid())
+  teamId        String?
+  team          Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  leagueId      String?
+  freeAgentOf   League?  @relation("FreeAgents", fields: [leagueId], references: [id], onDelete: Cascade)
+  name          String
+  position      String
+  age           Int      @default(24)
+  potential     Int      @default(70)
+  overall       Int
+  offense       Int
+  defense       Int
+  shooting      Int
+  rebounding    Int
+  playmaking    Int
+  stamina       Int
+  rotationOrder Int      @default(99)
+  targetMinutes Int      @default(0)
+  injuredDays   Int      @default(0)
+  contracts     Contract[]
+  seasonStats   PlayerSeasonStat[]
+}
+
+model Contract {
+  id             String  @id @default(cuid())
+  playerId       String
+  player         Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId         String?
+  team           Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  salary         Int
+  yearsRemaining Int
+}
+
+model ScheduledGame {
+  id            String   @id @default(cuid())
+  leagueId      String
+  league        League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonYear    Int
+  day           Int
+  homeTeamId    String
+  homeTeam      Team     @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeamId    String
+  awayTeam      Team     @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  status        String   @default("scheduled")
+  homeScore     Int?
+  awayScore     Int?
+  isPlayoff     Boolean  @default(false)
+  seriesId      String?
+  gameResultId  String?
 }
 
 model Game {
-  id        String   @id @default(cuid())
-  leagueId  String
-  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  homeTeamId String
-  awayTeamId String
-  playedAt  DateTime
-  resultJson String
+  id           String   @id @default(cuid())
+  leagueId     String
+  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  homeTeamId   String
+  awayTeamId   String
+  playedAt     DateTime
+  resultJson   String
+  isPlayoff    Boolean  @default(false)
+  scheduledGameId String?
+}
+
+model PlayerSeasonStat {
+  id         String @id @default(cuid())
+  playerId   String
+  player     Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId     String?
+  seasonYear Int
+  games      Int    @default(0)
+  minutes    Float  @default(0)
+  pts        Int    @default(0)
+  reb        Int    @default(0)
+  ast        Int    @default(0)
+  stl        Int    @default(0)
+  blk        Int    @default(0)
+  tov        Int    @default(0)
+  fgm        Int    @default(0)
+  fga        Int    @default(0)
+  tpm        Int    @default(0)
+  tpa        Int    @default(0)
+  ftm        Int    @default(0)
+  fta        Int    @default(0)
+
+  @@unique([playerId, seasonYear])
+}
+
+model TeamSeasonStat {
+  id          String @id @default(cuid())
+  teamId      String
+  team        Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  seasonYear  Int
+  wins        Int    @default(0)
+  losses      Int    @default(0)
+  ptsFor      Int    @default(0)
+  ptsAgainst  Int    @default(0)
+
+  @@unique([teamId, seasonYear])
+}
+
+model NewsItem {
+  id         String   @id @default(cuid())
+  leagueId   String
+  league     League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonYear Int
+  day        Int
+  kind       String
+  headline   String
+  body       String
+  createdAt  DateTime @default(now())
+}
+
+model DraftPick {
+  id             String  @id @default(cuid())
+  leagueId       String
+  league         League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonYear     Int
+  round          Int
+  pick           Int
+  originalTeamId String
+  ownerTeamId    String
+  ownerTeam      Team    @relation("PickOwner", fields: [ownerTeamId], references: [id], onDelete: Cascade)
+  playerId       String?
+}
+
+model SeasonChampion {
+  id         String @id @default(cuid())
+  leagueId   String
+  league     League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonYear Int
+  teamId     String
+  teamName   String
+}
+
+model Award {
+  id         String @id @default(cuid())
+  leagueId   String
+  league     League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonYear Int
+  kind       String
+  playerId   String
+  playerName String
+  teamId     String?
 }
