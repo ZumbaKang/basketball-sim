@@ -1,6 +1,6 @@
-# Basketball Sim
+# Basketball Sim (TIPOFF)
 
-Multi-agent basketball league simulator. Users log in, manage leagues/teams, and play games that produce realistic NBA-style box scores — with AI owners/GMs making credible front-office moves.
+Single-player franchise basketball simulator. Pick one of 30 teams, advance a full season calendar, trade with AI GMs, and read NBA-style box scores.
 
 ## Setup
 
@@ -8,32 +8,23 @@ Multi-agent basketball league simulator. Users log in, manage leagues/teams, and
 cp .env.example db/.env
 printf 'DATABASE_URL="file:./dev.db"\nSESSION_SECRET="dev-session-secret"\n' > frontend/.env.local
 npm install
-npm run db:migrate
+cd db && npx prisma migrate deploy && npx prisma generate && cd ..
+npm run build -w shared && npm run build -w sim && npm run build -w gm && npm run build -w db
 npm test
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — register, open your league, tip off a game, read the box score.
-
-## Scripts
-
-| Command | Purpose |
-| --- | --- |
-| `npm test` | Run sim + db + qa suites |
-| `npm run build` | Build workspace packages |
-| `npm run dev` | Start TIPOFF frontend |
-| `npm run db:migrate` | Apply Prisma migrations |
-| `npm run db:seed` | Seed sample user/league |
+Open [http://localhost:3000](http://localhost:3000) (or the port Next prints).
 
 ## Domains
 
 | Folder | Purpose |
 | --- | --- |
-| `db/` | Users, players, teams, leagues, persistence |
-| `frontend/` | Slick user UI |
-| `sim/` | Game simulation & realistic box scores |
-| `gm/` | Owner/GM logic (trades, coaches, roster) |
-| `shared/` | Contracts between domains |
-| `qa/` | Tests and PR gates |
+| `db/` | Auth, calendar, schedule, persistence |
+| `frontend/` | TIPOFF UI |
+| `sim/` | Game engine & box scores |
+| `gm/` | AI owner/GM decisions |
+| `shared/` | Contracts |
+| `qa/` | Tests and merge gates |
 
-Agent boundaries: see [AGENTS.md](./AGENTS.md).
+See [AGENTS.md](./AGENTS.md).

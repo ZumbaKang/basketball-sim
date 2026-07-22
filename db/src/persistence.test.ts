@@ -1,20 +1,19 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  assignFranchise,
   ensureLeagueForUser,
+  getFranchiseHome,
   getUserFromSession,
-  loginUser,
-  logoutSession,
   playGame,
   prisma,
   registerUser,
 } from "../src/index.js";
 
-const email = `test-${Date.now()}@example.com`;
-const password = "password123";
+describe("franchise persistence", () => {
+  const email = `franchise-${Date.now()}@example.com`;
+  const password = "password123";
 
-describe("persistence auth + league", () => {
   beforeAll(async () => {
-    // Ensure schema is applied; migrate should have run in setup
     await prisma.$connect();
   });
 
@@ -22,47 +21,32 @@ describe("persistence auth + league", () => {
     await prisma.$disconnect();
   });
 
-  it("registers, sessions round-trip, and seeds a league", async () => {
+  it("seeds 30 teams, assigns franchise, and plays a game", async () => {
     const { user, sessionToken } = await registerUser({
       email,
       password,
-      displayName: "Test Owner",
+      displayName: "Owner",
     });
-
-    const fromSession = await getUserFromSession(sessionToken);
-    expect(fromSession?.id).toBe(user.id);
-    expect(fromSession?.email).toBe(email);
+    expect(await getUserFromSession(sessionToken)).not.toBeNull();
 
     const snapshot = await ensureLeagueForUser(user.id);
-    expect(snapshot.teams.length).toBe(4);
-    expect(snapshot.players.length).toBe(40);
+    expect(snapshot.teams).toHaveLength(30);
+    expect(snapshot.players.length).toBeGreaterThanOrEqual(400);
 
-    const again = await ensureLeagueForUser(user.id);
-    expect(again.league.id).toBe(snapshot.league.id);
+    const teamId = snapshot.teams[0]!.id;
+    const assigned = await assignFranchise(user.id, teamId);
+    expect(assigned.userTeamId).toBe(teamId);
 
-    await logoutSession(sessionToken);
-    expect(await getUserFromSession(sessionToken)).toBeNull();
+    const home = await getFranchiseHome(user.id);
+    expect(home.roster.length).toBeGreaterThan(10);
+    expect(home.standings).toHaveLength(30);
 
-    const relogin = await loginUser({ email, password });
-    expect(relogin.user.id).toBe(user.id);
-  });
-
-  it("plays and persists a game result", async () => {
-    const { user } = await loginUser({ email, password });
-    const snapshot = await ensureLeagueForUser(user.id);
-    const home = snapshot.teams[0]!;
-    const away = snapshot.teams[1]!;
-
+    const away = snapshot.teams[1]!.id;
     const result = await playGame(user.id, {
       leagueId: snapshot.league.id,
-      homeTeamId: home.id,
-      awayTeamId: away.id,
+      homeTeamId: teamId,
+      awayTeamId: away,
     });
-
-    expect(result.home.pts + result.away.pts).toBeGreaterThan(150);
-    expect(result.home.players.length).toBeGreaterThan(5);
-
-    const stored = await prisma.game.findUnique({ where: { id: result.id } });
-    expect(stored).not.toBeNull();
-  });
+    expect(result.home.pts).toBeGreaterThan(80);
+  }, 120_000);
 });

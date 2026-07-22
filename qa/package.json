@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@basketball-sim/db": "*",
+    "@basketball-sim/gm": "*",
     "@basketball-sim/shared": "*",
     "@basketball-sim/sim": "*"
   },

@@ -22,6 +22,7 @@
   "dependencies": {
     "@basketball-sim/shared": "*",
     "@basketball-sim/sim": "*",
+    "@basketball-sim/gm": "*",
     "@prisma/client": "^6.11.1",
     "bcryptjs": "^3.0.2"
   },

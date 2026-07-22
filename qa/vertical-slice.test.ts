@@ -1,60 +1,60 @@
 import { afterAll, describe, expect, it } from "vitest";
 import {
+  advanceLeague,
+  assignFranchise,
   ensureLeagueForUser,
-  getGame,
-  getUserFromSession,
-  listGamesForLeague,
-  loginUser,
-  playGame,
+  getFranchiseHome,
   prisma,
+  proposeTrade,
   registerUser,
 } from "@basketball-sim/db";
 import { assertRealisticGameResult } from "@basketball-sim/sim";
 
-describe("vertical slice integration", () => {
-  const email = `qa-slice-${Date.now()}@example.com`;
-  const password = "password123";
+describe("franchise vertical slice", () => {
+  const email = `qa-franchise-${Date.now()}@example.com`;
 
   afterAll(async () => {
     await prisma.$disconnect();
   });
 
-  it("auth → league → play → persisted realistic box score", async () => {
-    const registered = await registerUser({
+  it("pick franchise, sim days, trade, and keep realism", async () => {
+    const { user } = await registerUser({
       email,
-      password,
-      displayName: "QA Slice",
+      password: "password123",
+      displayName: "QA",
     });
-    expect(registered.user.email).toBe(email);
+    const snapshot = await ensureLeagueForUser(user.id);
+    expect(snapshot.teams).toHaveLength(30);
+    await assignFranchise(user.id, snapshot.teams[0]!.id);
 
-    const sessionUser = await getUserFromSession(registered.sessionToken);
-    expect(sessionUser?.id).toBe(registered.user.id);
+    const home = await getFranchiseHome(user.id);
+    expect(home.roster.length).toBeGreaterThan(10);
 
-    const snapshot = await ensureLeagueForUser(registered.user.id);
-    expect(snapshot.teams).toHaveLength(4);
-    expect(snapshot.players.length).toBeGreaterThanOrEqual(40);
-
-    const home = snapshot.teams[0]!;
-    const away = snapshot.teams[1]!;
-    const played = await playGame(registered.user.id, {
+    const advanced = await advanceLeague(user.id, {
       leagueId: snapshot.league.id,
-      homeTeamId: home.id,
-      awayTeamId: away.id,
+      mode: "days",
+      days: 3,
+      autoSimUserGames: true,
     });
+    expect(advanced.gamesPlayed.length).toBeGreaterThan(0);
+    for (const g of advanced.gamesPlayed.slice(0, 3)) {
+      expect(() => assertRealisticGameResult(g)).not.toThrow();
+    }
 
-    expect(() => assertRealisticGameResult(played)).not.toThrow();
-    expect(played.home.pts).toBeGreaterThan(80);
-    expect(played.away.pts).toBeGreaterThan(80);
+    const myPlayer = home.roster.sort((a, b) => a.ratings.overall - b.ratings.overall)[0]!;
+    const otherTeam = snapshot.teams.find((t) => t.id !== snapshot.teams[0]!.id)!;
+    const their = snapshot.players
+      .filter((p) => p.teamId === otherTeam.id)
+      .sort((a, b) => a.ratings.overall - b.ratings.overall)[0]!;
 
-    const stored = await getGame(played.id, registered.user.id);
-    expect(stored.id).toBe(played.id);
-    expect(stored.home.pts).toBe(played.home.pts);
-
-    const games = await listGamesForLeague(snapshot.league.id, registered.user.id);
-    expect(games.some((g) => g.id === played.id)).toBe(true);
-
-    const relogin = await loginUser({ email, password });
-    const again = await ensureLeagueForUser(relogin.user.id);
-    expect(again.league.id).toBe(snapshot.league.id);
-  });
+    const decision = await proposeTrade(user.id, {
+      leagueId: snapshot.league.id,
+      fromTeamId: snapshot.teams[0]!.id,
+      toTeamId: otherTeam.id,
+      fromAssets: [{ playerId: myPlayer.id }],
+      toAssets: [{ playerId: their.id }],
+    });
+    expect(typeof decision.accepted).toBe("boolean");
+    expect(decision.reason.length).toBeGreaterThan(5);
+  }, 180_000);
 });

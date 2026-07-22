@@ -21,7 +21,13 @@ function roster(teamId: string, prefix: string): Player[] {
     teamId,
     name: `${prefix} Player ${i + 1}`,
     position,
+    age: 24 + (i % 6),
+    potential: 80,
     ratings: ratings(70 + (i % 5) * 3),
+    rotationOrder: i,
+    targetMinutes: i < 5 ? 32 - i : 14,
+    injuredDays: 0,
+    isFreeAgent: false,
   }));
 }
 
@@ -30,6 +36,11 @@ const homeTeam: Team = {
   leagueId: "lg1",
   name: "Harbor Hawks",
   abbreviation: "HHK",
+  conference: "East",
+  division: "Atlantic",
+  wins: 0,
+  losses: 0,
+  gmDirection: "window",
 };
 
 const awayTeam: Team = {
@@ -37,6 +48,11 @@ const awayTeam: Team = {
   leagueId: "lg1",
   name: "Metro Foxes",
   abbreviation: "MFX",
+  conference: "East",
+  division: "Atlantic",
+  wins: 0,
+  losses: 0,
+  gmDirection: "rebuild",
 };
 
 describe("simulateGame", () => {
