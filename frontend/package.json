@@ -1,0 +1,13 @@
+{
+  "name": "@basketball-sim/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"frontend dev: not configured yet\"",
+    "build": "echo \"frontend build: not configured yet\"",
+    "test": "node -e \"console.log('frontend: no tests yet')\""
+  },
+  "dependencies": {
+    "@basketball-sim/shared": "*"
+  }
+}

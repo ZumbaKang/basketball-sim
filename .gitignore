@@ -7,3 +7,5 @@ dist/
 coverage/
 *.db
 *.db-journal
+*.tsbuildinfo
+.DS_Store

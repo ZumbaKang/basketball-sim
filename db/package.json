@@ -1,0 +1,20 @@
+{
+  "name": "@basketball-sim/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "migrate": "echo \"db migrate: not configured yet\"",
+    "seed": "echo \"db seed: not configured yet\"",
+    "test": "node -e \"console.log('db: no tests yet')\""
+  },
+  "dependencies": {
+    "@basketball-sim/shared": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
