@@ -13,12 +13,13 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "node -e \"console.log('sim: no tests yet')\""
+    "test": "vitest run"
   },
   "dependencies": {
     "@basketball-sim/shared": "*"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
