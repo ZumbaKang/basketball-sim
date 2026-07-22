@@ -5,20 +5,25 @@ Multi-agent basketball league simulator. Users log in, manage leagues/teams, and
 ## Setup
 
 ```bash
-cp .env.example .env
+cp .env.example db/.env
+printf 'DATABASE_URL="file:./dev.db"\nSESSION_SECRET="dev-session-secret"\n' > frontend/.env.local
 npm install
+npm run db:migrate
 npm test
+npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000) — register, open your league, tip off a game, read the box score.
 
 ## Scripts
 
 | Command | Purpose |
 | --- | --- |
-| `npm test` | Run QA suite |
+| `npm test` | Run sim + db + qa suites |
 | `npm run build` | Build workspace packages |
-| `npm run dev` | Start frontend (once configured) |
-| `npm run db:migrate` | Run DB migrations |
-| `npm run db:seed` | Seed fictional league |
+| `npm run dev` | Start TIPOFF frontend |
+| `npm run db:migrate` | Apply Prisma migrations |
+| `npm run db:seed` | Seed sample user/league |
 
 ## Domains
 
