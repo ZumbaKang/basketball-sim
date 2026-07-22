@@ -3,11 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "echo \"frontend dev: not configured yet\"",
-    "build": "echo \"frontend build: not configured yet\"",
-    "test": "node -e \"console.log('frontend: no tests yet')\""
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node -e \"console.log('frontend: covered by qa + manual')\""
   },
   "dependencies": {
-    "@basketball-sim/shared": "*"
+    "@basketball-sim/db": "*",
+    "@basketball-sim/shared": "*",
+    "next": "^15.4.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.14",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "typescript": "^5.8.3"
   }
 }
