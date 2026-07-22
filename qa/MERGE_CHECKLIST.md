@@ -1,0 +1,28 @@
+# Merge checklist — vertical slice
+
+Use this before merging PRs into `main`.
+
+## Ownership
+
+- [ ] PR touches one domain, or documents an explicit handoff
+- [ ] No domain logic leaked into `frontend/` (UI calls APIs/contracts only)
+- [ ] `shared/` breakages update consumers in the same PR or a stacked follow-up
+
+## Quality
+
+- [ ] `npm test` passes locally
+- [ ] Sim changes include realism coverage
+- [ ] Persistence changes prove auth/league round-trip
+- [ ] No secrets (`.env`, credentials) committed
+
+## Vertical slice smoke
+
+- [ ] Register a new user
+- [ ] Log out and log back in — same league
+- [ ] Play a game between two teams
+- [ ] Box score shows reconciled player/team lines
+
+## Automations
+
+- [ ] PR Test Gate reported pass (or suite not yet configured — local `npm test` required)
+- [ ] PR Review Gate verdict is Approve
