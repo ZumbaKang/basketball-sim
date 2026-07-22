@@ -87,4 +87,37 @@ describe("simulateGame", () => {
     expect(a.away.pts).toBe(b.away.pts);
     expect(a.home.players.map((p) => p.pts)).toEqual(b.home.players.map((p) => p.pts));
   });
+
+  it("applies a small minutes and efficiency penalty on a back-to-back", () => {
+    const homePlayers = roster("t_home", "Harbor");
+    const awayPlayers = roster("t_away", "Metro");
+    const secondNightPlayerIds = homePlayers.slice(0, 5).map((player) => player.id);
+    const input = {
+      leagueId: "lg1",
+      homeTeam,
+      awayTeam,
+      homePlayers,
+      awayPlayers,
+      seed: 31415,
+    };
+
+    const rested = simulateGame(input);
+    const fatigued = simulateGame({
+      ...input,
+      homeSecondNightPlayerIds: secondNightPlayerIds,
+    });
+    const restedSecondNightMinutes = rested.home.players
+      .filter((player) => secondNightPlayerIds.includes(player.playerId))
+      .reduce((total, player) => total + player.minutes, 0);
+    const fatiguedSecondNightMinutes = fatigued.home.players
+      .filter((player) => secondNightPlayerIds.includes(player.playerId))
+      .reduce((total, player) => total + player.minutes, 0);
+    const restedFieldGoalPercentage = rested.home.fgm / rested.home.fga;
+    const fatiguedFieldGoalPercentage = fatigued.home.fgm / fatigued.home.fga;
+
+    expect(fatiguedSecondNightMinutes).toBeLessThan(restedSecondNightMinutes);
+    expect(restedSecondNightMinutes - fatiguedSecondNightMinutes).toBeLessThan(8);
+    expect(fatiguedFieldGoalPercentage).toBeLessThan(restedFieldGoalPercentage);
+    expect(() => assertRealisticGameResult(fatigued)).not.toThrow();
+  });
 });

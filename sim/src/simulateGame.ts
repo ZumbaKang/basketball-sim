@@ -7,6 +7,10 @@ export type SimulateGameInput = {
   awayTeam: Team;
   homePlayers: Player[];
   awayPlayers: Player[];
+  /** Players who appeared the previous day and are on a back-to-back. */
+  homeSecondNightPlayerIds?: readonly string[];
+  /** Players who appeared the previous day and are on a back-to-back. */
+  awaySecondNightPlayerIds?: readonly string[];
   seed?: number;
 };
 
@@ -26,7 +30,24 @@ function round1(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
-function allocateMinutes(players: Player[], rng: () => number): Map<string, number> {
+function fatigueMinuteMultiplier(player: Player, secondNightPlayerIds: ReadonlySet<string>): number {
+  if (!secondNightPlayerIds.has(player.id)) return 1;
+  const stamina = clamp(player.ratings.stamina, 0, 100);
+  const penalty = 0.03 + ((100 - stamina) / 100) * 0.03;
+  return 1 - penalty;
+}
+
+function fatigueEfficiencyPenalty(player: Player, secondNightPlayerIds: ReadonlySet<string>): number {
+  if (!secondNightPlayerIds.has(player.id)) return 0;
+  const stamina = clamp(player.ratings.stamina, 0, 100);
+  return 0.01 + ((100 - stamina) / 100) * 0.01;
+}
+
+function allocateMinutes(
+  players: Player[],
+  rng: () => number,
+  secondNightPlayerIds: ReadonlySet<string>,
+): Map<string, number> {
   const sorted = [...players].sort(
     (a, b) =>
       (a.rotationOrder ?? 99) - (b.rotationOrder ?? 99) ||
@@ -38,7 +59,12 @@ function allocateMinutes(players: Player[], rng: () => number): Map<string, numb
   // Honor targetMinutes when present and roughly sum to team minutes
   const withTargets = sorted.filter((p) => (p.targetMinutes ?? 0) > 0);
   if (withTargets.length >= 5) {
-    const raw = new Map(withTargets.map((p) => [p.id, p.targetMinutes]));
+    const raw = new Map(
+      withTargets.map((p) => [
+        p.id,
+        (p.targetMinutes ?? 0) * fatigueMinuteMultiplier(p, secondNightPlayerIds),
+      ]),
+    );
     const total = [...raw.values()].reduce((a, b) => a + b, 0) || 1;
     const scale = 240 / total;
     for (const [id, m] of raw) {
@@ -57,7 +83,7 @@ function allocateMinutes(players: Player[], rng: () => number): Map<string, numb
   for (let i = 0; i < starters.length; i++) {
     const p = starters[i]!;
     const base = 28 + (starters.length - i) * 1.5 + rng() * 4;
-    const m = clamp(base, 24, 38);
+    const m = clamp(base * fatigueMinuteMultiplier(p, secondNightPlayerIds), 24, 38);
     minutes.set(p.id, m);
     remaining -= m;
   }
@@ -71,7 +97,11 @@ function allocateMinutes(players: Player[], rng: () => number): Map<string, numb
     return minutes;
   }
 
-  const benchWeights = bench.map((p) => 0.4 + p.ratings.overall / 100 + p.ratings.stamina / 200);
+  const benchWeights = bench.map(
+    (p) =>
+      (0.4 + p.ratings.overall / 100 + p.ratings.stamina / 200) *
+      fatigueMinuteMultiplier(p, secondNightPlayerIds),
+  );
   const weightSum = benchWeights.reduce((a, b) => a + b, 0);
   let assigned = 0;
   bench.forEach((p, i) => {
@@ -100,8 +130,9 @@ function simulateTeamLine(
   players: Player[],
   opponentDefense: number,
   rng: () => number,
+  secondNightPlayerIds: ReadonlySet<string>,
 ): TeamGameLine {
-  const minuteMap = allocateMinutes(players, rng);
+  const minuteMap = allocateMinutes(players, rng, secondNightPlayerIds);
   const lines: PlayerGameLine[] = [];
 
   for (const player of players) {
@@ -111,8 +142,13 @@ function simulateTeamLine(
     const usage = (0.12 + player.ratings.offense / 500 + player.ratings.playmaking / 800) * (minutes / 36);
     const paceFactor = 1 + (rng() - 0.5) * 0.08;
     const fga = Math.max(0, Math.round(usage * 18 * paceFactor + rng() * 2));
+    const fatiguePenalty = fatigueEfficiencyPenalty(player, secondNightPlayerIds);
     const fgPct = clamp(
-      0.38 + player.ratings.shooting / 400 - opponentDefense / 900 + (rng() - 0.5) * 0.06,
+      0.38 +
+        player.ratings.shooting / 400 -
+        opponentDefense / 900 +
+        (rng() - 0.5) * 0.06 -
+        fatiguePenalty,
       0.28,
       0.62,
     );
@@ -120,14 +156,22 @@ function simulateTeamLine(
 
     const threeRate = clamp(0.25 + (player.position === "PG" || player.position === "SG" || player.position === "SF" ? 0.15 : 0), 0.05, 0.55);
     const tpa = Math.min(fga, Math.round(fga * threeRate));
-    const tpPct = clamp(0.28 + player.ratings.shooting / 450 + (rng() - 0.5) * 0.08, 0.2, 0.48);
+    const tpPct = clamp(
+      0.28 + player.ratings.shooting / 450 + (rng() - 0.5) * 0.08 - fatiguePenalty,
+      0.2,
+      0.48,
+    );
     const tpm = Math.min(tpa, Math.round(tpa * tpPct));
 
     // Ensure 2PT makes are consistent: fgm >= tpm
     const adjustedFgm = Math.max(fgm, tpm);
 
     const fta = Math.max(0, Math.round(fga * (0.18 + player.ratings.offense / 600) + rng()));
-    const ftPct = clamp(0.65 + player.ratings.shooting / 350 + (rng() - 0.5) * 0.05, 0.55, 0.95);
+    const ftPct = clamp(
+      0.65 + player.ratings.shooting / 350 + (rng() - 0.5) * 0.05 - fatiguePenalty,
+      0.55,
+      0.95,
+    );
     const ftm = Math.min(fta, Math.round(fta * ftPct));
 
     const twoPm = adjustedFgm - tpm;
@@ -235,8 +279,20 @@ export function simulateGame(input: SimulateGameInput): GameResult {
   const awayDef =
     input.awayPlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, input.awayPlayers.length);
 
-  const home = simulateTeamLine(input.homeTeam, input.homePlayers, awayDef, rng);
-  const away = simulateTeamLine(input.awayTeam, input.awayPlayers, homeDef, rng);
+  const home = simulateTeamLine(
+    input.homeTeam,
+    input.homePlayers,
+    awayDef,
+    rng,
+    new Set(input.homeSecondNightPlayerIds ?? []),
+  );
+  const away = simulateTeamLine(
+    input.awayTeam,
+    input.awayPlayers,
+    homeDef,
+    rng,
+    new Set(input.awaySecondNightPlayerIds ?? []),
+  );
 
   // Nudge totals into a plausible NBA scoring band if needed
   const nudge = (line: TeamGameLine, targetMin: number, targetMax: number): TeamGameLine => {
