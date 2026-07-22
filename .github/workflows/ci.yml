@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure environment
+        run: |
+          cp .env.example db/.env
+          printf 'DATABASE_URL="file:./dev.db"\nSESSION_SECRET="ci-session-secret"\n' > frontend/.env.local
+
+      - name: Prisma migrate + generate
+        working-directory: db
+        run: |
+          npx prisma migrate deploy
+          npx prisma generate
+
+      - name: Build workspaces
+        run: |
+          npm run build -w shared
+          npm run build -w sim
+          npm run build -w gm
+          npm run build -w db
+
+      - name: Run tests
+        run: npm test

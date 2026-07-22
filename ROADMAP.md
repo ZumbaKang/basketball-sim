@@ -25,6 +25,8 @@ picking the next piece of work.
 
 ## Now
 
+- [ ] `qa`: add CI (GitHub Actions) to run `npm test` on every PR
+      automatically, and require it to pass before merge into `main`.
 - [ ] `sim`: add back-to-back/fatigue modeling — players on the second night
       of a back-to-back get a small efficiency/minutes penalty; validate box
       scores stay realistic under `assertRealisticGameResult`.
@@ -60,6 +62,9 @@ picking the next piece of work.
       show "all moves this season" beyond the news feed.
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
+- [ ] `qa`: extend CI to also run `npm run build` for `frontend` (currently
+      only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
+      fails PRs too.
 
 ## Later
 
@@ -71,8 +76,6 @@ picking the next piece of work.
       focus states, keyboard nav for trade builder).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
-- [ ] `qa`: add CI (GitHub Actions) to run `npm test` on every PR
-      automatically instead of relying on manual/agent-run test gates.
 
 ## Shipped
 
