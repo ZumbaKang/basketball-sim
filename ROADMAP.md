@@ -27,7 +27,7 @@ picking the next piece of work.
 
 - [ ] `qa`: add CI (GitHub Actions) to run `npm test` on every PR
       automatically, and require it to pass before merge into `main`.
-- [ ] `sim`: add back-to-back/fatigue modeling — players on the second night
+- [x] `sim`: add back-to-back/fatigue modeling — players on the second night
       of a back-to-back get a small efficiency/minutes penalty; validate box
       scores stay realistic under `assertRealisticGameResult`.
 - [ ] `gm`: add a bad-contract/expiring-money awareness pass to trade
@@ -80,3 +80,4 @@ picking the next piece of work.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
