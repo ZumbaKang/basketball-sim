@@ -38,6 +38,9 @@ picking the next piece of work.
 
 - [ ] `qa`: add CI (GitHub Actions) to run `npm test` on every PR
       automatically, and require it to pass before merge into `main`.
+      _Blocked: The CI workflow already exists, but configuring/verifying the
+      required `test` status check needs repository-administration access;
+      this integration receives HTTP 403 for `main` branch protection._
 - [x] `sim`: add back-to-back/fatigue modeling — players on the second night
       of a back-to-back get a small efficiency/minutes penalty; validate box
       scores stay realistic under `assertRealisticGameResult`.
