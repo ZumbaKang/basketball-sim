@@ -85,7 +85,7 @@ implementing anything — its PRs are expected to touch only this file.
 
 ## Next
 
-- [ ] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
+- [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
       for star players.
 - [ ] `sim`: injuries should have a small chance of affecting multiple games
       already generated as "already scheduled" — ensure return-from-injury
@@ -109,6 +109,9 @@ implementing anything — its PRs are expected to touch only this file.
       season and regular season; regression-test against stale/playoff rows.
 - [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
       award-history reads use their composite indexes.
+- [ ] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
+      moving 2–4 minutes from starters to bench players while preserving team
+      minute totals; verify with seeded blowout comparisons and realism checks.
 
 ## Later
 
@@ -130,3 +133,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Added persistent navigation across league screens (PR #18)
 - 2026-07-23: Indexed and tightened league history lookups (PR #21)
 - 2026-07-23: Snapshotted a deterministic full-game box score in QA (PR #23)
+- 2026-07-23: Modeled clutch-time rotation and usage shifts for star players

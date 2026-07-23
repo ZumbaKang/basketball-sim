@@ -88,6 +88,20 @@ describe("simulateGame", () => {
     expect(a.home.players.map((p) => p.pts)).toEqual(b.home.players.map((p) => p.pts));
   });
 
+  it("keeps seeded clutch games realistic after closing-lineup shifts", () => {
+    const result = simulateGame({
+      leagueId: "lg1",
+      homeTeam,
+      awayTeam,
+      homePlayers: roster("t_home", "Harbor"),
+      awayPlayers: roster("t_away", "Metro"),
+      seed: 4,
+    });
+
+    expect(Math.abs(result.home.pts - result.away.pts)).toBeLessThanOrEqual(5);
+    expect(() => assertRealisticGameResult(result)).not.toThrow();
+  });
+
   it("applies a small minutes and efficiency penalty on a back-to-back", () => {
     const homePlayers = roster("t_home", "Harbor");
     const awayPlayers = roster("t_away", "Metro");
