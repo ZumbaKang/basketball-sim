@@ -25,4 +25,5 @@ Use this before merging PRs into `main`.
 ## Automations
 
 - [ ] CI (`.github/workflows/ci.yml`) is green on the PR — required to merge, not just advisory
+- [ ] Cursor-authored same-repository PRs are marked ready and merged only after CI succeeds
 - [ ] PR Review Gate verdict is Approve
