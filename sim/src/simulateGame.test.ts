@@ -102,6 +102,28 @@ describe("simulateGame", () => {
     expect(() => assertRealisticGameResult(result)).not.toThrow();
   });
 
+  it("keeps seeded blowouts realistic after garbage-time shifts", () => {
+    const input = {
+      leagueId: "lg1",
+      homeTeam,
+      awayTeam,
+      homePlayers: roster("t_home", "Harbor"),
+      awayPlayers: roster("t_away", "Metro"),
+      seed: 2,
+    };
+    const result = simulateGame(input);
+    const comparison = simulateGame(input);
+
+    expect(result.home.pts - result.away.pts).toBe(16);
+    expect(comparison.home.players.map(({ minutes }) => minutes)).toEqual(
+      result.home.players.map(({ minutes }) => minutes),
+    );
+    expect(comparison.away.players.map(({ minutes }) => minutes)).toEqual(
+      result.away.players.map(({ minutes }) => minutes),
+    );
+    expect(() => assertRealisticGameResult(result)).not.toThrow();
+  });
+
   it("applies a small minutes and efficiency penalty on a back-to-back", () => {
     const homePlayers = roster("t_home", "Harbor");
     const awayPlayers = roster("t_away", "Metro");
