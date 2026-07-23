@@ -3,6 +3,7 @@ import { prisma } from "./prisma.js";
 import { ensureLeagueForUser, listGamesForLeague } from "./league.js";
 import { getStandings } from "./standings.js";
 import { toNews, toPlayer, toScheduleGame, toUser } from "./mappers.js";
+import { findNextUserRegularSeasonGame } from "./nextGame.js";
 
 export async function getFranchiseHome(userId: string): Promise<FranchiseHome> {
   const snapshot = await ensureLeagueForUser(userId);
@@ -11,13 +12,10 @@ export async function getFranchiseHome(userId: string): Promise<FranchiseHome> {
   const recentGames = await listGamesForLeague(snapshot.league.id, userId);
 
   const nextGameRow = snapshot.userTeamId
-    ? await prisma.scheduledGame.findFirst({
-        where: {
-          leagueId: snapshot.league.id,
-          status: "scheduled",
-          OR: [{ homeTeamId: snapshot.userTeamId }, { awayTeamId: snapshot.userTeamId }],
-        },
-        orderBy: [{ day: "asc" }],
+    ? await findNextUserRegularSeasonGame({
+        leagueId: snapshot.league.id,
+        seasonYear: snapshot.league.seasonYear,
+        teamId: snapshot.userTeamId,
       })
     : null;
 

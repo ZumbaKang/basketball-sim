@@ -86,7 +86,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: extend CI to also run `npm run build` for `frontend` (currently
       only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
       fails PRs too.
-- [ ] `db`: tighten user next-game `ScheduledGame` lookups to the current
+- [x] `db`: tighten user next-game `ScheduledGame` lookups to the current
       season and regular season; regression-test against stale/playoff rows.
 - [ ] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
       moving 2–4 minutes from starters to bench players while preserving team
@@ -98,6 +98,9 @@ implementing anything — its PRs are expected to touch only this file.
 
 - [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
       for star players.
+- [ ] `db`: constrain regular-season next-game lookups to `day >= league.day`;
+      regression-test against an orphaned current-season scheduled row from an
+      earlier day.
 - [ ] `db`: add a lightweight audit/transaction log query API so frontend can
       show "all moves this season" beyond the news feed.
 - [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
@@ -139,3 +142,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Snapshotted a deterministic full-game box score in QA (PR #23)
 - 2026-07-23: Modeled clutch-time rotation and usage shifts for star players
 - 2026-07-23: Added the frontend Next.js production build to the CI merge gate
+- 2026-07-23: Scoped user next-game lookups to the current regular season
