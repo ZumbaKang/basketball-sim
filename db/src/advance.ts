@@ -120,6 +120,7 @@ export async function advanceLeague(userId: string, request: AdvanceRequest): Pr
           leagueId: league.id,
           seasonYear: current.seasonYear,
           teamId: current.userTeamId!,
+          currentDay: current.day + 1,
         });
         const refreshed = await prisma.league.findUniqueOrThrow({ where: { id: league.id } });
         if (nextUser && nextUser.day === refreshed.day) {
@@ -137,6 +138,7 @@ export async function advanceLeague(userId: string, request: AdvanceRequest): Pr
         leagueId: league.id,
         seasonYear: refreshed.seasonYear,
         teamId: refreshed.userTeamId,
+        currentDay: refreshed.day,
       })
     : null;
 
@@ -164,6 +166,7 @@ export async function playUserNextGame(userId: string, leagueId: string): Promis
     leagueId,
     seasonYear: league.seasonYear,
     teamId: league.userTeamId,
+    currentDay: league.day,
   });
   if (!next) throw new Error("No upcoming games for your team");
   if (next.day > league.day) {

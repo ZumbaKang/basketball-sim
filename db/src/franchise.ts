@@ -16,6 +16,7 @@ export async function getFranchiseHome(userId: string): Promise<FranchiseHome> {
         leagueId: snapshot.league.id,
         seasonYear: snapshot.league.seasonYear,
         teamId: snapshot.userTeamId,
+        currentDay: snapshot.league.day,
       })
     : null;
 
