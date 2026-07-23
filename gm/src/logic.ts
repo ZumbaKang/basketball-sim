@@ -7,15 +7,82 @@ import type {
 
 export type EvaluablePlayer = Player & { salary: number; yearsRemaining: number };
 
+function contractProfile(p: EvaluablePlayer, direction: GmDirection) {
+  const salaryMillions = p.salary / 1_000_000;
+  const estimatedMarketSalary = Math.max(2, (p.ratings.overall - 60) * 1.25);
+  const overpay = Math.max(0, salaryMillions - estimatedMarketSalary);
+  const yearsRemaining = Math.max(1, Math.round(p.yearsRemaining));
+  const futureYears = yearsRemaining - 1;
+  const penaltyRate =
+    direction === "cheap"
+      ? 0.35
+      : direction === "rebuild" || direction === "tank"
+        ? 0.3
+        : direction === "window"
+          ? 0.2
+          : 0.15;
+  const expiringBonusRate =
+    direction === "cheap"
+      ? 0.25
+      : direction === "rebuild" || direction === "tank"
+        ? 0.2
+        : direction === "window"
+          ? 0.15
+          : 0.1;
+
+  return {
+    adjustment:
+      yearsRemaining === 1
+        ? overpay * expiringBonusRate
+        : -(overpay * futureYears * penaltyRate),
+    isBadContract: overpay >= 5 && futureYears > 0,
+    isExpiringMoney: overpay >= 5 && yearsRemaining === 1,
+  };
+}
+
 function playerValue(p: EvaluablePlayer, direction: GmDirection): number {
   const agePenalty = p.age > 30 ? (p.age - 30) * 3 : 0;
   const youthBonus = p.age < 25 ? (25 - p.age) * 2 : 0;
   const pot = (p.potential - p.ratings.overall) * (direction === "rebuild" || direction === "tank" ? 1.4 : 0.6);
   const star = Math.max(0, p.ratings.overall - 80) * 2;
-  let value = p.ratings.overall + pot + youthBonus + star - agePenalty - p.salary / 5_000_000;
+  let value =
+    p.ratings.overall +
+    pot +
+    youthBonus +
+    star -
+    agePenalty -
+    p.salary / 5_000_000 +
+    contractProfile(p, direction).adjustment;
   if (direction === "cheap") value -= p.salary / 4_000_000;
   if (direction === "contend") value += Math.max(0, p.ratings.overall - 78) * 1.5;
   return value;
+}
+
+function contractReason(
+  incoming: EvaluablePlayer[],
+  outgoing: EvaluablePlayer[],
+  direction: GmDirection,
+): string {
+  const incomingProfiles = incoming.map((p) => contractProfile(p, direction));
+  const outgoingProfiles = outgoing.map((p) => contractProfile(p, direction));
+  const addsBadContract = incomingProfiles.some((p) => p.isBadContract);
+  const sendsBadContract = outgoingProfiles.some((p) => p.isBadContract);
+  const addsExpiringMoney = incomingProfiles.some((p) => p.isExpiringMoney);
+  const sendsExpiringMoney = outgoingProfiles.some((p) => p.isExpiringMoney);
+
+  if (addsExpiringMoney && sendsBadContract) {
+    return " The deal turns long-term bad salary into expiring money.";
+  }
+  if (addsBadContract && !sendsBadContract) {
+    return " The return adds long-term bad salary.";
+  }
+  if (addsExpiringMoney && !sendsExpiringMoney) {
+    return " Expiring money improves future cap flexibility.";
+  }
+  if (sendsBadContract && !addsBadContract) {
+    return " The deal clears long-term bad salary.";
+  }
+  return "";
 }
 
 export function evaluateTrade(input: {
@@ -38,6 +105,7 @@ export function evaluateTrade(input: {
   const outValue = outgoing.reduce((s, p) => s + playerValue(p, input.direction), 0);
   const inValue = incoming.reduce((s, p) => s + playerValue(p, input.direction), 0);
   const margin = inValue - outValue;
+  const contractContext = contractReason(incoming, outgoing, input.direction);
 
   const threshold =
     input.direction === "tank" || input.direction === "rebuild"
@@ -53,14 +121,14 @@ export function evaluateTrade(input: {
     const namesOut = outgoing.map((p) => p.name).join(", ") || "assets";
     return {
       accepted: true,
-      reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.`,
+      reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.${contractContext}`,
       proposal: input.proposal,
     };
   }
 
   return {
     accepted: false,
-    reason: `Rejected: as a ${input.direction} team, the return (${inValue.toFixed(1)}) does not beat what they give up (${outValue.toFixed(1)}).`,
+    reason: `Rejected: as a ${input.direction} team, the return (${inValue.toFixed(1)}) does not beat what they give up (${outValue.toFixed(1)}).${contractContext}`,
     proposal: input.proposal,
   };
 }
