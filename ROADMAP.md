@@ -41,7 +41,7 @@ picking the next piece of work.
 - [x] `sim`: add back-to-back/fatigue modeling — players on the second night
       of a back-to-back get a small efficiency/minutes penalty; validate box
       scores stay realistic under `assertRealisticGameResult`.
-- [ ] `gm`: add a bad-contract/expiring-money awareness pass to trade
+- [x] `gm`: add a bad-contract/expiring-money awareness pass to trade
       evaluation so AI GMs value expiring contracts and avoid hoarding dead
       salary.
 - [ ] `frontend`: add a persistent nav bar/shell across `league`, `standings`,
@@ -76,6 +76,9 @@ picking the next piece of work.
 - [ ] `qa`: extend CI to also run `npm run build` for `frontend` (currently
       only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
       fails PRs too.
+- [ ] `gm`: add direction-specific contract valuation calibration tests so
+      cheap/rebuilding teams prioritize cap relief more than contenders without
+      rejecting productive players on fair long-term deals.
 
 ## Later
 
@@ -93,3 +96,4 @@ picking the next piece of work.
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
 - 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
+- 2026-07-23: Added expiring-money and bad-contract trade awareness (PR #16)
