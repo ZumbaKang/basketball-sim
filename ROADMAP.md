@@ -13,26 +13,34 @@ picking the next piece of work.
    this file to do that) rather than editing multiple domain folders in one PR.
 3. Implement the item, add/update tests in the owning workspace (and `qa/`
    for cross-cutting checks), run `npm test` for the touched workspace(s).
-4. Open a PR from a feature branch (`git checkout -b <domain>/<short-name>`).
-   Use the PR body to note which item this closes.
-5. Once merged, check the box below in the same PR (or a tiny immediate
-   follow-up) and add a one-line dated note under **Shipped**.
+4. **In that same branch/commit — before opening the PR** — also edit this
+   file: check the box for the item you just implemented, add a one-line
+   dated note under **Shipped**, and add the 1–3 new backlog follow-ups
+   from step 8 below. All of that is a `ROADMAP.md` diff living in the exact
+   same branch as the code change.
+5. Open exactly **one PR** from a feature branch (`git checkout -b
+   <domain>/<short-name>`) containing both the code change and the
+   `ROADMAP.md` update together. Use the PR body to note which item this
+   closes. **Never** open a second PR, and never push a direct follow-up
+   commit to `main`, just to update `ROADMAP.md` for a change you already
+   shipped — that bookkeeping belongs in the original PR or it doesn't
+   happen.
 6. If an item turns out to be bigger than one PR, break it into smaller
-   checkboxes in place rather than shipping a half-finished cross-domain change.
+   checkboxes in place (same PR as the first sub-item you ship) rather than
+   shipping a half-finished cross-domain change.
 7. If blocked (needs a product decision, ambiguous spec, or touches a
    contract in `shared/`), leave the item unchecked, add a `_Blocked: why_`
    note under it, and move to the next item instead of guessing.
-8. **Before finishing the run, refill the backlog.** After opening the PR
-   (or after checking off the item, if it merged in the same run), spend a
+8. **Refill the backlog in the same PR.** Before opening the PR, spend a
    couple minutes thinking about what you just touched: obvious follow-ups,
    edge cases you deliberately skipped, adjacent gaps in that same domain,
    or realism/UX issues you noticed while in there. Add **1–3 new
-   checkboxes** to **Now**, **Next**, or **Later** (whichever fits) in the
-   same PR. Each new item must be as concrete and single-PR-sized as the
-   existing ones — name the owning domain, describe the change, and note
-   how it'd be verified. Do not add vague items ("improve X", "polish Y")
-   and do not add more than 3 in one run — the backlog should grow steadily,
-   not turn into noise.
+   checkboxes** to **Now**, **Next**, or **Later** (whichever fits) as part
+   of the same `ROADMAP.md` diff from step 4 — not a separate PR. Each new
+   item must be as concrete and single-PR-sized as the existing ones — name
+   the owning domain, describe the change, and note how it'd be verified.
+   Do not add vague items ("improve X", "polish Y") and do not add more
+   than 3 in one run — the backlog should grow steadily, not turn into noise.
 
 ## Now
 
@@ -41,7 +49,7 @@ picking the next piece of work.
 - [x] `sim`: add back-to-back/fatigue modeling — players on the second night
       of a back-to-back get a small efficiency/minutes penalty; validate box
       scores stay realistic under `assertRealisticGameResult`.
-- [ ] `gm`: add a bad-contract/expiring-money awareness pass to trade
+- [x] `gm`: add a bad-contract/expiring-money awareness pass to trade
       evaluation so AI GMs value expiring contracts and avoid hoarding dead
       salary.
 - [ ] `frontend`: add a persistent nav bar/shell across `league`, `standings`,
@@ -93,3 +101,4 @@ picking the next piece of work.
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
 - 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
+- 2026-07-23: GM trade evaluation now values expiring/bad contracts (PR #16)

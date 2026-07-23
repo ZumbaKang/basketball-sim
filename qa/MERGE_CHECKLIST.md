@@ -25,5 +25,10 @@ Use this before merging PRs into `main`.
 ## Automations
 
 - [ ] CI (`.github/workflows/ci.yml`) is green on the PR — required to merge, not just advisory
-- [ ] Cursor-authored same-repository PRs are marked ready and merged only after CI succeeds
 - [ ] PR Review Gate verdict is Approve
+- [ ] `TIPOFF Merge Gate` is the only automation that merges PRs (squash + delete branch)
+      once CI/Bugbot/Review Gate are all green and its own ownership skim is clean. It
+      is intentionally the single merge path — do not add a second auto-merge workflow
+      (e.g. a `.github/workflows/*.yml` that calls `gh pr merge`); that duplicates and
+      races with this gate. If a PR isn't merging, check its comments for what Merge
+      Gate flagged instead of merging around it.
