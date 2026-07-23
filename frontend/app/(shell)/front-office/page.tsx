@@ -128,7 +128,7 @@ export default function FrontOfficePage() {
   }
 
   return (
-    <main>
+    <main className="front-office">
       <h1 className="brand" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>
         Front office
       </h1>
@@ -136,9 +136,9 @@ export default function FrontOfficePage() {
       {msg && <p className="muted">{msg}</p>}
       {error && <p className="error">{error}</p>}
 
-      <section className="panel">
+      <section className="panel trade-builder">
         <h2>Propose a trade</h2>
-        <div className="form">
+        <div className="form trade-form">
           <label>
             You send
             <select value={giveId} onChange={(e) => setGiveId(e.target.value)}>
@@ -177,7 +177,7 @@ export default function FrontOfficePage() {
             </select>
           </label>
         </div>
-        <div className="cta-row">
+        <div className="cta-row trade-actions">
           <button type="button" className="btn btn-primary" onClick={() => void propose()}>
             Send proposal
           </button>
@@ -193,7 +193,7 @@ export default function FrontOfficePage() {
           <p className="muted">No free agents right now — check back in the offseason.</p>
         ) : (
           <>
-            <label className="form">
+            <label className="form free-agent-form">
               Target
               <select value={faId} onChange={(e) => setFaId(e.target.value)}>
                 {freeAgents.map((p) => (
@@ -203,7 +203,7 @@ export default function FrontOfficePage() {
                 ))}
               </select>
             </label>
-            <div className="cta-row">
+            <div className="cta-row free-agent-actions">
               <button type="button" className="btn btn-primary" onClick={() => void offer()}>
                 Offer $8M / 2 yrs
               </button>
