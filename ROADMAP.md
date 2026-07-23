@@ -17,14 +17,23 @@ picking the next piece of work.
    file: check the box for the item you just implemented, add a one-line
    dated note under **Shipped**, and add the 1–3 new backlog follow-ups
    from step 8 below. All of that is a `ROADMAP.md` diff living in the exact
-   same branch as the code change.
-5. Open exactly **one PR** from a feature branch (`git checkout -b
-   <domain>/<short-name>`) containing both the code change and the
-   `ROADMAP.md` update together. Use the PR body to note which item this
-   closes. **Never** open a second PR, and never push a direct follow-up
-   commit to `main`, just to update `ROADMAP.md` for a change you already
-   shipped — that bookkeeping belongs in the original PR or it doesn't
-   happen.
+   same branch as the code change. Do this before your first `git push`, not
+   after.
+5. Open exactly **one PR** per roadmap item, from one feature branch
+   (`git checkout -b <domain>/<short-name>`), containing both the code
+   change and the `ROADMAP.md` update in the same diff. Use the PR body to
+   note which item this closes.
+   **HARD RULE — read this if you take nothing else from this file:**
+   A PR whose diff is *only* `ROADMAP.md` is a bug, not a valid PR. If you
+   notice you already opened/merged a code PR without its `ROADMAP.md`
+   bookkeeping, do **not** open a follow-up PR titled anything like
+   "mark X shipped" and do **not** push a direct commit to `main`. Instead:
+   check out the *original* branch (or a fresh branch off `main` if it was
+   already merged), make the `ROADMAP.md` edit there, and either push an
+   additional commit to the still-open PR, or — if it already merged —
+   fold the edit into your *next* roadmap-item PR's diff instead of
+   shipping a standalone docs PR for it. Missing one Shipped-log line for a
+   cycle is fine; a docs-only PR is not.
 6. If an item turns out to be bigger than one PR, break it into smaller
    checkboxes in place (same PR as the first sub-item you ship) rather than
    shipping a half-finished cross-domain change.
@@ -41,6 +50,16 @@ picking the next piece of work.
    the owning domain, describe the change, and note how it'd be verified.
    Do not add vague items ("improve X", "polish Y") and do not add more
    than 3 in one run — the backlog should grow steadily, not turn into noise.
+9. **Do not invent CI/automation/repo-process changes on your own.** This
+   has happened twice already: an unrequested `.github/workflows/*.yml`
+   auto-merge workflow (removed — it raced with the `TIPOFF Merge Gate`
+   Cursor automation) and an unrequested "mark draft PR ready" workflow
+   (removed — it was based on a wrong premise; these PRs are never drafts
+   or authored by `cursor[bot]`). If you notice something about the
+   PR/CI/merge process seems broken while working an item, do **not** fix
+   it yourself in the same or a new PR. Add it as a new `qa`-owned backlog
+   item describing the problem (per step 8) and let a human or a future run
+   explicitly pick it up and evaluate it.
 
 ## Now
 
