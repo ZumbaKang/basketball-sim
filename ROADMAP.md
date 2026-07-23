@@ -101,7 +101,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: constrain regular-season next-game lookups to `day >= league.day`;
       regression-test against an orphaned current-season scheduled row from an
       earlier day.
-- [ ] `db`: add a lightweight audit/transaction log query API so frontend can
+- [x] `db`: add a lightweight audit/transaction log query API so frontend can
       show "all moves this season" beyond the news feed.
 - [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
       valuing future picks vs. present talent).
@@ -134,6 +134,11 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
+- [ ] `db`: record draft selections and offseason contract expirations as
+      `draft`/`transaction` news items; verify the season transaction log
+      includes both move types.
+- [ ] `db`: add a composite `NewsItem` index for season transaction-log filters;
+      use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
 
 ## Later
 
@@ -161,3 +166,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Added garbage-time starter-to-bench rotation shifts for blowouts
 - 2026-07-23: Made the league dashboard and trade builder mobile responsive
 - 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
+- 2026-07-23: Added an owner-scoped current-season transaction log query API
