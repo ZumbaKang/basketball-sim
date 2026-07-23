@@ -1,4 +1,5 @@
 import type { GameResult, Player, PlayerGameLine, Team, TeamGameLine } from "@basketball-sim/shared";
+import { applyClutchTime, isClutchGame } from "./clutch.js";
 import { assertRealisticGameResult } from "./realism.js";
 
 export type SimulateGameInput = {
@@ -279,14 +280,14 @@ export function simulateGame(input: SimulateGameInput): GameResult {
   const awayDef =
     input.awayPlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, input.awayPlayers.length);
 
-  const home = simulateTeamLine(
+  let home = simulateTeamLine(
     input.homeTeam,
     input.homePlayers,
     awayDef,
     rng,
     new Set(input.homeSecondNightPlayerIds ?? []),
   );
-  const away = simulateTeamLine(
+  let away = simulateTeamLine(
     input.awayTeam,
     input.awayPlayers,
     homeDef,
@@ -327,11 +328,19 @@ export function simulateGame(input: SimulateGameInput): GameResult {
     };
   };
 
+  home = nudge(home, 95, 125);
+  away = nudge(away, 95, 125);
+
+  if (isClutchGame(home, away)) {
+    home = applyClutchTime(home, input.homePlayers);
+    away = applyClutchTime(away, input.awayPlayers);
+  }
+
   const result: GameResult = {
     id: idFromSeed(seed),
     leagueId: input.leagueId,
-    home: nudge(home, 95, 125),
-    away: nudge(away, 95, 125),
+    home,
+    away,
     playedAt: new Date().toISOString(),
   };
 
