@@ -55,7 +55,7 @@ picking the next piece of work.
 - [x] `frontend`: add a persistent nav bar/shell across `league`, `standings`,
       `front-office`, `history`, and game pages so navigation doesn't rely on
       browser back.
-- [ ] `db`: add indices/query tightening for `PlayerSeasonStat` and
+- [x] `db`: add indices/query tightening for `PlayerSeasonStat` and
       `ScheduledGame` lookups used by standings/history as league history
       grows across seasons (perf, not schema shape changes).
 - [ ] `qa`: add a fixture-based regression test that snapshots one full
@@ -84,6 +84,10 @@ picking the next piece of work.
 - [ ] `qa`: extend CI to also run `npm run build` for `frontend` (currently
       only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
       fails PRs too.
+- [ ] `db`: tighten user next-game `ScheduledGame` lookups to the current
+      season and regular season; regression-test against stale/playoff rows.
+- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
+      award-history reads use their composite indexes.
 
 ## Later
 
@@ -103,3 +107,4 @@ picking the next piece of work.
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
 - 2026-07-23: GM trade evaluation now values expiring/bad contracts (PR #16)
 - 2026-07-23: Added persistent navigation across league screens (PR #18)
+- 2026-07-23: Indexed and tightened league history lookups (PR #21)
