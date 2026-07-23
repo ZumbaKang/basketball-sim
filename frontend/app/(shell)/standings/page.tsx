@@ -60,15 +60,7 @@ export default function StandingsPage() {
   }
 
   return (
-    <main className="shell">
-      <div className="topbar">
-        <a className="mark" href="/league">
-          TIPOFF
-        </a>
-        <a className="btn btn-secondary" href="/league">
-          Franchise
-        </a>
-      </div>
+    <main>
       <h1 className="brand" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>
         Standings
       </h1>

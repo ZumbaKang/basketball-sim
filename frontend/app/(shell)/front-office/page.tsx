@@ -40,7 +40,7 @@ export default function FrontOfficePage() {
 
   if (!home) {
     return (
-      <main className="shell">
+      <main>
         <p className="muted">Loading front office…</p>
       </main>
     );
@@ -128,15 +128,7 @@ export default function FrontOfficePage() {
   }
 
   return (
-    <main className="shell">
-      <div className="topbar">
-        <a className="mark" href="/league">
-          TIPOFF
-        </a>
-        <a className="btn btn-secondary" href="/league">
-          Franchise
-        </a>
-      </div>
+    <main>
       <h1 className="brand" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>
         Front office
       </h1>
