@@ -1,16 +1,18 @@
-name: Mark Cursor PR ready
+name: Cursor PR merge
 
 # Cursor cloud automations sometimes open PRs as drafts. Draft PRs don't
 # reliably trigger downstream gates (CI, Bugbot, PR Review Gate, TIPOFF
-# Merge Gate), so they can get stuck indefinitely with no human or agent
-# ever looking at them again (see PR #14). This workflow's only job is to
-# flip same-repo, default-branch, cursor[bot]-authored draft PRs to ready
-# the moment they open, so the normal gate pipeline can run. It never
-# merges anything - that stays the sole job of TIPOFF Merge Gate.
+# Merge Gate), and Cursor-authored PR events do not reliably trigger other
+# Cursor automations. This workflow marks same-repo Cursor PRs ready, then
+# enables GitHub-native squash auto-merge only after CI succeeds. GitHub
+# branch protection remains the source of truth for required checks.
 
 on:
   pull_request_target:
     types: [opened, reopened]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
 
 permissions:
   contents: write
@@ -31,3 +33,58 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr ready "$PR_URL"
+
+  enable-auto-merge:
+    name: Enable squash auto-merge
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.pull_requests[0]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Verify tested Cursor PR and enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          pr="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")"
+          author="$(jq -r '.user.login' <<<"$pr")"
+          state="$(jq -r '.state' <<<"$pr")"
+          draft="$(jq -r '.draft' <<<"$pr")"
+          head_repo="$(jq -r '.head.repo.full_name' <<<"$pr")"
+          head_sha="$(jq -r '.head.sha' <<<"$pr")"
+          base_branch="$(jq -r '.base.ref' <<<"$pr")"
+
+          if [[ "$author" != "cursor[bot]" ||
+                "$state" != "open" ||
+                "$head_repo" != "$GITHUB_REPOSITORY" ||
+                "$base_branch" != "$DEFAULT_BRANCH" ]]; then
+            echo "Skipping non-Cursor, closed, fork, or non-default-branch PR."
+            exit 0
+          fi
+
+          if [[ "$head_sha" != "$TESTED_SHA" ]]; then
+            echo "Skipping stale CI result for $TESTED_SHA; current head is $head_sha."
+            exit 0
+          fi
+
+          if [[ "$draft" == "true" ]]; then
+            gh pr ready "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"
+          fi
+
+          gh pr checks "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --watch \
+            --fail-fast \
+            --interval 10
+
+          gh pr merge "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --auto \
+            --squash \
+            --delete-branch \
+            --match-head-commit "$TESTED_SHA"

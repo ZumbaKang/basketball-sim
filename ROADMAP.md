@@ -52,16 +52,17 @@ implementing anything — its PRs are expected to touch only this file.
    the owning domain, describe the change, and note how it'd be verified.
    Do not add vague items ("improve X", "polish Y") and do not add more
    than 3 in one run — the backlog should grow steadily, not turn into noise.
-9. **Do not invent CI/automation/repo-process changes on your own.** This
-   has happened twice already: an unrequested `.github/workflows/*.yml`
-   auto-merge workflow (removed — it raced with the `TIPOFF Merge Gate`
-   Cursor automation) and an unrequested "mark draft PR ready" workflow
-   (removed — it was based on a wrong premise; these PRs are never drafts
-   or authored by `cursor[bot]`). If you notice something about the
-   PR/CI/merge process seems broken while working an item, do **not** fix
-   it yourself in the same or a new PR. Add it as a new `qa`-owned backlog
-   item describing the problem (per step 8) and let a human or a future run
-   explicitly pick it up and evaluate it.
+9. **Do not invent CI/automation/repo-process changes on your own.**
+   `.github/workflows/cursor-pr-ready.yml` is a deliberately authorized
+   exception: Cursor-authored PR events do not reliably trigger other Cursor
+   automations, so it marks draft PRs ready and enables GitHub-native squash
+   auto-merge only after CI succeeds for the current head SHA and every
+   reported check has finished successfully. Branch protection remains
+   responsible for required checks. Do not add another merge workflow or
+   bypass this gate. If any other part of the PR/CI/merge process seems broken
+   while working an item, add it as a new `qa`-owned backlog item (per step 8)
+   for explicit evaluation instead of changing repository process as a side
+   effect.
 
 ## Now
 
@@ -82,45 +83,45 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: add a fixture-based regression test that snapshots one full
       simulated game's box score and fails if simulation output drifts
       unexpectedly between runs (deterministic seed).
-
-## Next
-
-- [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
-      for star players.
-- [ ] `sim`: injuries should have a small chance of affecting multiple games
-      already generated as "already scheduled" — ensure return-from-injury
-      is reflected in rotation/minutes.
-- [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
-      talent vs. expectations (currently only trades/FA are modeled).
-- [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
-      valuing future picks vs. present talent).
-- [ ] `frontend`: player detail page (season stats, career game log, contract
-      info) linked from roster views.
-- [ ] `frontend`: mobile-responsive pass on `league` dashboard and
-      `front-office` trade builder.
-- [ ] `db`: add a lightweight audit/transaction log query API so frontend can
-      show "all moves this season" beyond the news feed.
-- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
-      end-to-end and asserts standings/awards/draft invariants hold.
 - [ ] `qa`: extend CI to also run `npm run build` for `frontend` (currently
       only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
       fails PRs too.
 - [ ] `db`: tighten user next-game `ScheduledGame` lookups to the current
       season and regular season; regression-test against stale/playoff rows.
-- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
-      award-history reads use their composite indexes.
 - [ ] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
       moving 2–4 minutes from starters to bench players while preserving team
       minute totals; verify with seeded blowout comparisons and realism checks.
+- [ ] `frontend`: mobile-responsive pass on `league` dashboard and
+      `front-office` trade builder.
+
+## Next
+
+- [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
+      for star players.
+- [ ] `db`: add a lightweight audit/transaction log query API so frontend can
+      show "all moves this season" beyond the news feed.
+- [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
+      valuing future picks vs. present talent).
+- [ ] `sim`: injuries should have a small chance of affecting multiple games
+      already generated as "already scheduled" — ensure return-from-injury
+      is reflected in rotation/minutes.
+- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
+      award-history reads use their composite indexes.
+- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
+      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
+      focus states, keyboard nav for trade builder).
+- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
+      end-to-end and asserts standings/awards/draft invariants hold.
 
 ## Later
 
-- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
-      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `frontend`: player detail page (season stats, career game log, contract
+      info) linked from roster views.
+- [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
+      talent vs. expectations (currently only trades/FA are modeled).
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
-- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
-      focus states, keyboard nav for trade builder).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
 
