@@ -102,6 +102,39 @@ describe("simulateGame", () => {
     expect(() => assertRealisticGameResult(result)).not.toThrow();
   });
 
+  it("keeps seeded blowouts realistic after garbage-time shifts", () => {
+    const input = {
+      leagueId: "lg1",
+      homeTeam,
+      awayTeam,
+      homePlayers: roster("t_home", "Harbor"),
+      awayPlayers: roster("t_away", "Metro"),
+    };
+    let seededBlowout:
+      | { seed: number; result: ReturnType<typeof simulateGame> }
+      | undefined;
+
+    for (let seed = 1; seed <= 100; seed++) {
+      const result = simulateGame({ ...input, seed });
+      if (Math.abs(result.home.pts - result.away.pts) >= 15) {
+        seededBlowout = { seed, result };
+        break;
+      }
+    }
+
+    expect(seededBlowout).toBeDefined();
+    if (!seededBlowout) return;
+
+    const comparison = simulateGame({ ...input, seed: seededBlowout.seed });
+    expect(comparison.home.players.map(({ minutes }) => minutes)).toEqual(
+      seededBlowout.result.home.players.map(({ minutes }) => minutes),
+    );
+    expect(comparison.away.players.map(({ minutes }) => minutes)).toEqual(
+      seededBlowout.result.away.players.map(({ minutes }) => minutes),
+    );
+    expect(() => assertRealisticGameResult(seededBlowout.result)).not.toThrow();
+  });
+
   it("applies a small minutes and efficiency penalty on a back-to-back", () => {
     const homePlayers = roster("t_home", "Harbor");
     const awayPlayers = roster("t_away", "Metro");

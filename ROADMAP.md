@@ -88,7 +88,7 @@ implementing anything — its PRs are expected to touch only this file.
       fails PRs too.
 - [x] `db`: tighten user next-game `ScheduledGame` lookups to the current
       season and regular season; regression-test against stale/playoff rows.
-- [ ] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
+- [x] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
       moving 2–4 minutes from starters to bench players while preserving team
       minute totals; verify with seeded blowout comparisons and realism checks.
 - [ ] `frontend`: mobile-responsive pass on `league` dashboard and
@@ -112,6 +112,12 @@ implementing anything — its PRs are expected to touch only this file.
       award-history reads use their composite indexes.
 - [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
       playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
+      during garbage time while preserving team shooting and point totals;
+      verify with seeded 15-point and 25-point blowout box scores.
+- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+      starters remain above 20 minutes and each team stays at 240 total minutes;
+      add seeded regression cases for both home and away teams.
 - [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
@@ -143,3 +149,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Modeled clutch-time rotation and usage shifts for star players
 - 2026-07-23: Added the frontend Next.js production build to the CI merge gate
 - 2026-07-23: Scoped user next-game lookups to the current regular season
+- 2026-07-23: Added garbage-time starter-to-bench rotation shifts for blowouts

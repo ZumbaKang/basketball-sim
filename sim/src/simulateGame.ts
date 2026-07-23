@@ -1,5 +1,6 @@
 import type { GameResult, Player, PlayerGameLine, Team, TeamGameLine } from "@basketball-sim/shared";
 import { applyClutchTime, isClutchGame } from "./clutch.js";
+import { applyGarbageTime, isGarbageTimeGame } from "./garbageTime.js";
 import { assertRealisticGameResult } from "./realism.js";
 
 export type SimulateGameInput = {
@@ -331,7 +332,11 @@ export function simulateGame(input: SimulateGameInput): GameResult {
   home = nudge(home, 95, 125);
   away = nudge(away, 95, 125);
 
-  if (isClutchGame(home, away)) {
+  if (isGarbageTimeGame(home, away)) {
+    const margin = Math.abs(home.pts - away.pts);
+    home = applyGarbageTime(home, input.homePlayers, margin);
+    away = applyGarbageTime(away, input.awayPlayers, margin);
+  } else if (isClutchGame(home, away)) {
     home = applyClutchTime(home, input.homePlayers);
     away = applyClutchTime(away, input.awayPlayers);
   }
