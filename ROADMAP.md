@@ -91,7 +91,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
       moving 2–4 minutes from starters to bench players while preserving team
       minute totals; verify with seeded blowout comparisons and realism checks.
-- [ ] `frontend`: mobile-responsive pass on `league` dashboard and
+- [x] `frontend`: mobile-responsive pass on `league` dashboard and
       `front-office` trade builder.
 
 ## Next
@@ -120,6 +120,12 @@ implementing anything — its PRs are expected to touch only this file.
       add seeded regression cases for both home and away teams.
 - [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
+- [ ] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
+      treatment to standings and history; verify both at 320px without page
+      overflow and with visible keyboard focus.
+- [ ] `frontend`: add a compact selected-assets summary above trade actions;
+      verify long player and team names wrap at 320px without horizontal
+      overflow.
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
 - [ ] `qa`: make CI build-workspace coverage data-driven from root
@@ -150,3 +156,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Added the frontend Next.js production build to the CI merge gate
 - 2026-07-23: Scoped user next-game lookups to the current regular season
 - 2026-07-23: Added garbage-time starter-to-bench rotation shifts for blowouts
+- 2026-07-23: Made the league dashboard and trade builder mobile responsive

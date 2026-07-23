@@ -50,8 +50,13 @@ a {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
+}
+
+.shell main {
+  min-width: 0;
 }
 
 .shell {
@@ -144,10 +149,20 @@ input {
 
 .form input,
 .form select {
+  width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   background: var(--paper);
   padding: 0.7rem 0.8rem;
   border-radius: 0.4rem;
+}
+
+.trade-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.free-agent-form {
+  max-width: 32rem;
 }
 
 .error {
@@ -339,6 +354,33 @@ input {
   color: var(--ink-soft);
 }
 
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  scrollbar-gutter: stable;
+  overscroll-behavior-inline: contain;
+}
+
+.table-scroll .box-table {
+  min-width: 42rem;
+}
+
+.table-scroll:focus-visible {
+  outline: 3px solid var(--hardwood);
+  outline-offset: 3px;
+}
+
+.table-scroll .box-table th:first-child,
+.table-scroll .box-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--paper);
+  box-shadow: 1px 0 var(--line);
+}
+
 .muted {
   color: var(--ink-soft);
 }
@@ -387,7 +429,65 @@ input {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
+  .shell {
+    width: min(100% - 1rem, 1100px);
+    padding: 0.75rem 0 2rem;
+  }
+
+  .brand {
+    overflow-wrap: anywhere;
+  }
+
+  .panel {
+    margin-top: 1.25rem;
+    padding: 1rem;
+  }
+
+  .dashboard-actions,
+  .trade-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .dashboard-actions .btn-primary {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-actions .btn,
+  .trade-actions .btn,
+  .free-agent-actions .btn {
+    min-height: 3rem;
+    padding-inline: 0.8rem;
+  }
+
+  .trade-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .roster-panel {
+    overflow: hidden;
+  }
+
+  .roster-panel .table-scroll {
+    width: calc(100% + 2rem);
+    max-width: none;
+    margin-inline: -1rem;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .game-list a {
+    align-items: flex-start;
+  }
+
+  .game-list a > .muted {
+    flex: 0 0 auto;
+  }
+
   .app-nav {
     grid-template-areas:
       "mark account"
@@ -426,5 +526,20 @@ input {
 
   .scoreboard .vs {
     display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-actions,
+  .trade-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-actions .btn-primary {
+    grid-column: auto;
+  }
+
+  .free-agent-actions .btn {
+    width: 100%;
   }
 }

@@ -144,7 +144,7 @@ export default function LeaguePage() {
   const myStanding = home.standings.find((s) => s.teamId === home.snapshot.userTeamId);
 
   return (
-    <main>
+    <main className="league-dashboard">
       <h1 className="brand" style={{ fontSize: "clamp(2rem, 6vw, 3.4rem)" }}>
         {my?.name ?? "Franchise"}
       </h1>
@@ -156,9 +156,9 @@ export default function LeaguePage() {
       {message && <p className="muted">{message}</p>}
       {error && <p className="error">{error}</p>}
 
-      <section className="panel">
+      <section className="panel dashboard-advance">
         <h2>Advance</h2>
-        <div className="cta-row">
+        <div className="cta-row dashboard-actions">
           <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void playNext()}>
             {busy ? "Working…" : "Play next game"}
           </button>
@@ -183,9 +183,9 @@ export default function LeaguePage() {
         )}
       </section>
 
-      <section className="panel">
+      <section className="panel roster-panel">
         <h2>Roster · payroll ${(home.payroll / 1_000_000).toFixed(1)}M</h2>
-        <div style={{ overflowX: "auto" }}>
+        <div className="table-scroll" role="region" aria-label="Franchise roster" tabIndex={0}>
           <table className="box-table">
             <thead>
               <tr>
