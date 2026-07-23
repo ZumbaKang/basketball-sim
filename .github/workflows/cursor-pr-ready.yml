@@ -1,0 +1,32 @@
+name: Mark Cursor PR ready
+
+# Cursor cloud automations sometimes open PRs as drafts. Draft PRs don't
+# reliably trigger downstream gates (CI, Bugbot, PR Review Gate, TIPOFF
+# Merge Gate), so they can get stuck indefinitely with no human or agent
+# ever looking at them again (see PR #14). This workflow's only job is to
+# flip same-repo, default-branch, cursor[bot]-authored draft PRs to ready
+# the moment they open, so the normal gate pipeline can run. It never
+# merges anything - that stays the sole job of TIPOFF Merge Gate.
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  mark-ready:
+    name: Mark Cursor PR ready for review
+    if: >-
+      github.event.pull_request.draft &&
+      github.event.pull_request.user.login == 'cursor[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.base.ref == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark ready for review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr ready "$PR_URL"
