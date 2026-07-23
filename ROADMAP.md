@@ -82,45 +82,45 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: add a fixture-based regression test that snapshots one full
       simulated game's box score and fails if simulation output drifts
       unexpectedly between runs (deterministic seed).
-
-## Next
-
-- [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
-      for star players.
-- [ ] `sim`: injuries should have a small chance of affecting multiple games
-      already generated as "already scheduled" — ensure return-from-injury
-      is reflected in rotation/minutes.
-- [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
-      talent vs. expectations (currently only trades/FA are modeled).
-- [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
-      valuing future picks vs. present talent).
-- [ ] `frontend`: player detail page (season stats, career game log, contract
-      info) linked from roster views.
-- [ ] `frontend`: mobile-responsive pass on `league` dashboard and
-      `front-office` trade builder.
-- [ ] `db`: add a lightweight audit/transaction log query API so frontend can
-      show "all moves this season" beyond the news feed.
-- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
-      end-to-end and asserts standings/awards/draft invariants hold.
 - [ ] `qa`: extend CI to also run `npm run build` for `frontend` (currently
       only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
       fails PRs too.
 - [ ] `db`: tighten user next-game `ScheduledGame` lookups to the current
       season and regular season; regression-test against stale/playoff rows.
-- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
-      award-history reads use their composite indexes.
 - [ ] `sim`: add garbage-time rotation shifts for games decided by 15+ points,
       moving 2–4 minutes from starters to bench players while preserving team
       minute totals; verify with seeded blowout comparisons and realism checks.
+- [ ] `frontend`: mobile-responsive pass on `league` dashboard and
+      `front-office` trade builder.
+
+## Next
+
+- [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
+      for star players.
+- [ ] `db`: add a lightweight audit/transaction log query API so frontend can
+      show "all moves this season" beyond the news feed.
+- [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
+      valuing future picks vs. present talent).
+- [ ] `sim`: injuries should have a small chance of affecting multiple games
+      already generated as "already scheduled" — ensure return-from-injury
+      is reflected in rotation/minutes.
+- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
+      award-history reads use their composite indexes.
+- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
+      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
+      focus states, keyboard nav for trade builder).
+- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
+      end-to-end and asserts standings/awards/draft invariants hold.
 
 ## Later
 
-- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
-      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `frontend`: player detail page (season stats, career game log, contract
+      info) linked from roster views.
+- [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
+      talent vs. expectations (currently only trades/FA are modeled).
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
-- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
-      focus states, keyboard nav for trade builder).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
 
