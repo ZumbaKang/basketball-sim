@@ -44,4 +44,76 @@ describe("evaluateTrade", () => {
     expect(decision.accepted).toBe(true);
     expect(decision.reason.toLowerCase()).toContain("accepted");
   });
+
+  it("values expiring money over equivalent long-term bad salary", () => {
+    const decision = evaluateTrade({
+      direction: "cheap",
+      proposal: {
+        leagueId: "l",
+        fromTeamId: "a",
+        toTeamId: "b",
+        fromAssets: [{ playerId: "expiring" }],
+        toAssets: [{ playerId: "long-term" }],
+      },
+      ourPlayers: [
+        p({
+          id: "long-term",
+          name: "Long Term",
+          salary: 30_000_000,
+          yearsRemaining: 4,
+          potential: 72,
+          ratings: { overall: 72, offense: 72, defense: 72, shooting: 72, rebounding: 72, playmaking: 72, stamina: 72 },
+        }),
+      ],
+      theirPlayers: [
+        p({
+          id: "expiring",
+          name: "Expiring",
+          salary: 30_000_000,
+          yearsRemaining: 1,
+          potential: 72,
+          ratings: { overall: 72, offense: 72, defense: 72, shooting: 72, rebounding: 72, playmaking: 72, stamina: 72 },
+        }),
+      ],
+    });
+
+    expect(decision.accepted).toBe(true);
+    expect(decision.reason).toContain("expiring money");
+  });
+
+  it("rejects taking on long-term bad salary for equivalent expiring money", () => {
+    const decision = evaluateTrade({
+      direction: "rebuild",
+      proposal: {
+        leagueId: "l",
+        fromTeamId: "a",
+        toTeamId: "b",
+        fromAssets: [{ playerId: "long-term" }],
+        toAssets: [{ playerId: "expiring" }],
+      },
+      ourPlayers: [
+        p({
+          id: "expiring",
+          name: "Expiring",
+          salary: 30_000_000,
+          yearsRemaining: 1,
+          potential: 72,
+          ratings: { overall: 72, offense: 72, defense: 72, shooting: 72, rebounding: 72, playmaking: 72, stamina: 72 },
+        }),
+      ],
+      theirPlayers: [
+        p({
+          id: "long-term",
+          name: "Long Term",
+          salary: 30_000_000,
+          yearsRemaining: 4,
+          potential: 72,
+          ratings: { overall: 72, offense: 72, defense: 72, shooting: 72, rebounding: 72, playmaking: 72, stamina: 72 },
+        }),
+      ],
+    });
+
+    expect(decision.accepted).toBe(false);
+    expect(decision.reason).toContain("long-term bad salary");
+  });
 });
