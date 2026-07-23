@@ -5,6 +5,7 @@ import { simulateScheduledGame } from "./playGame.js";
 import { getStandings } from "./standings.js";
 import { maybeStartPlayoffs, advancePlayoffsIfNeeded } from "./playoffs.js";
 import { runOffseason } from "./offseason.js";
+import { findNextUserRegularSeasonGame } from "./nextGame.js";
 
 export async function advanceLeague(userId: string, request: AdvanceRequest): Promise<AdvanceResult> {
   const league = await prisma.league.findFirst({
@@ -115,14 +116,10 @@ export async function advanceLeague(userId: string, request: AdvanceRequest): Pr
         break;
       }
       if (request.mode === "toUserGame") {
-        const nextUser = await prisma.scheduledGame.findFirst({
-          where: {
-            leagueId: league.id,
-            status: "scheduled",
-            isPlayoff: false,
-            OR: [{ homeTeamId: current.userTeamId! }, { awayTeamId: current.userTeamId! }],
-          },
-          orderBy: [{ day: "asc" }],
+        const nextUser = await findNextUserRegularSeasonGame({
+          leagueId: league.id,
+          seasonYear: current.seasonYear,
+          teamId: current.userTeamId!,
         });
         const refreshed = await prisma.league.findUniqueOrThrow({ where: { id: league.id } });
         if (nextUser && nextUser.day === refreshed.day) {
@@ -136,13 +133,10 @@ export async function advanceLeague(userId: string, request: AdvanceRequest): Pr
   const refreshed = await prisma.league.findUniqueOrThrow({ where: { id: league.id } });
   const standings = await getStandings(league.id);
   const nextUserGameRow = refreshed.userTeamId
-    ? await prisma.scheduledGame.findFirst({
-        where: {
-          leagueId: league.id,
-          status: "scheduled",
-          OR: [{ homeTeamId: refreshed.userTeamId }, { awayTeamId: refreshed.userTeamId }],
-        },
-        orderBy: [{ day: "asc" }],
+    ? await findNextUserRegularSeasonGame({
+        leagueId: league.id,
+        seasonYear: refreshed.seasonYear,
+        teamId: refreshed.userTeamId,
       })
     : null;
 
@@ -166,13 +160,10 @@ async function tickInjuries(leagueId: string) {
 export async function playUserNextGame(userId: string, leagueId: string): Promise<GameResult> {
   const league = await prisma.league.findFirst({ where: { id: leagueId, ownerUserId: userId } });
   if (!league?.userTeamId) throw new Error("Franchise not selected");
-  const next = await prisma.scheduledGame.findFirst({
-    where: {
-      leagueId,
-      status: "scheduled",
-      OR: [{ homeTeamId: league.userTeamId }, { awayTeamId: league.userTeamId }],
-    },
-    orderBy: [{ day: "asc" }],
+  const next = await findNextUserRegularSeasonGame({
+    leagueId,
+    seasonYear: league.seasonYear,
+    teamId: league.userTeamId,
   });
   if (!next) throw new Error("No upcoming games for your team");
   if (next.day > league.day) {
