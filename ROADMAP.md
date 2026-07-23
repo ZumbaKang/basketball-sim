@@ -52,7 +52,7 @@ picking the next piece of work.
 - [x] `gm`: add a bad-contract/expiring-money awareness pass to trade
       evaluation so AI GMs value expiring contracts and avoid hoarding dead
       salary.
-- [ ] `frontend`: add a persistent nav bar/shell across `league`, `standings`,
+- [x] `frontend`: add a persistent nav bar/shell across `league`, `standings`,
       `front-office`, `history`, and game pages so navigation doesn't rely on
       browser back.
 - [ ] `db`: add indices/query tightening for `PlayerSeasonStat` and
@@ -102,3 +102,4 @@ picking the next piece of work.
 - 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
 - 2026-07-23: GM trade evaluation now values expiring/bad contracts (PR #16)
+- 2026-07-23: Added persistent navigation across league screens (PR #18)
