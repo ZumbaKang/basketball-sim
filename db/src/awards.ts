@@ -1,9 +1,35 @@
 import { prisma } from "./prisma.js";
 
 export async function computeAwards(leagueId: string, seasonYear: number) {
+  const teams = await prisma.team.findMany({
+    where: { leagueId },
+    select: { id: true },
+  });
+  if (!teams.length) return;
+
   const stats = await prisma.playerSeasonStat.findMany({
-    where: { seasonYear, games: { gte: 1 } },
-    include: { player: true },
+    where: {
+      seasonYear,
+      teamId: { in: teams.map((team) => team.id) },
+      games: { gte: 1 },
+    },
+    select: {
+      playerId: true,
+      teamId: true,
+      games: true,
+      minutes: true,
+      pts: true,
+      reb: true,
+      ast: true,
+      stl: true,
+      blk: true,
+      player: {
+        select: {
+          name: true,
+          age: true,
+        },
+      },
+    },
   });
   if (!stats.length) return;
 

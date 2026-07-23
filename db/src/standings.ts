@@ -3,10 +3,30 @@ import { prisma } from "./prisma.js";
 import { toTeam } from "./mappers.js";
 
 export async function getStandings(leagueId: string): Promise<StandingsRow[]> {
-  const teams = await prisma.team.findMany({ where: { leagueId } });
-  const seasonYear = (await prisma.league.findUniqueOrThrow({ where: { id: leagueId } })).seasonYear;
+  const teams = await prisma.team.findMany({
+    where: { leagueId },
+    select: {
+      id: true,
+      name: true,
+      abbreviation: true,
+      conference: true,
+      division: true,
+      wins: true,
+      losses: true,
+    },
+  });
+  const { seasonYear } = await prisma.league.findUniqueOrThrow({
+    where: { id: leagueId },
+    select: { seasonYear: true },
+  });
   const finals = await prisma.scheduledGame.findMany({
     where: { leagueId, seasonYear, status: "final", isPlayoff: false },
+    select: {
+      homeTeamId: true,
+      awayTeamId: true,
+      homeScore: true,
+      awayScore: true,
+    },
   });
 
   const confRecords = new Map<string, { w: number; l: number }>();
