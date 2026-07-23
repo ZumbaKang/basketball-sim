@@ -28,10 +28,18 @@ Use this before merging PRs into `main`.
 - [ ] PR Review Gate verdict is Approve
 - [ ] `TIPOFF Merge Gate` is the only automation that merges PRs (squash + delete branch)
       once CI/Bugbot/Review Gate are all green and its own ownership skim is clean. It
-      is intentionally the single merge path — do not add a second auto-merge workflow
-      (e.g. a `.github/workflows/*.yml` that calls `gh pr merge`); that duplicates and
-      races with this gate. If a PR isn't merging, check its comments for what Merge
-      Gate flagged instead of merging around it.
+      is intentionally the single **merge** path — do not add a second workflow that
+      calls `gh pr merge`; that duplicates and races with this gate. If a PR isn't
+      merging, check its comments for what Merge Gate flagged instead of merging around it.
+- [ ] `.github/workflows/cursor-pr-ready.yml` is a deliberate, kept exception to the
+      "no invented CI" rule below: Cursor cloud automations sometimes open PRs as
+      drafts (see PR #14, which got stuck as a draft and was closed unmerged), and
+      draft PRs don't reliably trigger CI/Bugbot/Review Gate/Merge Gate. This workflow
+      only flips them to ready — it never merges. Do not remove it without confirming
+      via the raw REST API (`gh api repos/OWNER/REPO/pulls/N --jq .user.login`) whether
+      `cursor[bot]`-authored draft PRs are still happening; `gh pr view --json author`
+      displays bot logins differently (e.g. `app/cursor`) and will make this workflow
+      look dead when it isn't.
 - [ ] PR diff is not `ROADMAP.md`-only. Roadmap bookkeeping (checkbox, Shipped line,
       new backlog items) belongs in the same PR as the code change it documents — see
       `ROADMAP.md`'s "How this gets worked". A standalone "mark X shipped" PR is a bug.
