@@ -83,7 +83,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: add a fixture-based regression test that snapshots one full
       simulated game's box score and fails if simulation output drifts
       unexpectedly between runs (deterministic seed).
-- [ ] `qa`: extend CI to also run `npm run build` for `frontend` (currently
+- [x] `qa`: extend CI to also run `npm run build` for `frontend` (currently
       only `shared`/`sim`/`gm`/`db` are built in CI) so a broken `next build`
       fails PRs too.
 - [ ] `db`: tighten user next-game `ScheduledGame` lookups to the current
@@ -113,6 +113,9 @@ implementing anything — its PRs are expected to touch only this file.
       focus states, keyboard nav for trade builder).
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
+- [ ] `qa`: make CI build-workspace coverage data-driven from root
+      `package.json`, with a regression fixture proving that omitting any
+      workspace that declares a `build` script fails the QA check.
 
 ## Later
 
@@ -135,3 +138,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Indexed and tightened league history lookups (PR #21)
 - 2026-07-23: Snapshotted a deterministic full-game box score in QA (PR #23)
 - 2026-07-23: Modeled clutch-time rotation and usage shifts for star players
+- 2026-07-23: Added the frontend Next.js production build to the CI merge gate
