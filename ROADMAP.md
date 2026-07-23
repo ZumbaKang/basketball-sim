@@ -36,7 +36,7 @@ picking the next piece of work.
 
 ## Now
 
-- [ ] `qa`: add CI (GitHub Actions) to run `npm test` on every PR
+- [x] `qa`: add CI (GitHub Actions) to run `npm test` on every PR
       automatically, and require it to pass before merge into `main`.
 - [x] `sim`: add back-to-back/fatigue modeling — players on the second night
       of a back-to-back get a small efficiency/minutes penalty; validate box
@@ -91,4 +91,5 @@ picking the next piece of work.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-23: Added required GitHub Actions `npm test` gate (PR #10)
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
