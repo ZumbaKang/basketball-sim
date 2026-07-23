@@ -156,19 +156,93 @@ input {
   font-size: 0.95rem;
 }
 
-.topbar {
-  display: flex;
-  justify-content: space-between;
+.app-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--line);
+  background: rgba(243, 235, 224, 0.94);
+  backdrop-filter: blur(12px);
 }
 
-.topbar .mark {
+.app-nav .mark {
   font-family: var(--font-display);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-size: 1.2rem;
+}
+
+.app-nav-links,
+.app-nav-account {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.app-nav-links {
+  min-width: 0;
+}
+
+.app-nav-link,
+.app-nav-logout {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 0.8rem;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.app-nav-link:hover,
+.app-nav-link-active {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.app-nav-link:focus-visible,
+.app-nav-logout:focus-visible,
+.app-nav .mark:focus-visible {
+  outline: 3px solid var(--hardwood);
+  outline-offset: 2px;
+}
+
+.app-nav-account {
+  justify-content: flex-end;
+}
+
+.app-nav-user {
+  max-width: 12rem;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-nav-logout {
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.app-nav-logout:hover {
+  background: rgba(16, 35, 58, 0.08);
+}
+
+.app-nav-logout:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .grid-teams {
@@ -314,6 +388,37 @@ input {
 }
 
 @media (max-width: 640px) {
+  .app-nav {
+    grid-template-areas:
+      "mark account"
+      "links links";
+    grid-template-columns: 1fr auto;
+  }
+
+  .app-nav .mark {
+    grid-area: mark;
+  }
+
+  .app-nav-links {
+    grid-area: links;
+    margin-right: -1rem;
+    padding-right: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .app-nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-nav-account {
+    grid-area: account;
+  }
+
+  .app-nav-user {
+    display: none;
+  }
+
   .scoreboard {
     grid-template-columns: 1fr;
     text-align: center;

@@ -101,20 +101,9 @@ export default function LeaguePage() {
     }
   }
 
-  async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/");
-  }
-
   if (choices) {
     return (
-      <main className="shell">
-        <div className="topbar">
-          <div className="mark">TIPOFF</div>
-          <button type="button" className="btn btn-secondary" onClick={() => void logout()}>
-            Log out
-          </button>
-        </div>
+      <main>
         <h1 className="brand" style={{ fontSize: "clamp(2rem, 6vw, 3.4rem)" }}>
           Pick your franchise
         </h1>
@@ -145,7 +134,7 @@ export default function LeaguePage() {
 
   if (!home) {
     return (
-      <main className="shell">
+      <main>
         <p className="muted">Loading franchise…</p>
       </main>
     );
@@ -155,26 +144,7 @@ export default function LeaguePage() {
   const myStanding = home.standings.find((s) => s.teamId === home.snapshot.userTeamId);
 
   return (
-    <main className="shell">
-      <div className="topbar">
-        <div className="mark">TIPOFF</div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <a className="btn btn-secondary" href="/standings">
-            Standings
-          </a>
-          <a className="btn btn-secondary" href="/front-office">
-            Front office
-          </a>
-          <a className="btn btn-secondary" href="/history">
-            History
-          </a>
-          <span className="muted">{home.user.displayName}</span>
-          <button type="button" className="btn btn-secondary" onClick={() => void logout()}>
-            Log out
-          </button>
-        </div>
-      </div>
-
+    <main>
       <h1 className="brand" style={{ fontSize: "clamp(2rem, 6vw, 3.4rem)" }}>
         {my?.name ?? "Franchise"}
       </h1>

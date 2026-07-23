@@ -101,34 +101,22 @@ export default function GamePage() {
 
   if (error) {
     return (
-      <main className="shell">
+      <main>
         <p className="error">{error}</p>
-        <a className="btn btn-secondary" href="/league">
-          Back to league
-        </a>
       </main>
     );
   }
 
   if (!game) {
     return (
-      <main className="shell">
+      <main>
         <p className="muted">Loading box score…</p>
       </main>
     );
   }
 
   return (
-    <main className="shell">
-      <div className="topbar">
-        <a className="mark" href="/league">
-          TIPOFF
-        </a>
-        <a className="btn btn-secondary" href="/league">
-          Back to league
-        </a>
-      </div>
-
+    <main>
       <div className="scoreboard">
         <div className="side">
           <div className="name">{game.home.teamName}</div>
