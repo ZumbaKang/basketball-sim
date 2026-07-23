@@ -2,7 +2,9 @@
 
 Living backlog for continuous iteration. This file is read by the scheduled
 "TIPOFF Iterate" automation (every 3 hours) as well as by any agent or human
-picking the next piece of work.
+picking the next piece of work. A separate "TIPOFF Roadmap Reprioritize"
+automation (every ~4 days) reorders Now/Next/Later by priority without
+implementing anything — its PRs are expected to touch only this file.
 
 ## How this gets worked
 
