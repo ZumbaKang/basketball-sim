@@ -116,6 +116,8 @@ model ScheduledGame {
   isPlayoff     Boolean  @default(false)
   seriesId      String?
   gameResultId  String?
+
+  @@index([leagueId, seasonYear, status, isPlayoff, day])
 }
 
 model Game {
@@ -152,6 +154,7 @@ model PlayerSeasonStat {
   fta        Int    @default(0)
 
   @@unique([playerId, seasonYear])
+  @@index([seasonYear, teamId])
 }
 
 model TeamSeasonStat {
