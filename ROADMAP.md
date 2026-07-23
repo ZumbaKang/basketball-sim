@@ -52,16 +52,17 @@ implementing anything — its PRs are expected to touch only this file.
    the owning domain, describe the change, and note how it'd be verified.
    Do not add vague items ("improve X", "polish Y") and do not add more
    than 3 in one run — the backlog should grow steadily, not turn into noise.
-9. **Do not invent CI/automation/repo-process changes on your own.** This
-   has happened twice already: an unrequested `.github/workflows/*.yml`
-   auto-merge workflow (removed — it raced with the `TIPOFF Merge Gate`
-   Cursor automation) and an unrequested "mark draft PR ready" workflow
-   (removed — it was based on a wrong premise; these PRs are never drafts
-   or authored by `cursor[bot]`). If you notice something about the
-   PR/CI/merge process seems broken while working an item, do **not** fix
-   it yourself in the same or a new PR. Add it as a new `qa`-owned backlog
-   item describing the problem (per step 8) and let a human or a future run
-   explicitly pick it up and evaluate it.
+9. **Do not invent CI/automation/repo-process changes on your own.**
+   `.github/workflows/cursor-pr-ready.yml` is a deliberately authorized
+   exception: Cursor-authored PR events do not reliably trigger other Cursor
+   automations, so it marks draft PRs ready and enables GitHub-native squash
+   auto-merge only after CI succeeds for the current head SHA and every
+   reported check has finished successfully. Branch protection remains
+   responsible for required checks. Do not add another merge workflow or
+   bypass this gate. If any other part of the PR/CI/merge process seems broken
+   while working an item, add it as a new `qa`-owned backlog item (per step 8)
+   for explicit evaluation instead of changing repository process as a side
+   effect.
 
 ## Now
 
