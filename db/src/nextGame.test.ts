@@ -14,7 +14,7 @@ describe("next user regular-season game lookup", () => {
     await prisma.$disconnect();
   });
 
-  it("ignores stale-season and playoff rows even when they occur earlier", async () => {
+  it("ignores stale-season, playoff, and earlier-day rows", async () => {
     const suffix = `${Date.now()}-${Math.random()}`;
     const seasonYear = 2099;
     const owner = await prisma.user.create({
@@ -31,6 +31,7 @@ describe("next user regular-season game lookup", () => {
         name: "Next Game League",
         seasonYear,
         ownerUserId: owner.id,
+        day: 3,
       },
     });
     const userTeam = await prisma.team.create({
@@ -72,6 +73,14 @@ describe("next user regular-season game lookup", () => {
           awayTeamId: userTeam.id,
         },
         {
+          id: `earlier-day-${suffix}`,
+          leagueId: league.id,
+          seasonYear,
+          day: 2,
+          homeTeamId: opponent.id,
+          awayTeamId: userTeam.id,
+        },
+        {
           id: `current-${suffix}`,
           leagueId: league.id,
           seasonYear,
@@ -86,6 +95,7 @@ describe("next user regular-season game lookup", () => {
       leagueId: league.id,
       seasonYear,
       teamId: userTeam.id,
+      currentDay: league.day,
     });
 
     expect(nextGame?.id).toBe(`current-${suffix}`);

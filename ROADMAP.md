@@ -98,7 +98,7 @@ implementing anything — its PRs are expected to touch only this file.
 
 - [x] `sim`: model clutch-time (last 2 min, close score) minute/usage shifts
       for star players.
-- [ ] `db`: constrain regular-season next-game lookups to `day >= league.day`;
+- [x] `db`: constrain regular-season next-game lookups to `day >= league.day`;
       regression-test against an orphaned current-season scheduled row from an
       earlier day.
 - [ ] `db`: add a lightweight audit/transaction log query API so frontend can
@@ -131,6 +131,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: make CI build-workspace coverage data-driven from root
       `package.json`, with a regression fixture proving that omitting any
       workspace that declares a `build` script fails the QA check.
+- [ ] `db`: make next-game selection deterministic when malformed schedules
+      contain two user games on the same day; add a duplicate-matchup regression
+      fixture that asserts a stable tie-break.
 
 ## Later
 
@@ -157,3 +160,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Scoped user next-game lookups to the current regular season
 - 2026-07-23: Added garbage-time starter-to-bench rotation shifts for blowouts
 - 2026-07-23: Made the league dashboard and trade builder mobile responsive
+- 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
