@@ -109,30 +109,19 @@ describe("simulateGame", () => {
       awayTeam,
       homePlayers: roster("t_home", "Harbor"),
       awayPlayers: roster("t_away", "Metro"),
+      seed: 2,
     };
-    let seededBlowout:
-      | { seed: number; result: ReturnType<typeof simulateGame> }
-      | undefined;
+    const result = simulateGame(input);
+    const comparison = simulateGame(input);
 
-    for (let seed = 1; seed <= 100; seed++) {
-      const result = simulateGame({ ...input, seed });
-      if (Math.abs(result.home.pts - result.away.pts) >= 15) {
-        seededBlowout = { seed, result };
-        break;
-      }
-    }
-
-    expect(seededBlowout).toBeDefined();
-    if (!seededBlowout) return;
-
-    const comparison = simulateGame({ ...input, seed: seededBlowout.seed });
+    expect(result.home.pts - result.away.pts).toBe(16);
     expect(comparison.home.players.map(({ minutes }) => minutes)).toEqual(
-      seededBlowout.result.home.players.map(({ minutes }) => minutes),
+      result.home.players.map(({ minutes }) => minutes),
     );
     expect(comparison.away.players.map(({ minutes }) => minutes)).toEqual(
-      seededBlowout.result.away.players.map(({ minutes }) => minutes),
+      result.away.players.map(({ minutes }) => minutes),
     );
-    expect(() => assertRealisticGameResult(seededBlowout.result)).not.toThrow();
+    expect(() => assertRealisticGameResult(result)).not.toThrow();
   });
 
   it("applies a small minutes and efficiency penalty on a back-to-back", () => {
