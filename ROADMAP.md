@@ -58,7 +58,7 @@ picking the next piece of work.
 - [x] `db`: add indices/query tightening for `PlayerSeasonStat` and
       `ScheduledGame` lookups used by standings/history as league history
       grows across seasons (perf, not schema shape changes).
-- [ ] `qa`: add a fixture-based regression test that snapshots one full
+- [x] `qa`: add a fixture-based regression test that snapshots one full
       simulated game's box score and fails if simulation output drifts
       unexpectedly between runs (deterministic seed).
 
@@ -108,3 +108,4 @@ picking the next piece of work.
 - 2026-07-23: GM trade evaluation now values expiring/bad contracts (PR #16)
 - 2026-07-23: Added persistent navigation across league screens (PR #18)
 - 2026-07-23: Indexed and tightened league history lookups (PR #21)
+- 2026-07-23: Snapshotted a deterministic full-game box score in QA (PR #23)
