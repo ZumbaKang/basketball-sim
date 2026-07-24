@@ -98,7 +98,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: make CI build-workspace coverage data-driven from root
       `package.json`, with a regression fixture proving that omitting any
       workspace that declares a `build` script fails the QA check.
-- [ ] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
+- [x] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
       treatment to standings and history; verify both at 320px without page
       overflow and with visible keyboard focus.
 - [ ] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
@@ -119,6 +119,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: add a compact selected-assets summary above trade actions;
       verify long player and team names wrap at 320px without horizontal
       overflow.
+- [ ] `frontend`: add visible horizontal-scroll instructions to standings and
+      history tables; associate each hint with its focusable table region and
+      verify screen-reader text identifies the offscreen columns.
 - [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
@@ -178,3 +181,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Added an owner-scoped current-season transaction log query API
 - 2026-07-24: Asserted standings and award-history reads use composite indexes
 - 2026-07-24: Made CI build-workspace coverage follow root package declarations
+- 2026-07-24: Made standings and history tables focusable and edge-to-edge on mobile
