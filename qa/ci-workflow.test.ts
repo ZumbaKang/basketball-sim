@@ -44,7 +44,7 @@ function buildableWorkspaces(
 function buildCommandPositions(workflow: string): ReadonlyMap<string, number> {
   const positions = new Map<string, number>();
   const command =
-    /\bnpm\s+run\s+build\s+(?:-w|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s#]+))/g;
+    /\bnpm\s+run\s+build\s+(?:-w\s+|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s#]+))/g;
 
   for (const match of workflow.matchAll(command)) {
     const selector = match[1] ?? match[2] ?? match[3];
