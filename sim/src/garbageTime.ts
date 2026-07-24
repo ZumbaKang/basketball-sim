@@ -1,9 +1,12 @@
 import type { Player, PlayerGameLine, TeamGameLine } from "@basketball-sim/shared";
+import { transferFieldGoalAttempt } from "./fieldGoalTransfer.js";
 
 export const GARBAGE_TIME_MARGIN_MIN = 15;
 
 const MIN_GARBAGE_TIME_SHIFT = 2;
 const MAX_GARBAGE_TIME_SHIFT = 4;
+const MIN_GARBAGE_TIME_FGA_SHIFT = 1;
+const MAX_GARBAGE_TIME_FGA_SHIFT = 2;
 const STARTER_COUNT = 5;
 const MAX_SHIFTED_STARTERS = 2;
 const MAX_BENCH_RECIPIENTS = 2;
@@ -44,6 +47,16 @@ function garbageTimeMinutes(margin: number): number {
   );
 }
 
+function garbageTimeFieldGoalAttempts(margin: number): number {
+  const extraForMargin = Math.floor(
+    Math.max(0, margin - GARBAGE_TIME_MARGIN_MIN) / 10,
+  );
+  return Math.min(
+    MAX_GARBAGE_TIME_FGA_SHIFT,
+    MIN_GARBAGE_TIME_FGA_SHIFT + extraForMargin,
+  );
+}
+
 function removeStarterMinutes(starters: ActivePlayer[], target: number): number {
   let remaining = target;
 
@@ -76,6 +89,26 @@ function addBenchMinutes(bench: ActivePlayer[], minutes: number): void {
   });
 }
 
+function transferUsageToBench(
+  starters: ActivePlayer[],
+  bench: ActivePlayer[],
+  target: number,
+): void {
+  for (let attempt = 0; attempt < target; attempt += 1) {
+    const recipient = bench[attempt % bench.length]!;
+
+    for (let offset = 0; offset < starters.length; offset += 1) {
+      const donor = starters[(attempt + offset) % starters.length]!;
+      if (
+        donor.line.fga > 0 &&
+        transferFieldGoalAttempt(donor.line, recipient.line)
+      ) {
+        break;
+      }
+    }
+  }
+}
+
 export function isGarbageTimeGame(
   home: TeamGameLine,
   away: TeamGameLine,
@@ -85,7 +118,8 @@ export function isGarbageTimeGame(
 
 /**
  * Approximate garbage time in an aggregate box score by moving two to four
- * minutes from lower-priority starters to the first reserves off the bench.
+ * minutes and one to two field-goal attempts from lower-priority starters to
+ * the first reserves off the bench.
  */
 export function applyGarbageTime(
   line: TeamGameLine,
@@ -112,6 +146,11 @@ export function applyGarbageTime(
     garbageTimeMinutes(margin),
   );
   addBenchMinutes(bench, shifted);
+  transferUsageToBench(
+    starters,
+    bench,
+    garbageTimeFieldGoalAttempts(margin),
+  );
 
   return {
     ...adjustedLine,
