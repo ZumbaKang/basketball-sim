@@ -27,34 +27,36 @@ export default function StandingsPage() {
 
   function table(rows: StandingsRow[], title: string) {
     return (
-      <section className="panel">
+      <section className="panel mobile-table-panel">
         <h2>{title}</h2>
-        <table className="box-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Team</th>
-              <th>W</th>
-              <th>L</th>
-              <th>PCT</th>
-              <th>DIFF</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.teamId}>
-                <td>{r.rank}</td>
-                <td>
-                  {r.abbreviation} {r.teamName}
-                </td>
-                <td>{r.wins}</td>
-                <td>{r.losses}</td>
-                <td>{r.winPct.toFixed(3)}</td>
-                <td>{r.pointDiff > 0 ? `+${r.pointDiff}` : r.pointDiff}</td>
+        <div className="table-scroll" role="region" aria-label={`${title} standings`} tabIndex={0}>
+          <table className="box-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Team</th>
+                <th>W</th>
+                <th>L</th>
+                <th>PCT</th>
+                <th>DIFF</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.teamId}>
+                  <td>{r.rank}</td>
+                  <td>
+                    {r.abbreviation} {r.teamName}
+                  </td>
+                  <td>{r.wins}</td>
+                  <td>{r.losses}</td>
+                  <td>{r.winPct.toFixed(3)}</td>
+                  <td>{r.pointDiff > 0 ? `+${r.pointDiff}` : r.pointDiff}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     );
   }

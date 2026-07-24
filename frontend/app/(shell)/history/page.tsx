@@ -77,30 +77,32 @@ export default function HistoryPage() {
         )}
       </section>
 
-      <section className="panel">
+      <section className="panel mobile-table-panel">
         <h2>Scoring leaders</h2>
-        <table className="box-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>GP</th>
-              <th>PPG</th>
-              <th>RPG</th>
-              <th>APG</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.leaders.map((l) => (
-              <tr key={l.playerName}>
-                <td>{l.playerName}</td>
-                <td>{l.games}</td>
-                <td>{l.ppg.toFixed(1)}</td>
-                <td>{l.rpg.toFixed(1)}</td>
-                <td>{l.apg.toFixed(1)}</td>
+        <div className="table-scroll" role="region" aria-label="Scoring leaders" tabIndex={0}>
+          <table className="box-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>GP</th>
+                <th>PPG</th>
+                <th>RPG</th>
+                <th>APG</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.leaders.map((l) => (
+                <tr key={l.playerName}>
+                  <td>{l.playerName}</td>
+                  <td>{l.games}</td>
+                  <td>{l.ppg.toFixed(1)}</td>
+                  <td>{l.rpg.toFixed(1)}</td>
+                  <td>{l.apg.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   );
