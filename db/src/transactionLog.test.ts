@@ -109,6 +109,28 @@ describe("season transaction log", () => {
     expect(transactions[0]?.createdAt).toMatch(/Z$/);
   });
 
+  it("uses the composite index for season transaction filters", async () => {
+    const plan = await prisma.$queryRawUnsafe<Array<{ detail: string }>>(
+      `EXPLAIN QUERY PLAN
+       SELECT *
+       FROM "NewsItem"
+       WHERE "leagueId" = ?
+         AND "seasonYear" = ?
+         AND "kind" IN (?, ?, ?, ?)
+       ORDER BY "day" DESC, "createdAt" DESC, "id" DESC`,
+      leagueId,
+      2099,
+      "trade",
+      "signing",
+      "draft",
+      "transaction",
+    );
+
+    expect(plan.map(({ detail }) => detail).join("\n")).toMatch(
+      /USING INDEX NewsItem_leagueId_seasonYear_kind_idx/,
+    );
+  });
+
   it("rejects reads from users who do not own the league", async () => {
     await expect(listSeasonTransactions(otherOwnerId, leagueId)).rejects.toThrow("League not found");
   });
