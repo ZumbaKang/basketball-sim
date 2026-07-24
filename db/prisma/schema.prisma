@@ -180,6 +180,8 @@ model NewsItem {
   headline   String
   body       String
   createdAt  DateTime @default(now())
+
+  @@index([leagueId, seasonYear, kind])
 }
 
 model DraftPick {
