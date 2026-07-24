@@ -93,6 +93,17 @@ implementing anything — its PRs are expected to touch only this file.
       minute totals; verify with seeded blowout comparisons and realism checks.
 - [x] `frontend`: mobile-responsive pass on `league` dashboard and
       `front-office` trade builder.
+- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
+      award-history reads use their composite indexes.
+- [ ] `qa`: make CI build-workspace coverage data-driven from root
+      `package.json`, with a regression fixture proving that omitting any
+      workspace that declares a `build` script fails the QA check.
+- [ ] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
+      treatment to standings and history; verify both at 320px without page
+      overflow and with visible keyboard focus.
+- [ ] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
+      during garbage time while preserving team shooting and point totals;
+      verify with seeded 15-point and 25-point blowout box scores.
 
 ## Next
 
@@ -103,47 +114,36 @@ implementing anything — its PRs are expected to touch only this file.
       earlier day.
 - [x] `db`: add a lightweight audit/transaction log query API so frontend can
       show "all moves this season" beyond the news feed.
+- [ ] `db`: add a composite `NewsItem` index for season transaction-log filters;
+      use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
+- [ ] `frontend`: add a compact selected-assets summary above trade actions;
+      verify long player and team names wrap at 320px without horizontal
+      overflow.
+- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+      starters remain above 20 minutes and each team stays at 240 total minutes;
+      add seeded regression cases for both home and away teams.
+- [ ] `db`: record draft selections and offseason contract expirations as
+      `draft`/`transaction` news items; verify the season transaction log
+      includes both move types.
+- [ ] `frontend`: player detail page (season stats, career game log, contract
+      info) linked from roster views.
 - [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
       valuing future picks vs. present talent).
 - [ ] `sim`: injuries should have a small chance of affecting multiple games
       already generated as "already scheduled" — ensure return-from-injury
       is reflected in rotation/minutes.
-- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
-      award-history reads use their composite indexes.
-- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
-      playoff games vs. regular season, matching real NBA tendencies).
-- [ ] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
-      during garbage time while preserving team shooting and point totals;
-      verify with seeded 15-point and 25-point blowout box scores.
-- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
-      starters remain above 20 minutes and each team stays at 240 total minutes;
-      add seeded regression cases for both home and away teams.
-- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
-      focus states, keyboard nav for trade builder).
-- [ ] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
-      treatment to standings and history; verify both at 320px without page
-      overflow and with visible keyboard focus.
-- [ ] `frontend`: add a compact selected-assets summary above trade actions;
-      verify long player and team names wrap at 320px without horizontal
-      overflow.
-- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
-      end-to-end and asserts standings/awards/draft invariants hold.
-- [ ] `qa`: make CI build-workspace coverage data-driven from root
-      `package.json`, with a regression fixture proving that omitting any
-      workspace that declares a `build` script fails the QA check.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
-- [ ] `db`: record draft selections and offseason contract expirations as
-      `draft`/`transaction` news items; verify the season transaction log
-      includes both move types.
-- [ ] `db`: add a composite `NewsItem` index for season transaction-log filters;
-      use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
+- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
+      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
+      end-to-end and asserts standings/awards/draft invariants hold.
 
 ## Later
 
-- [ ] `frontend`: player detail page (season stats, career game log, contract
-      info) linked from roster views.
+- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
+      focus states, keyboard nav for trade builder).
 - [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
       talent vs. expectations (currently only trades/FA are modeled).
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
