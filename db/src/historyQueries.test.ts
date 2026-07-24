@@ -32,6 +32,44 @@ describe("history query performance", () => {
     expect(playerStatIndex.map(({ name }) => name)).toEqual(["seasonYear", "teamId"]);
   });
 
+  it("uses the composite schedule index for standings reads", async () => {
+    const plan = await prisma.$queryRawUnsafe<QueryPlanRow[]>(
+      `EXPLAIN QUERY PLAN
+       SELECT "homeTeamId", "awayTeamId", "homeScore", "awayScore"
+       FROM "ScheduledGame"
+       WHERE "leagueId" = ?
+         AND "seasonYear" = ?
+         AND "status" = ?
+         AND "isPlayoff" = ?`,
+      "league-id",
+      2099,
+      "final",
+      false,
+    );
+
+    expectQueryPlanToUseIndex(
+      plan,
+      "ScheduledGame_leagueId_seasonYear_status_isPlayoff_day_idx",
+    );
+  });
+
+  it("uses the composite season and team index for award-history reads", async () => {
+    const plan = await prisma.$queryRawUnsafe<QueryPlanRow[]>(
+      `EXPLAIN QUERY PLAN
+       SELECT "playerId", "teamId", "games", "minutes", "pts", "reb", "ast", "stl", "blk"
+       FROM "PlayerSeasonStat"
+       WHERE "seasonYear" = ?
+         AND "teamId" IN (?, ?)
+         AND "games" >= ?`,
+      2099,
+      "team-one",
+      "team-two",
+      1,
+    );
+
+    expectQueryPlanToUseIndex(plan, "PlayerSeasonStat_seasonYear_teamId_idx");
+  });
+
   it("limits award history reads to teams in the requested league", async () => {
     const seasonYear = 2099;
     const first = await createLeagueWithPlayer("In League", seasonYear, 10);
@@ -45,6 +83,15 @@ describe("history query performance", () => {
     expect(new Set(awards.map(({ playerId }) => playerId))).toEqual(new Set([first.playerId]));
   });
 });
+
+type QueryPlanRow = {
+  detail: string;
+};
+
+function expectQueryPlanToUseIndex(plan: QueryPlanRow[], indexName: string) {
+  const details = plan.map(({ detail }) => detail).join("\n");
+  expect(details).toMatch(new RegExp(`USING (?:COVERING )?INDEX ${indexName}`));
+}
 
 async function createLeagueWithPlayer(name: string, seasonYear: number, points: number) {
   const suffix = `${name.toLowerCase().replaceAll(" ", "-")}-${Date.now()}-${Math.random()}`;
