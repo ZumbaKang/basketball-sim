@@ -101,7 +101,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
       treatment to standings and history; verify both at 320px without page
       overflow and with visible keyboard focus.
-- [ ] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
+- [x] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
       during garbage time while preserving team shooting and point totals;
       verify with seeded 15-point and 25-point blowout box scores.
 
@@ -125,6 +125,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
+- [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
+      attempt transfers; verify every player shooting equation and all team
+      shooting and point totals still reconcile.
 - [ ] `db`: record draft selections and offseason contract expirations as
       `draft`/`transaction` news items; verify the season transaction log
       includes both move types.
@@ -182,3 +185,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-24: Asserted standings and award-history reads use composite indexes
 - 2026-07-24: Made CI build-workspace coverage follow root package declarations
 - 2026-07-24: Made standings and history tables focusable and edge-to-edge on mobile
+- 2026-07-24: Shifted 1–2 garbage-time shot attempts from starters to reserves
