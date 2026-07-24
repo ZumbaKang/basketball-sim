@@ -225,9 +225,14 @@ export type NewsItem = {
   createdAt: string;
 };
 
+export type DraftPickProtection =
+  | { kind: "unprotected" }
+  | { kind: "top"; protectedThrough: number };
+
 export type TradeAsset = {
   playerId?: string;
   draftPickId?: string;
+  draftPickProtection?: DraftPickProtection;
 };
 
 export type TradeProposal = {
