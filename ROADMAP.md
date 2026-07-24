@@ -114,6 +114,7 @@ implementing anything — its PRs are expected to touch only this file.
       earlier day.
 - [x] `db`: add a lightweight audit/transaction log query API so frontend can
       show "all moves this season" beyond the news feed.
+- [x] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
 - [ ] `db`: add a composite `NewsItem` index for season transaction-log filters;
       use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
 - [ ] `frontend`: add a compact selected-assets summary above trade actions;
@@ -148,6 +149,26 @@ implementing anything — its PRs are expected to touch only this file.
       playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
+- [ ] `qa`: make CI build-workspace coverage data-driven from root
+      `package.json`, with a regression fixture proving that omitting any
+      workspace that declares a `build` script fails the QA check.
+- [ ] `db`: make next-game selection deterministic when malformed schedules
+      contain two user games on the same day; add a duplicate-matchup regression
+      fixture that asserts a stable tie-break.
+- [ ] `db`: record draft selections and offseason contract expirations as
+      `draft`/`transaction` news items; verify the season transaction log
+      includes both move types.
+- [ ] `db`: add a composite `NewsItem` index for season transaction-log filters;
+      use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
+- [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
+      `applyTrade` by loading only owned, unselected picks and atomically
+      transferring `ownerTeamId`; reject foreign/used picks in regression tests.
+- [ ] `db`: persist protected-pick conveyance terms and resolve them during
+      offseason draft-order creation; verify a protected slot stays with its
+      original owner while an unprotected slot conveys.
+- [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
+      controls to the trade builder; verify mixed player/pick proposals serialize
+      correctly and remain usable at 320px.
 - [ ] `qa`: make root test-workspace coverage data-driven from `package.json`;
       add a regression fixture that omits one workspace declaring a `test`
       script and asserts the QA check fails.
@@ -182,6 +203,7 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Made the league dashboard and trade builder mobile responsive
 - 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
 - 2026-07-23: Added an owner-scoped current-season transaction log query API
+- 2026-07-24: Added direction-aware draft-pick trade valuation and protection discounts
 - 2026-07-24: Asserted standings and award-history reads use composite indexes
 - 2026-07-24: Made CI build-workspace coverage follow root package declarations
 - 2026-07-24: Made standings and history tables focusable and edge-to-edge on mobile
