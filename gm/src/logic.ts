@@ -1,4 +1,6 @@
 import type {
+  DraftPick,
+  DraftPickProtection,
   GmDirection,
   Player,
   TradeDecision,
@@ -6,6 +8,127 @@ import type {
 } from "@basketball-sim/shared";
 
 export type EvaluablePlayer = Player & { salary: number; yearsRemaining: number };
+export type EvaluableDraftPick = Pick<
+  DraftPick,
+  "id" | "seasonYear" | "round" | "pick"
+>;
+
+type ResolvedDraftPick = {
+  pick: EvaluableDraftPick;
+  protection: DraftPickProtection;
+};
+
+const UNPROTECTED_PICK: DraftPickProtection = { kind: "unprotected" };
+
+function isValidProtection(
+  protection: DraftPickProtection | undefined,
+): boolean {
+  return (
+    !protection ||
+    protection.kind === "unprotected" ||
+    (protection.kind === "top" &&
+      Number.isInteger(protection.protectedThrough) &&
+      protection.protectedThrough >= 1 &&
+      protection.protectedThrough <= 30)
+  );
+}
+
+function isValidDraftPick(pick: EvaluableDraftPick): boolean {
+  return (
+    (pick.round === 1 || pick.round === 2) &&
+    Number.isInteger(pick.pick) &&
+    pick.pick >= 1 &&
+    Number.isInteger(pick.seasonYear)
+  );
+}
+
+function protectionMultiplier(protection: DraftPickProtection): number {
+  if (protection.kind === "unprotected") return 1;
+  return Math.max(0.2, 1 - (protection.protectedThrough / 30) * 0.75);
+}
+
+export function draftPickValue(
+  pick: EvaluableDraftPick,
+  protection: DraftPickProtection,
+  direction: GmDirection,
+  currentSeasonYear: number,
+): number {
+  const slotValue =
+    pick.round === 1
+      ? Math.max(35, 100 - (pick.pick - 1) * 3.5)
+      : Math.max(8, 40 - (pick.pick - 1));
+  const yearsAway = Math.max(0, pick.seasonYear - currentSeasonYear);
+  const futureDiscount = 0.82 ** yearsAway;
+  const directionMultiplier =
+    direction === "tank"
+      ? 1.2
+      : direction === "rebuild"
+        ? 1.15
+        : direction === "contend"
+          ? 0.78
+          : direction === "window"
+            ? 0.9
+            : 1;
+
+  return (
+    slotValue *
+    futureDiscount *
+    directionMultiplier *
+    protectionMultiplier(protection)
+  );
+}
+
+function resolveDraftPicks(
+  assets: TradeProposal["fromAssets"],
+  availablePicks: EvaluableDraftPick[],
+): {
+  resolved: ResolvedDraftPick[];
+  invalid: boolean;
+} {
+  const availableById = new Map(availablePicks.map((pick) => [pick.id, pick]));
+  const seen = new Set<string>();
+  const resolved: ResolvedDraftPick[] = [];
+  let invalid = false;
+
+  for (const asset of assets) {
+    if (!asset.draftPickId || seen.has(asset.draftPickId)) continue;
+    seen.add(asset.draftPickId);
+    const pick = availableById.get(asset.draftPickId);
+    if (
+      !pick ||
+      !isValidDraftPick(pick) ||
+      !isValidProtection(asset.draftPickProtection)
+    ) {
+      invalid = true;
+      continue;
+    }
+    resolved.push({
+      pick,
+      protection: asset.draftPickProtection ?? UNPROTECTED_PICK,
+    });
+  }
+
+  return { resolved, invalid };
+}
+
+function pickLabel({ pick, protection }: ResolvedDraftPick): string {
+  const protectionLabel =
+    protection.kind === "unprotected"
+      ? "unprotected"
+      : `top-${protection.protectedThrough} protected`;
+  const roundLabel = pick.round === 1 ? "first" : "second";
+  return `${pick.seasonYear} ${protectionLabel} ${roundLabel}-round pick`;
+}
+
+function assetNames(
+  players: EvaluablePlayer[],
+  picks: ResolvedDraftPick[],
+): string {
+  return [
+    ...players.map((player) => player.name),
+    ...picks.map((pick) => pickLabel(pick)),
+  ].join(", ");
+}
 
 function contractProfile(p: EvaluablePlayer, direction: GmDirection) {
   const salaryMillions = p.salary / 1_000_000;
@@ -90,6 +213,9 @@ export function evaluateTrade(input: {
   direction: GmDirection;
   ourPlayers: EvaluablePlayer[];
   theirPlayers: EvaluablePlayer[];
+  ourDraftPicks?: EvaluableDraftPick[];
+  theirDraftPicks?: EvaluableDraftPick[];
+  currentSeasonYear?: number;
 }): TradeDecision {
   const giveIds = new Set(input.proposal.toAssets.map((a) => a.playerId).filter(Boolean));
   const getIds = new Set(input.proposal.fromAssets.map((a) => a.playerId).filter(Boolean));
@@ -97,13 +223,71 @@ export function evaluateTrade(input: {
   // Perspective: evaluating team is toTeam (receiving fromAssets, sending toAssets)
   const outgoing = input.ourPlayers.filter((p) => giveIds.has(p.id));
   const incoming = input.theirPlayers.filter((p) => getIds.has(p.id));
+  const outgoingPicks = resolveDraftPicks(
+    input.proposal.toAssets,
+    input.ourDraftPicks ?? [],
+  );
+  const incomingPicks = resolveDraftPicks(
+    input.proposal.fromAssets,
+    input.theirDraftPicks ?? [],
+  );
 
-  if (!outgoing.length && !incoming.length) {
-    return { accepted: false, reason: "No player assets in the proposal.", proposal: input.proposal };
+  if (outgoingPicks.invalid || incomingPicks.invalid) {
+    return {
+      accepted: false,
+      reason: "Draft pick details or protection terms are invalid.",
+      proposal: input.proposal,
+    };
   }
 
-  const outValue = outgoing.reduce((s, p) => s + playerValue(p, input.direction), 0);
-  const inValue = incoming.reduce((s, p) => s + playerValue(p, input.direction), 0);
+  if (
+    !outgoing.length &&
+    !incoming.length &&
+    !outgoingPicks.resolved.length &&
+    !incomingPicks.resolved.length
+  ) {
+    return {
+      accepted: false,
+      reason: "No evaluable assets in the proposal.",
+      proposal: input.proposal,
+    };
+  }
+
+  const allPicks = [
+    ...outgoingPicks.resolved,
+    ...incomingPicks.resolved,
+  ];
+  const currentSeasonYear =
+    input.currentSeasonYear ??
+    (allPicks.length
+      ? Math.min(...allPicks.map(({ pick }) => pick.seasonYear)) - 1
+      : 0);
+  const outValue =
+    outgoing.reduce((s, p) => s + playerValue(p, input.direction), 0) +
+    outgoingPicks.resolved.reduce(
+      (sum, { pick, protection }) =>
+        sum +
+        draftPickValue(
+          pick,
+          protection,
+          input.direction,
+          currentSeasonYear,
+        ),
+      0,
+    );
+  const inValue =
+    incoming.reduce((s, p) => s + playerValue(p, input.direction), 0) +
+    incomingPicks.resolved.reduce(
+      (sum, { pick, protection }) =>
+        sum +
+        draftPickValue(
+          pick,
+          protection,
+          input.direction,
+          currentSeasonYear,
+        ),
+      0,
+    );
   const margin = inValue - outValue;
   const contractContext = contractReason(incoming, outgoing, input.direction);
 
@@ -117,8 +301,10 @@ export function evaluateTrade(input: {
           : -0.5;
 
   if (margin >= threshold) {
-    const namesIn = incoming.map((p) => p.name).join(", ") || "assets";
-    const namesOut = outgoing.map((p) => p.name).join(", ") || "assets";
+    const namesIn =
+      assetNames(incoming, incomingPicks.resolved) || "incoming assets";
+    const namesOut =
+      assetNames(outgoing, outgoingPicks.resolved) || "outgoing assets";
     return {
       accepted: true,
       reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.${contractContext}`,
@@ -126,9 +312,13 @@ export function evaluateTrade(input: {
     };
   }
 
+  const namesIn =
+    assetNames(incoming, incomingPicks.resolved) || "incoming assets";
+  const namesOut =
+    assetNames(outgoing, outgoingPicks.resolved) || "outgoing assets";
   return {
     accepted: false,
-    reason: `Rejected: as a ${input.direction} team, the return (${inValue.toFixed(1)}) does not beat what they give up (${outValue.toFixed(1)}).${contractContext}`,
+    reason: `Rejected: as a ${input.direction} team, the return on ${namesIn} (${inValue.toFixed(1)}) does not beat ${namesOut} (${outValue.toFixed(1)}).${contractContext}`,
     proposal: input.proposal,
   };
 }

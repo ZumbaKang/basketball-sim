@@ -1,2 +1,7 @@
-export { evaluateTrade, findTradePackages, preferFreeAgent } from "./logic.js";
-export type { EvaluablePlayer } from "./logic.js";
+export {
+  draftPickValue,
+  evaluateTrade,
+  findTradePackages,
+  preferFreeAgent,
+} from "./logic.js";
+export type { EvaluableDraftPick, EvaluablePlayer } from "./logic.js";

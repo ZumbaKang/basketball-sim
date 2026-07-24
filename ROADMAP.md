@@ -103,7 +103,7 @@ implementing anything — its PRs are expected to touch only this file.
       earlier day.
 - [x] `db`: add a lightweight audit/transaction log query API so frontend can
       show "all moves this season" beyond the news feed.
-- [ ] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
+- [x] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
       valuing future picks vs. present talent).
 - [ ] `sim`: injuries should have a small chance of affecting multiple games
       already generated as "already scheduled" — ensure return-from-injury
@@ -139,6 +139,15 @@ implementing anything — its PRs are expected to touch only this file.
       includes both move types.
 - [ ] `db`: add a composite `NewsItem` index for season transaction-log filters;
       use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
+- [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
+      `applyTrade` by loading only owned, unselected picks and atomically
+      transferring `ownerTeamId`; reject foreign/used picks in regression tests.
+- [ ] `db`: persist protected-pick conveyance terms and resolve them during
+      offseason draft-order creation; verify a protected slot stays with its
+      original owner while an unprotected slot conveys.
+- [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
+      controls to the trade builder; verify mixed player/pick proposals serialize
+      correctly and remain usable at 320px.
 
 ## Later
 
@@ -167,3 +176,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Made the league dashboard and trade builder mobile responsive
 - 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
 - 2026-07-23: Added an owner-scoped current-season transaction log query API
+- 2026-07-24: Added direction-aware draft-pick trade valuation and protection discounts
