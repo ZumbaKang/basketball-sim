@@ -102,27 +102,39 @@ describe("simulateGame", () => {
     expect(() => assertRealisticGameResult(result)).not.toThrow();
   });
 
-  it("keeps seeded blowouts realistic after garbage-time shifts", () => {
-    const input = {
-      leagueId: "lg1",
-      homeTeam,
-      awayTeam,
-      homePlayers: roster("t_home", "Harbor"),
-      awayPlayers: roster("t_away", "Metro"),
-      seed: 2,
-    };
-    const result = simulateGame(input);
-    const comparison = simulateGame(input);
+  it.each([
+    { seed: 6, margin: 15 },
+    { seed: 73, margin: 25 },
+  ])(
+    "keeps a seeded $margin-point blowout realistic after garbage-time shifts",
+    ({ seed, margin }) => {
+      const input = {
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: roster("t_home", "Harbor"),
+        awayPlayers: roster("t_away", "Metro"),
+        seed,
+      };
+      const result = simulateGame(input);
+      const comparison = simulateGame(input);
 
-    expect(result.home.pts - result.away.pts).toBe(16);
-    expect(comparison.home.players.map(({ minutes }) => minutes)).toEqual(
-      result.home.players.map(({ minutes }) => minutes),
-    );
-    expect(comparison.away.players.map(({ minutes }) => minutes)).toEqual(
-      result.away.players.map(({ minutes }) => minutes),
-    );
-    expect(() => assertRealisticGameResult(result)).not.toThrow();
-  });
+      expect(Math.abs(result.home.pts - result.away.pts)).toBe(margin);
+      expect(comparison.home.players.map(({ minutes }) => minutes)).toEqual(
+        result.home.players.map(({ minutes }) => minutes),
+      );
+      expect(comparison.away.players.map(({ minutes }) => minutes)).toEqual(
+        result.away.players.map(({ minutes }) => minutes),
+      );
+      expect(comparison.home.players.map(({ fga }) => fga)).toEqual(
+        result.home.players.map(({ fga }) => fga),
+      );
+      expect(comparison.away.players.map(({ fga }) => fga)).toEqual(
+        result.away.players.map(({ fga }) => fga),
+      );
+      expect(() => assertRealisticGameResult(result)).not.toThrow();
+    },
+  );
 
   it("applies a small minutes and efficiency penalty on a back-to-back", () => {
     const homePlayers = roster("t_home", "Harbor");

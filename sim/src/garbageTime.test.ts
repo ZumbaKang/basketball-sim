@@ -34,22 +34,29 @@ function player(id: string, rotationOrder: number): Player {
   };
 }
 
-function playerLine(playerId: string, minutes: number): PlayerGameLine {
+function playerLine(
+  playerId: string,
+  minutes: number,
+  fgm = 0,
+  fga = 0,
+  tpm = 0,
+  tpa = 0,
+): PlayerGameLine {
   return {
     playerId,
     playerName: playerId,
     teamId: "team",
     minutes,
-    pts: 0,
+    pts: (fgm - tpm) * 2 + tpm * 3,
     reb: 0,
     ast: 0,
     stl: 0,
     blk: 0,
     tov: 0,
-    fgm: 0,
-    fga: 0,
-    tpm: 0,
-    tpa: 0,
+    fgm,
+    fga,
+    tpm,
+    tpa,
     ftm: 0,
     fta: 0,
   };
@@ -58,23 +65,31 @@ function playerLine(playerId: string, minutes: number): PlayerGameLine {
 function teamLine(
   players: PlayerGameLine[],
   teamId = "team",
-  pts = 105,
+  pts?: number,
 ): TeamGameLine {
+  const sum = (key: keyof PlayerGameLine) =>
+    players.reduce(
+      (total, current) =>
+        total +
+        (typeof current[key] === "number" ? (current[key] as number) : 0),
+      0,
+    );
+
   return {
     teamId,
     teamName: teamId,
-    pts,
-    reb: 0,
-    ast: 0,
-    stl: 0,
-    blk: 0,
-    tov: 0,
-    fgm: 0,
-    fga: 0,
-    tpm: 0,
-    tpa: 0,
-    ftm: 0,
-    fta: 0,
+    pts: pts ?? sum("pts"),
+    reb: sum("reb"),
+    ast: sum("ast"),
+    stl: sum("stl"),
+    blk: sum("blk"),
+    tov: sum("tov"),
+    fgm: sum("fgm"),
+    fga: sum("fga"),
+    tpm: sum("tpm"),
+    tpa: sum("tpa"),
+    ftm: sum("ftm"),
+    fta: sum("fta"),
     players,
   };
 }
@@ -153,6 +168,51 @@ describe("garbage time", () => {
     ).toBe(baselineMinutes);
     expect(baseline.players.find(({ playerId }) => playerId === "player_3"))
       .toMatchObject({ minutes: 33 });
+  });
+
+  it("moves one or two shot attempts to reserves without changing team totals", () => {
+    const roster = Array.from({ length: 8 }, (_, index) =>
+      player(`player_${index}`, index),
+    );
+    const baseline = teamLine([
+      playerLine("player_0", 36, 4, 10, 1, 4),
+      playerLine("player_1", 35, 4, 10, 1, 4),
+      playerLine("player_2", 34, 4, 10, 1, 4),
+      playerLine("player_3", 33, 4, 10, 1, 4),
+      playerLine("player_4", 32, 4, 10, 1, 4),
+      playerLine("player_5", 26, 4, 10, 1, 4),
+      playerLine("player_6", 24, 4, 10, 1, 4),
+      playerLine("player_7", 20, 4, 10, 1, 4),
+    ]);
+
+    const thresholdBlowout = applyGarbageTime(baseline, roster, 15);
+    const largeBlowout = applyGarbageTime(baseline, roster, 25);
+    const thresholdById = new Map(
+      thresholdBlowout.players.map((current) => [current.playerId, current]),
+    );
+    const largeById = new Map(
+      largeBlowout.players.map((current) => [current.playerId, current]),
+    );
+
+    expect(thresholdById.get("player_4")).toMatchObject({ fga: 9, tpa: 3 });
+    expect(thresholdById.get("player_5")).toMatchObject({ fga: 11, tpa: 5 });
+    expect(largeById.get("player_3")).toMatchObject({ fga: 9, tpa: 3 });
+    expect(largeById.get("player_4")).toMatchObject({ fga: 9, tpa: 3 });
+    expect(largeById.get("player_5")).toMatchObject({ fga: 11, tpa: 5 });
+    expect(largeById.get("player_6")).toMatchObject({ fga: 11, tpa: 5 });
+
+    for (const adjusted of [thresholdBlowout, largeBlowout]) {
+      expect(adjusted).toMatchObject({
+        pts: baseline.pts,
+        fgm: baseline.fgm,
+        fga: baseline.fga,
+        tpm: baseline.tpm,
+        tpa: baseline.tpa,
+      });
+    }
+    expect(
+      baseline.players.find(({ playerId }) => playerId === "player_4"),
+    ).toMatchObject({ fga: 10, tpa: 4 });
   });
 
   it("does not shift a close-game rotation", () => {

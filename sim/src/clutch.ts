@@ -1,4 +1,5 @@
 import type { Player, PlayerGameLine, TeamGameLine } from "@basketball-sim/shared";
+import { transferFieldGoalAttempt } from "./fieldGoalTransfer.js";
 
 export const CLUTCH_MARGIN_MAX = 5;
 
@@ -53,47 +54,6 @@ function transferMinutes(star: PlayerGameLine, donors: ActivePlayer[]): void {
     remaining = round1(remaining - shifted);
     if (remaining <= 0) return;
   }
-}
-
-function transferFieldGoalAttempt(donor: PlayerGameLine, star: PlayerGameLine): boolean {
-  const missedThrees = donor.tpa - donor.tpm;
-  const missedTwos = donor.fga - donor.fgm - missedThrees;
-  const madeTwos = donor.fgm - donor.tpm;
-
-  donor.fga -= 1;
-  star.fga += 1;
-
-  if (missedThrees > 0) {
-    donor.tpa -= 1;
-    star.tpa += 1;
-    return true;
-  }
-
-  if (missedTwos > 0) return true;
-
-  if (madeTwos > 0) {
-    donor.fgm -= 1;
-    donor.pts -= 2;
-    star.fgm += 1;
-    star.pts += 2;
-    return true;
-  }
-
-  if (donor.tpm > 0) {
-    donor.fgm -= 1;
-    donor.tpm -= 1;
-    donor.tpa -= 1;
-    donor.pts -= 3;
-    star.fgm += 1;
-    star.tpm += 1;
-    star.tpa += 1;
-    star.pts += 3;
-    return true;
-  }
-
-  donor.fga += 1;
-  star.fga -= 1;
-  return false;
 }
 
 function transferUsage(star: PlayerGameLine, donors: ActivePlayer[]): void {
