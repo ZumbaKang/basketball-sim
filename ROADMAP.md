@@ -93,7 +93,7 @@ implementing anything — its PRs are expected to touch only this file.
       minute totals; verify with seeded blowout comparisons and realism checks.
 - [x] `frontend`: mobile-responsive pass on `league` dashboard and
       `front-office` trade builder.
-- [ ] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
+- [x] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
       award-history reads use their composite indexes.
 - [ ] `qa`: make CI build-workspace coverage data-driven from root
       `package.json`, with a regression fixture proving that omitting any
@@ -135,6 +135,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
+- [ ] `db`: add an `EXPLAIN QUERY PLAN` regression for current-season next-game
+      reads that proves the schedule index covers league, season, status,
+      playoff, and day-range filters.
 - [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
       playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
@@ -167,3 +170,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Made the league dashboard and trade builder mobile responsive
 - 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
 - 2026-07-23: Added an owner-scoped current-season transaction log query API
+- 2026-07-24: Asserted standings and award-history reads use composite indexes
