@@ -95,7 +95,7 @@ implementing anything — its PRs are expected to touch only this file.
       `front-office` trade builder.
 - [x] `db`: add `EXPLAIN QUERY PLAN` regression assertions that standings and
       award-history reads use their composite indexes.
-- [ ] `qa`: make CI build-workspace coverage data-driven from root
+- [x] `qa`: make CI build-workspace coverage data-driven from root
       `package.json`, with a regression fixture proving that omitting any
       workspace that declares a `build` script fails the QA check.
 - [ ] `frontend`: apply the keyboard-focusable, edge-to-edge mobile table
@@ -142,6 +142,12 @@ implementing anything — its PRs are expected to touch only this file.
       playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
+- [ ] `qa`: make root test-workspace coverage data-driven from `package.json`;
+      add a regression fixture that omits one workspace declaring a `test`
+      script and asserts the QA check fails.
+- [ ] `qa`: assert every CI workspace build runs after Prisma generation as
+      well as before tests; add an out-of-order workflow fixture that fails the
+      QA check.
 
 ## Later
 
@@ -171,3 +177,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
 - 2026-07-23: Added an owner-scoped current-season transaction log query API
 - 2026-07-24: Asserted standings and award-history reads use composite indexes
+- 2026-07-24: Made CI build-workspace coverage follow root package declarations
