@@ -99,6 +99,8 @@ export type Coach = {
   rating: number;
   development: number;
   seasonsWithTeam: number;
+  wins: number;
+  losses: number;
 };
 
 export type CoachStaffingIntent =
