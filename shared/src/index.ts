@@ -225,6 +225,18 @@ export type NewsItem = {
   createdAt: string;
 };
 
+export type SeasonTransactionCursor = Pick<NewsItem, "day" | "createdAt" | "id">;
+
+export type SeasonTransactionPageRequest = {
+  limit?: number;
+  cursor?: SeasonTransactionCursor | null;
+};
+
+export type SeasonTransactionPage = {
+  items: NewsItem[];
+  nextCursor: SeasonTransactionCursor | null;
+};
+
 export type DraftPickProtection =
   | { kind: "unprotected" }
   | { kind: "top"; protectedThrough: number };
