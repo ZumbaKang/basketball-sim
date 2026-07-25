@@ -168,4 +168,46 @@ describe("simulateGame", () => {
     expect(fatiguedFieldGoalPercentage).toBeLessThan(restedFieldGoalPercentage);
     expect(() => assertRealisticGameResult(fatigued)).not.toThrow();
   });
+
+  it("keeps an injured player out of multiple games and restores their rotation on return", () => {
+    const healthyHomePlayers = roster("t_home", "Harbor");
+    const awayPlayers = roster("t_away", "Metro");
+    const returningPlayer = healthyHomePlayers[0]!;
+    const scheduledInjuryDays = [2, 1, 0];
+
+    const games = scheduledInjuryDays.map((injuredDays, index) =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: healthyHomePlayers.map((player) =>
+          player.id === returningPlayer.id ? { ...player, injuredDays } : player,
+        ),
+        awayPlayers,
+        seed: 8800 + index,
+      }),
+    );
+
+    expect(games[0]!.home.players.some((line) => line.playerId === returningPlayer.id)).toBe(false);
+    expect(games[1]!.home.players.some((line) => line.playerId === returningPlayer.id)).toBe(false);
+
+    const returnLine = games[2]!.home.players.find((line) => line.playerId === returningPlayer.id);
+    const healthyBaseline = simulateGame({
+      leagueId: "lg1",
+      homeTeam,
+      awayTeam,
+      homePlayers: healthyHomePlayers,
+      awayPlayers,
+      seed: 8802,
+    });
+    const baselineLine = healthyBaseline.home.players.find(
+      (line) => line.playerId === returningPlayer.id,
+    );
+
+    expect(returnLine?.minutes).toBe(baselineLine?.minutes);
+    expect(returnLine?.minutes).toBeGreaterThan(24);
+    for (const game of games) {
+      expect(() => assertRealisticGameResult(game)).not.toThrow();
+    }
+  });
 });

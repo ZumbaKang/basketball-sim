@@ -107,7 +107,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: add cursor pagination to season transaction-log reads using
       `(day, createdAt, id)` as the stable boundary; verify equal-day rows have
       no duplicates or omissions across pages.
-- [ ] `sim`: injuries should have a small chance of affecting multiple games
+- [x] `sim`: injuries should have a small chance of affecting multiple games
       already generated as "already scheduled" — ensure return-from-injury
       is reflected in rotation/minutes.
 - [ ] `frontend`: add visible horizontal-scroll instructions to standings and
@@ -135,6 +135,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
+- [ ] `sim`: harden injury-shortened rotations with only five to seven available
+      players so no player exceeds 48 minutes and the team remains at 240;
+      verify each roster size with seeded realism checks.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -205,3 +211,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-24: Shifted 1–2 garbage-time shot attempts from starters to reserves
 - 2026-07-24: Indexed current-season transaction-log filters
 - 2026-07-25: Added stable cursor pagination to season transaction-log reads
+- 2026-07-25: Made simulation rotations honor multi-game injuries and player returns
