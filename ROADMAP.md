@@ -113,7 +113,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: add visible horizontal-scroll instructions to standings and
       history tables; associate each hint with its focusable table region and
       verify screen-reader text identifies the offscreen columns.
-- [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
+- [x] `gm`: coach firing/hiring logic tied to win-loss record and roster
       talent vs. expectations (currently only trades/FA are modeled).
 - [ ] `qa`: make root test-workspace coverage data-driven from `package.json`;
       add a regression fixture that omits one workspace declaring a `test`
@@ -181,6 +181,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: show mobile table scroll hints only when columns actually
       overflow and hide each hint after its region reaches the right edge; verify
       resize and scroll behavior at 320px and desktop widths.
+- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
+      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
+      staffing intents; verify replacements cannot be hired by two teams.
+- [ ] `frontend`: show each team's current coach, style, and latest staffing
+      rationale on front-office pages; verify long names and rationale wrap at
+      320px without horizontal overflow.
 
 ## Later
 
@@ -216,3 +222,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Added stable cursor pagination to season transaction-log reads
 - 2026-07-25: Made simulation rotations honor multi-game injuries and player returns
 - 2026-07-25: Added accessible horizontal-scroll instructions to standings and history tables
+- 2026-07-25: Added expectation-based GM coach firing and hiring intents
