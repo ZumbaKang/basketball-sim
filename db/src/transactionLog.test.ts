@@ -1,3 +1,4 @@
+import type { SeasonTransactionCursor } from "@basketball-sim/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "./prisma.js";
 import { listSeasonTransactions } from "./transactionLog.js";
@@ -95,9 +96,11 @@ describe("season transaction log", () => {
   });
 
   it("returns every current-season roster move without the news-feed cap", async () => {
-    const transactions = await listSeasonTransactions(ownerId, leagueId);
+    const page = await listSeasonTransactions(ownerId, leagueId, { limit: 50 });
+    const transactions = page.items;
 
     expect(transactions).toHaveLength(24);
+    expect(page.nextCursor).toBeNull();
     expect(transactions.map(({ day }) => day)).toEqual(
       Array.from({ length: 24 }, (_, index) => 24 - index),
     );
@@ -107,6 +110,51 @@ describe("season transaction log", () => {
     expect(transactions.every(({ leagueId: id, seasonYear }) => id === leagueId && seasonYear === 2099))
       .toBe(true);
     expect(transactions[0]?.createdAt).toMatch(/Z$/);
+  });
+
+  it("paginates equal-day and equal-timestamp rows without duplicates or omissions", async () => {
+    const sharedTimestamp = new Date("2099-01-12T12:00:00.000Z");
+    const equalBoundaryIds = Array.from(
+      { length: 8 },
+      (_, index) => `equal-boundary-${leagueId}-${index}`,
+    );
+    await prisma.newsItem.createMany({
+      data: equalBoundaryIds.map((id, index) => ({
+        id,
+        leagueId,
+        seasonYear: 2099,
+        day: 12,
+        kind: "trade",
+        headline: `Equal-boundary move ${index}`,
+        body: "Shares a complete day and timestamp boundary",
+        createdAt: sharedTimestamp,
+      })),
+    });
+
+    const expectedRows = await prisma.newsItem.findMany({
+      where: {
+        leagueId,
+        seasonYear: 2099,
+        kind: { in: ["trade", "signing", "draft", "transaction"] },
+      },
+      orderBy: [{ day: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      select: { id: true },
+    });
+
+    const seenIds: string[] = [];
+    let cursor: SeasonTransactionCursor | null = null;
+    do {
+      const page = await listSeasonTransactions(ownerId, leagueId, {
+        limit: 5,
+        cursor,
+      });
+      seenIds.push(...page.items.map(({ id }) => id));
+      cursor = page.nextCursor;
+    } while (cursor);
+
+    expect(seenIds).toEqual(expectedRows.map(({ id }) => id));
+    expect(new Set(seenIds).size).toBe(seenIds.length);
+    expect(equalBoundaryIds.every((id) => seenIds.includes(id))).toBe(true);
   });
 
   it("uses the composite index for season transaction filters", async () => {

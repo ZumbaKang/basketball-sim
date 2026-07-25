@@ -117,9 +117,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `gm`: draft-pick valuation in trades (protect/unprotect logic, and
 - [x] `db`: add a composite `NewsItem` index for season transaction-log filters;
       use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
-- [ ] `db`: add cursor pagination to season transaction-log reads using
+- [x] `db`: add cursor pagination to season transaction-log reads using
       `(day, createdAt, id)` as the stable boundary; verify equal-day rows have
       no duplicates or omissions across pages.
+- [ ] `db`: add a descending transaction-log cursor index over
+      `(leagueId, seasonYear, day, createdAt, id)` and an `EXPLAIN QUERY PLAN`
+      regression proving page-boundary reads avoid a temporary sort.
 - [ ] `frontend`: add a compact selected-assets summary above trade actions;
       verify long player and team names wrap at 320px without horizontal
       overflow.
@@ -212,3 +215,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-24: Made standings and history tables focusable and edge-to-edge on mobile
 - 2026-07-24: Shifted 1–2 garbage-time shot attempts from starters to reserves
 - 2026-07-24: Indexed current-season transaction-log filters
+- 2026-07-25: Added stable cursor pagination to current-season transaction-log reads
