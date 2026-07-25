@@ -45,6 +45,10 @@ function fatigueEfficiencyPenalty(player: Player, secondNightPlayerIds: Readonly
   return 0.01 + ((100 - stamina) / 100) * 0.01;
 }
 
+function availablePlayers(players: Player[]): Player[] {
+  return players.filter((player) => player.injuredDays <= 0);
+}
+
 function allocateMinutes(
   players: Player[],
   rng: () => number,
@@ -275,22 +279,24 @@ function idFromSeed(seed: number): string {
 export function simulateGame(input: SimulateGameInput): GameResult {
   const seed = input.seed ?? Math.floor(Math.random() * 1_000_000_000);
   const rng = createRng(seed);
+  const homePlayers = availablePlayers(input.homePlayers);
+  const awayPlayers = availablePlayers(input.awayPlayers);
 
   const homeDef =
-    input.homePlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, input.homePlayers.length);
+    homePlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, homePlayers.length);
   const awayDef =
-    input.awayPlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, input.awayPlayers.length);
+    awayPlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, awayPlayers.length);
 
   let home = simulateTeamLine(
     input.homeTeam,
-    input.homePlayers,
+    homePlayers,
     awayDef,
     rng,
     new Set(input.homeSecondNightPlayerIds ?? []),
   );
   let away = simulateTeamLine(
     input.awayTeam,
-    input.awayPlayers,
+    awayPlayers,
     homeDef,
     rng,
     new Set(input.awaySecondNightPlayerIds ?? []),
@@ -334,11 +340,11 @@ export function simulateGame(input: SimulateGameInput): GameResult {
 
   if (isGarbageTimeGame(home, away)) {
     const margin = Math.abs(home.pts - away.pts);
-    home = applyGarbageTime(home, input.homePlayers, margin);
-    away = applyGarbageTime(away, input.awayPlayers, margin);
+    home = applyGarbageTime(home, homePlayers, margin);
+    away = applyGarbageTime(away, awayPlayers, margin);
   } else if (isClutchGame(home, away)) {
-    home = applyClutchTime(home, input.homePlayers);
-    away = applyClutchTime(away, input.awayPlayers);
+    home = applyClutchTime(home, homePlayers);
+    away = applyClutchTime(away, awayPlayers);
   }
 
   const result: GameResult = {
