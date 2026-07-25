@@ -85,6 +85,41 @@ export type GmProfile = {
   loyalty: number;
 };
 
+export type CoachStyle =
+  | "balanced"
+  | "offense"
+  | "defense"
+  | "development";
+
+export type Coach = {
+  id: string;
+  teamId: string | null;
+  name: string;
+  style: CoachStyle;
+  rating: number;
+  development: number;
+  seasonsWithTeam: number;
+};
+
+export type CoachStaffingIntent =
+  | {
+      action: "retain";
+      teamId: string;
+      coachId: string;
+      actualWinPct: number;
+      expectedWinPct: number;
+      reason: string;
+    }
+  | {
+      action: "fire-and-hire";
+      teamId: string;
+      firedCoachId: string;
+      hiredCoachId: string;
+      actualWinPct: number;
+      expectedWinPct: number;
+      reason: string;
+    };
+
 export type PlayerGameLine = {
   playerId: string;
   playerName: string;
