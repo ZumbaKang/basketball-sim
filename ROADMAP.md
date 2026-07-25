@@ -104,7 +104,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: redistribute 1–2 late-game shot attempts from starters to reserves
       during garbage time while preserving team shooting and point totals;
       verify with seeded 15-point and 25-point blowout box scores.
-- [ ] `db`: add cursor pagination to season transaction-log reads using
+- [x] `db`: add cursor pagination to season transaction-log reads using
       `(day, createdAt, id)` as the stable boundary; verify equal-day rows have
       no duplicates or omissions across pages.
 - [ ] `sim`: injuries should have a small chance of affecting multiple games
@@ -148,6 +148,10 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: add an `EXPLAIN QUERY PLAN` regression for current-season next-game
       reads that proves the schedule index covers league, season, status,
       playoff, and day-range filters.
+- [ ] `db`: bind transaction-log cursors to their league and season; reject
+      cross-league and stale-season cursor reuse in regression tests.
+- [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
+      prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
 - [ ] `frontend`: player detail page (season stats, career game log, contract
       info) linked from roster views.
 - [ ] `db`: record draft selections and offseason contract expirations as
@@ -200,3 +204,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-24: Made standings and history tables focusable and edge-to-edge on mobile
 - 2026-07-24: Shifted 1–2 garbage-time shot attempts from starters to reserves
 - 2026-07-24: Indexed current-season transaction-log filters
+- 2026-07-25: Added stable cursor pagination to season transaction-log reads
