@@ -110,7 +110,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: injuries should have a small chance of affecting multiple games
       already generated as "already scheduled" — ensure return-from-injury
       is reflected in rotation/minutes.
-- [ ] `frontend`: add visible horizontal-scroll instructions to standings and
+- [x] `frontend`: add visible horizontal-scroll instructions to standings and
       history tables; associate each hint with its focusable table region and
       verify screen-reader text identifies the offscreen columns.
 - [ ] `gm`: coach firing/hiring logic tied to win-loss record and roster
@@ -178,6 +178,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
+- [ ] `frontend`: show mobile table scroll hints only when columns actually
+      overflow and hide each hint after its region reaches the right edge; verify
+      resize and scroll behavior at 320px and desktop widths.
 
 ## Later
 
@@ -212,3 +215,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-24: Indexed current-season transaction-log filters
 - 2026-07-25: Added stable cursor pagination to season transaction-log reads
 - 2026-07-25: Made simulation rotations honor multi-game injuries and player returns
+- 2026-07-25: Added accessible horizontal-scroll instructions to standings and history tables

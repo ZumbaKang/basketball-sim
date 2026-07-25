@@ -79,7 +79,20 @@ export default function HistoryPage() {
 
       <section className="panel mobile-table-panel">
         <h2>Scoring leaders</h2>
-        <div className="table-scroll" role="region" aria-label="Scoring leaders" tabIndex={0}>
+        <p className="table-scroll-hint" id="scoring-leaders-scroll-hint">
+          Scroll horizontally to view all columns.
+          <span className="sr-only">
+            {" "}
+            Offscreen columns include games played, points, rebounds, and assists per game.
+          </span>
+        </p>
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label="Scoring leaders"
+          aria-describedby="scoring-leaders-scroll-hint"
+          tabIndex={0}
+        >
           <table className="box-table">
             <thead>
               <tr>
