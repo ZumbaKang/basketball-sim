@@ -25,8 +25,8 @@ function coach(partial: Partial<Coach> & { id: string; name: string }): Coach {
     rating: 68,
     development: 65,
     seasonsWithTeam: 3,
-    wins: 0,
-    losses: 0,
+    seasonWins: 0,
+    seasonLosses: 0,
     ...partial,
   };
 }
@@ -37,7 +37,7 @@ const currentCoach = coach({
   teamId: "team",
 });
 function currentCoachWithRecord(wins: number, losses: number): Coach {
-  return { ...currentCoach, wins, losses };
+  return { ...currentCoach, seasonWins: wins, seasonLosses: losses };
 }
 
 const candidates = [
@@ -169,16 +169,16 @@ describe("evaluateCoachStaffing", () => {
     expect(decision.reason).toContain("no qualified replacement");
   });
 
-  it("does not charge a new coach with the predecessor's losses", () => {
+  it("does not charge prior-season losses to the current evaluation", () => {
     const decision = evaluateCoachStaffing({
       teamId: "team",
       direction: "contend",
       roster: roster(84),
       currentCoach: coach({
         ...currentCoach,
-        seasonsWithTeam: 0,
-        wins: 12,
-        losses: 0,
+        seasonsWithTeam: 4,
+        seasonWins: 12,
+        seasonLosses: 0,
       }),
       candidates,
     });

@@ -157,8 +157,11 @@ function retain(
 export function evaluateCoachStaffing(
   input: CoachEvaluationInput,
 ): CoachStaffingIntent {
-  const coachWins = Math.max(0, Math.floor(input.currentCoach.wins));
-  const coachLosses = Math.max(0, Math.floor(input.currentCoach.losses));
+  const coachWins = Math.max(0, Math.floor(input.currentCoach.seasonWins));
+  const coachLosses = Math.max(
+    0,
+    Math.floor(input.currentCoach.seasonLosses),
+  );
   const gamesPlayed = Math.max(
     0,
     coachWins + coachLosses,
