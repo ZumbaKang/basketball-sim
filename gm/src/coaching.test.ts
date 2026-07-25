@@ -25,6 +25,8 @@ function coach(partial: Partial<Coach> & { id: string; name: string }): Coach {
     rating: 68,
     development: 65,
     seasonsWithTeam: 3,
+    wins: 0,
+    losses: 0,
     ...partial,
   };
 }
@@ -34,6 +36,10 @@ const currentCoach = coach({
   name: "Pat Current",
   teamId: "team",
 });
+function currentCoachWithRecord(wins: number, losses: number): Coach {
+  return { ...currentCoach, wins, losses };
+}
+
 const candidates = [
   coach({
     id: "veteran",
@@ -55,11 +61,9 @@ describe("evaluateCoachStaffing", () => {
   it("retains a coach before there is a meaningful record sample", () => {
     const decision = evaluateCoachStaffing({
       teamId: "team",
-      wins: 2,
-      losses: 8,
       direction: "contend",
       roster: roster(84),
-      currentCoach,
+      currentCoach: currentCoachWithRecord(2, 8),
       candidates,
     });
 
@@ -70,11 +74,9 @@ describe("evaluateCoachStaffing", () => {
   it("fires an underperforming contender coach and hires the best win-now fit", () => {
     const decision = evaluateCoachStaffing({
       teamId: "team",
-      wins: 12,
-      losses: 28,
       direction: "contend",
       roster: roster(84),
-      currentCoach,
+      currentCoach: currentCoachWithRecord(12, 28),
       candidates,
     });
 
@@ -93,11 +95,9 @@ describe("evaluateCoachStaffing", () => {
   it("prefers a development coach for an underperforming rebuild", () => {
     const decision = evaluateCoachStaffing({
       teamId: "team",
-      wins: 10,
-      losses: 30,
       direction: "rebuild",
       roster: roster(84),
-      currentCoach,
+      currentCoach: currentCoachWithRecord(10, 30),
       candidates,
       owner: { aggression: 1, loyalty: 0 },
     });
@@ -111,11 +111,9 @@ describe("evaluateCoachStaffing", () => {
   it("keeps a rebuilding coach when a weak roster meets expectations", () => {
     const decision = evaluateCoachStaffing({
       teamId: "team",
-      wins: 9,
-      losses: 31,
       direction: "rebuild",
       roster: roster(68),
-      currentCoach,
+      currentCoach: currentCoachWithRecord(9, 31),
       candidates,
     });
 
@@ -126,11 +124,9 @@ describe("evaluateCoachStaffing", () => {
   it("uses owner patience when a record is moderately below expectations", () => {
     const base = {
       teamId: "team",
-      wins: 22,
-      losses: 18,
       direction: "contend" as const,
       roster: roster(80),
-      currentCoach,
+      currentCoach: currentCoachWithRecord(22, 18),
       candidates,
     };
 
@@ -150,11 +146,9 @@ describe("evaluateCoachStaffing", () => {
   it("does not fire a coach without a qualified available replacement", () => {
     const decision = evaluateCoachStaffing({
       teamId: "team",
-      wins: 12,
-      losses: 28,
       direction: "contend",
       roster: roster(84),
-      currentCoach,
+      currentCoach: currentCoachWithRecord(12, 28),
       candidates: [
         coach({
           id: "employed",
@@ -173,5 +167,24 @@ describe("evaluateCoachStaffing", () => {
 
     expect(decision.action).toBe("retain");
     expect(decision.reason).toContain("no qualified replacement");
+  });
+
+  it("does not charge a new coach with the predecessor's losses", () => {
+    const decision = evaluateCoachStaffing({
+      teamId: "team",
+      direction: "contend",
+      roster: roster(84),
+      currentCoach: coach({
+        ...currentCoach,
+        seasonsWithTeam: 0,
+        wins: 12,
+        losses: 0,
+      }),
+      candidates,
+    });
+
+    expect(decision.action).toBe("retain");
+    expect(decision.reason).toContain("too early");
+    expect(decision.actualWinPct).toBe(1);
   });
 });

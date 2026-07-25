@@ -8,8 +8,6 @@ import type {
 
 export type CoachEvaluationInput = {
   teamId: string;
-  wins: number;
-  losses: number;
   direction: GmDirection;
   roster: Array<Pick<Player, "ratings">>;
   currentCoach: Coach;
@@ -159,12 +157,14 @@ function retain(
 export function evaluateCoachStaffing(
   input: CoachEvaluationInput,
 ): CoachStaffingIntent {
+  const coachWins = Math.max(0, Math.floor(input.currentCoach.wins));
+  const coachLosses = Math.max(0, Math.floor(input.currentCoach.losses));
   const gamesPlayed = Math.max(
     0,
-    Math.floor(input.wins) + Math.floor(input.losses),
+    coachWins + coachLosses,
   );
   const actualWinPct =
-    gamesPlayed > 0 ? clamp(input.wins / gamesPlayed, 0, 1) : 0;
+    gamesPlayed > 0 ? clamp(coachWins / gamesPlayed, 0, 1) : 0;
   const talentRating = rosterTalentRating(input.roster);
 
   if (talentRating === null) {
@@ -188,7 +188,7 @@ export function evaluateCoachStaffing(
     );
   }
 
-  const winShortfall = expectedWins - input.wins;
+  const winShortfall = expectedWins - coachWins;
   const pctShortfall = expectedPct - actualWinPct;
   const tolerance = firingTolerance(input);
 
@@ -197,7 +197,7 @@ export function evaluateCoachStaffing(
       input,
       actualWinPct,
       expectedPct,
-      `Retained: the ${input.wins}-${input.losses} record is within ${tolerance.toFixed(1)} wins of the expectation for a ${talentRating.toFixed(1)}-rated roster.`,
+      `Retained: the coach's ${coachWins}-${coachLosses} record is within ${tolerance.toFixed(1)} wins of the expectation for a ${talentRating.toFixed(1)}-rated roster.`,
     );
   }
 
@@ -211,7 +211,7 @@ export function evaluateCoachStaffing(
       input,
       actualWinPct,
       expectedPct,
-      `Retained for now: the ${input.wins}-${input.losses} record trails the ${expectedWins.toFixed(1)}-win expectation, but no qualified replacement is available.`,
+      `Retained for now: the coach's ${coachWins}-${coachLosses} record trails the ${expectedWins.toFixed(1)}-win expectation, but no qualified replacement is available.`,
     );
   }
 
@@ -222,6 +222,6 @@ export function evaluateCoachStaffing(
     hiredCoachId: replacement.id,
     actualWinPct: roundedRate(actualWinPct),
     expectedWinPct: roundedRate(expectedPct),
-    reason: `Changed coaches: a ${talentRating.toFixed(1)}-rated roster was expected to win ${expectedWins.toFixed(1)} of ${gamesPlayed} games but went ${input.wins}-${input.losses}; ${replacement.name}'s ${replacement.style} approach is the best available fit for a ${input.direction} team.`,
+    reason: `Changed coaches: a ${talentRating.toFixed(1)}-rated roster was expected to win ${expectedWins.toFixed(1)} of ${gamesPlayed} games, but the coach went ${coachWins}-${coachLosses}; ${replacement.name}'s ${replacement.style} approach is the best available fit for a ${input.direction} team.`,
   };
 }
