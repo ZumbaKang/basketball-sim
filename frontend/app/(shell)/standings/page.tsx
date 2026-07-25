@@ -25,11 +25,26 @@ export default function StandingsPage() {
   const east = standings.filter((s) => s.conference === "East");
   const west = standings.filter((s) => s.conference === "West");
 
-  function table(rows: StandingsRow[], title: string) {
+  function table(rows: StandingsRow[], title: string, id: string) {
+    const hintId = `${id}-scroll-hint`;
+
     return (
       <section className="panel mobile-table-panel">
         <h2>{title}</h2>
-        <div className="table-scroll" role="region" aria-label={`${title} standings`} tabIndex={0}>
+        <p className="table-scroll-hint" id={hintId}>
+          Scroll horizontally to view all columns.
+          <span className="sr-only">
+            {" "}
+            Offscreen columns include wins, losses, winning percentage, and point differential.
+          </span>
+        </p>
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label={`${title} standings`}
+          aria-describedby={hintId}
+          tabIndex={0}
+        >
           <table className="box-table">
             <thead>
               <tr>
@@ -69,8 +84,8 @@ export default function StandingsPage() {
       <p className="tagline">
         {league ? `${league.seasonYear} · Day ${league.day} · ${league.phase}` : "Loading…"}
       </p>
-      {table(east, "Eastern Conference")}
-      {table(west, "Western Conference")}
+      {table(east, "Eastern Conference", "eastern-standings")}
+      {table(west, "Western Conference", "western-standings")}
     </main>
   );
 }
