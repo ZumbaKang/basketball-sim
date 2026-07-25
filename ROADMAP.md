@@ -115,7 +115,7 @@ implementing anything — its PRs are expected to touch only this file.
       verify screen-reader text identifies the offscreen columns.
 - [x] `gm`: coach firing/hiring logic tied to win-loss record and roster
       talent vs. expectations (currently only trades/FA are modeled).
-- [ ] `qa`: make root test-workspace coverage data-driven from `package.json`;
+- [x] `qa`: make root test-workspace coverage data-driven from `package.json`;
       add a regression fixture that omits one workspace declaring a `test`
       script and asserts the QA check fails.
 
@@ -169,6 +169,11 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: assert every CI workspace build runs after Prisma generation as
       well as before tests; add an out-of-order workflow fixture that fails the
       QA check.
+- [ ] `qa`: extract shared workspace-manifest discovery for CI-build and
+      root-test coverage checks; verify object-form `workspaces.packages` with
+      a regression fixture.
+- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
+      a fixture that invokes one workspace by both path and package name.
 - [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
       `applyTrade` by loading only owned, unselected picks and atomically
       transferring `ownerTeamId`; reject foreign/used picks in regression tests.
@@ -223,3 +228,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Made simulation rotations honor multi-game injuries and player returns
 - 2026-07-25: Added accessible horizontal-scroll instructions to standings and history tables
 - 2026-07-25: Added expectation-based GM coach firing and hiring intents
+- 2026-07-25: Made root test-workspace coverage follow package declarations
