@@ -7,6 +7,8 @@ const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 
 export type SeasonTransactionCursor = {
+  leagueId: string;
+  seasonYear: number;
   day: number;
   createdAt: string;
   id: string;
@@ -31,6 +33,8 @@ function normalizeLimit(limit: number | undefined): number {
 }
 
 function parseCursor(cursor: SeasonTransactionCursor | undefined): {
+  leagueId: string;
+  seasonYear: number;
   day: number;
   createdAt: Date;
   id: string;
@@ -38,7 +42,10 @@ function parseCursor(cursor: SeasonTransactionCursor | undefined): {
   if (!cursor) return null;
 
   if (
-    !Number.isInteger(cursor.day)
+    typeof cursor.leagueId !== "string"
+    || cursor.leagueId.length === 0
+    || !Number.isInteger(cursor.seasonYear)
+    || !Number.isInteger(cursor.day)
     || typeof cursor.createdAt !== "string"
     || typeof cursor.id !== "string"
     || cursor.id.length === 0
@@ -49,7 +56,13 @@ function parseCursor(cursor: SeasonTransactionCursor | undefined): {
   const createdAt = new Date(cursor.createdAt);
   if (Number.isNaN(createdAt.getTime())) throw new Error("Invalid transaction cursor");
 
-  return { day: cursor.day, createdAt, id: cursor.id };
+  return {
+    leagueId: cursor.leagueId,
+    seasonYear: cursor.seasonYear,
+    day: cursor.day,
+    createdAt,
+    id: cursor.id,
+  };
 }
 
 /**
@@ -72,6 +85,9 @@ export async function listSeasonTransactions(
     select: { seasonYear: true },
   });
   if (!league) throw new Error("League not found");
+  if (cursor && (cursor.leagueId !== leagueId || cursor.seasonYear !== league.seasonYear)) {
+    throw new Error("Transaction cursor does not match the requested league and season");
+  }
 
   const rows = await prisma.newsItem.findMany({
     where: {
@@ -107,6 +123,8 @@ export async function listSeasonTransactions(
     transactions: pageRows.map(toNews),
     nextCursor: hasNextPage && lastRow
       ? {
+          leagueId,
+          seasonYear: league.seasonYear,
           day: lastRow.day,
           createdAt: lastRow.createdAt.toISOString(),
           id: lastRow.id,
