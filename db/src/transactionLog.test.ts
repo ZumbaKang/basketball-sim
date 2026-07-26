@@ -11,6 +11,7 @@ describe("season transaction log", () => {
   let otherOwnerId: string;
   let leagueId: string;
   let cursorLeagueId: string;
+  let staleSeasonLeagueId: string;
   const collisionTransactionIds: string[] = [];
 
   beforeAll(async () => {
@@ -43,7 +44,7 @@ describe("season transaction log", () => {
     otherOwnerId = otherOwner.id;
     ownerIds.push(owner.id, otherOwner.id);
 
-    const [league, otherLeague, cursorLeague] = await Promise.all([
+    const [league, otherLeague, cursorLeague, staleSeasonLeague] = await Promise.all([
       prisma.league.create({
         data: {
           name: "Transaction Log League",
@@ -65,9 +66,17 @@ describe("season transaction log", () => {
           ownerUserId: owner.id,
         },
       }),
+      prisma.league.create({
+        data: {
+          name: "Stale Season Cursor League",
+          seasonYear: 2099,
+          ownerUserId: owner.id,
+        },
+      }),
     ]);
     leagueId = league.id;
     cursorLeagueId = cursorLeague.id;
+    staleSeasonLeagueId = staleSeasonLeague.id;
 
     const kinds = ["trade", "signing", "draft", "transaction"] as const;
     const collisionCreatedAt = new Date("2099-02-03T04:05:06.000Z");
@@ -120,6 +129,26 @@ describe("season transaction log", () => {
           createdAt: collisionCreatedAt,
         })),
       }),
+      prisma.newsItem.createMany({
+        data: [
+          {
+            leagueId: staleSeasonLeague.id,
+            seasonYear: staleSeasonLeague.seasonYear,
+            day: 2,
+            kind: "trade",
+            headline: "Newest stale-season move",
+            body: "Creates the first page",
+          },
+          {
+            leagueId: staleSeasonLeague.id,
+            seasonYear: staleSeasonLeague.seasonYear,
+            day: 1,
+            kind: "signing",
+            headline: "Older stale-season move",
+            body: "Creates a next cursor",
+          },
+        ],
+      }),
     ]);
   });
 
@@ -168,6 +197,37 @@ describe("season transaction log", () => {
 
     expect(transactionIds).toEqual([...collisionTransactionIds].sort().reverse());
     expect(new Set(transactionIds).size).toBe(collisionTransactionIds.length);
+  });
+
+  it("rejects a cursor issued for a different league", async () => {
+    const sourcePage = await listSeasonTransactions(ownerId, cursorLeagueId, { limit: 3 });
+
+    expect(sourcePage.nextCursor).toMatchObject({
+      leagueId: cursorLeagueId,
+      seasonYear: 2099,
+    });
+    await expect(
+      listSeasonTransactions(ownerId, leagueId, { cursor: sourcePage.nextCursor! }),
+    ).rejects.toThrow("Transaction cursor does not match the requested league and season");
+  });
+
+  it("rejects a cursor after its league advances to a new season", async () => {
+    const oldSeasonPage = await listSeasonTransactions(ownerId, staleSeasonLeagueId, { limit: 1 });
+    expect(oldSeasonPage.nextCursor).toMatchObject({
+      leagueId: staleSeasonLeagueId,
+      seasonYear: 2099,
+    });
+
+    await prisma.league.update({
+      where: { id: staleSeasonLeagueId },
+      data: { seasonYear: 2100 },
+    });
+
+    await expect(
+      listSeasonTransactions(ownerId, staleSeasonLeagueId, {
+        cursor: oldSeasonPage.nextCursor!,
+      }),
+    ).rejects.toThrow("Transaction cursor does not match the requested league and season");
   });
 
   it("uses the composite index for season transaction filters", async () => {

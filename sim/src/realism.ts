@@ -2,6 +2,7 @@ import type { GameResult, PlayerGameLine, TeamGameLine } from "@basketball-sim/s
 
 function assertPlayerLine(line: PlayerGameLine, label: string): void {
   if (line.minutes < 0) throw new Error(`${label}: negative minutes`);
+  if (line.minutes > 48) throw new Error(`${label}: minutes exceed regulation`);
   if (line.fgm > line.fga) throw new Error(`${label}: fgm > fga`);
   if (line.tpm > line.tpa) throw new Error(`${label}: tpm > tpa`);
   if (line.ftm > line.fta) throw new Error(`${label}: ftm > fta`);

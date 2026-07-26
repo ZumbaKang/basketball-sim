@@ -118,18 +118,21 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: make root test-workspace coverage data-driven from `package.json`;
       add a regression fixture that omits one workspace declaring a `test`
       script and asserts the QA check fails.
-- [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
+- [x] `db`: wire unprotected draft-pick assets through `proposeTrade` and
       `applyTrade` by loading only owned, unselected picks and atomically
       transferring `ownerTeamId`; reject foreign/used picks in regression tests.
-- [ ] `sim`: harden injury-shortened rotations with only five to seven available
+- [x] `sim`: harden injury-shortened rotations with only five to seven available
       players so no player exceeds 48 minutes and the team remains at 240;
       verify each roster size with seeded realism checks.
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
-- [ ] `frontend`: add a compact selected-assets summary above trade actions;
+      _Blocked: playoff bracket promotion can index incomplete Western
+      first-round winners when the Eastern first round finishes first, crashing
+      before awards and the offseason draft; persistence must fix this first._
+- [x] `frontend`: add a compact selected-assets summary above trade actions;
       verify long player and team names wrap at 320px without horizontal
       overflow.
-- [ ] `db`: bind transaction-log cursors to their league and season; reject
+- [x] `db`: bind transaction-log cursors to their league and season; reject
       cross-league and stale-season cursor reuse in regression tests.
 - [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
@@ -151,6 +154,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: persist protected-pick conveyance terms and resolve them during
       offseason draft-order creation; verify a protected slot stays with its
       original owner while an unprotected slot conveys.
+- [ ] `db`: validate every player asset belongs to its declaring team before
+      trade evaluation and guard player/contract moves inside the transaction;
+      verify a foreign-player injection leaves every mixed-trade asset unchanged.
+- [ ] `db`: add a composite index for tradable draft-pick reads across league,
+      owner, selection status, and season; prove the loader avoids a table scan
+      with an `EXPLAIN QUERY PLAN` regression.
 - [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
@@ -160,12 +169,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
       stars still receive the closing-lineup usage shift while both teams stay
       at 240 minutes; add seeded home and away regression cases.
-- [ ] `sim`: harden injury-shortened rotations with only five to seven available
-      players so no player exceeds 48 minutes and the team remains at 240;
-      verify each roster size with seeded realism checks.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
+- [ ] `sim`: reject game inputs with fewer than five available players before
+      box-score generation; verify zero-to-four-player rosters fail with a
+      descriptive preflight error.
+- [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
+      rotations preserve fatigue priority; verify fatigued low-stamina players
+      do not gain more minutes than comparable rested teammates.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -193,6 +205,8 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `db`: reject transaction-log cursors with negative days or noncanonical
+      timestamps; add malformed-cursor regressions for each invalid boundary.
 - [ ] `qa`: reject duplicate workspace selectors in the root test command; add
       a fixture that invokes one workspace by both path and package name.
 - [ ] `frontend`: show mobile table scroll hints only when columns actually
@@ -204,6 +218,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: show each team's current coach, style, and latest staffing
       rationale on front-office pages; verify long names and rationale wrap at
       320px without horizontal overflow.
+- [ ] `frontend`: disable trade actions while a proposal or finder request is in
+      flight and prevent duplicate submissions; verify rapid clicks issue only
+      one request and controls re-enable after success or failure.
+- [ ] `frontend`: announce trade-finder asset changes through the selected-assets
+      summary and move focus to it; verify keyboard and screen-reader users hear
+      both updated player and partner names.
 
 ## Later
 
@@ -253,3 +273,7 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
 - 2026-07-26: Added owner-requested Fly.io hosting (Docker image, volume-backed
   SQLite, registration lockdown) so the sim is reachable away from home
+- 2026-07-26: Wired owned, unselected draft picks into atomic persisted trades
+- 2026-07-26: Capped five-to-seven-player injury rotations at 48 minutes per player
+- 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
+- 2026-07-26: Bound transaction-log cursors to their issuing league and season

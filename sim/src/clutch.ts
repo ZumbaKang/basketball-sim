@@ -6,6 +6,7 @@ export const CLUTCH_MARGIN_MAX = 5;
 const CLUTCH_STAR_COUNT = 2;
 const CLUTCH_MINUTES_PER_STAR = 1.5;
 const MIN_ROTATION_MINUTES = 4;
+const MAX_PLAYER_MINUTES = 48;
 
 type ActivePlayer = {
   player: Player;
@@ -42,7 +43,10 @@ function rankDonors(a: ActivePlayer, b: ActivePlayer): number {
 }
 
 function transferMinutes(star: PlayerGameLine, donors: ActivePlayer[]): void {
-  let remaining = CLUTCH_MINUTES_PER_STAR;
+  let remaining = Math.min(
+    CLUTCH_MINUTES_PER_STAR,
+    Math.max(0, MAX_PLAYER_MINUTES - star.minutes),
+  );
 
   for (const donor of donors) {
     const available = Math.max(0, donor.line.minutes - MIN_ROTATION_MINUTES);
