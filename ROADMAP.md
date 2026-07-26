@@ -134,7 +134,7 @@ implementing anything — its PRs are expected to touch only this file.
       overflow.
 - [x] `db`: bind transaction-log cursors to their league and season; reject
       cross-league and stale-season cursor reuse in regression tests.
-- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+- [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
 
@@ -151,9 +151,12 @@ implementing anything — its PRs are expected to touch only this file.
       valuing future picks vs. present talent).
 - [x] `db`: add a composite `NewsItem` index for season transaction-log filters;
       use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
-- [ ] `db`: persist protected-pick conveyance terms and resolve them during
+- [x] `db`: persist protected-pick conveyance terms and resolve them during
       offseason draft-order creation; verify a protected slot stays with its
       original owner while an unprotected slot conveys.
+- [ ] `db`: record protected-pick draft-order resolutions as transaction news
+      items; verify retained and conveyed outcomes identify the slot and recipient
+      exactly once.
 - [ ] `db`: validate every player asset belongs to its declaring team before
       trade evaluation and guard player/contract moves inside the transaction;
       verify a foreign-player injection leaves every mixed-trade asset unchanged.
@@ -266,3 +269,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Capped five-to-seven-player injury rotations at 48 minutes per player
 - 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
 - 2026-07-26: Bound transaction-log cursors to their issuing league and season
+- 2026-07-26: Persisted and resolved protected-pick conveyance during offseason draft ordering

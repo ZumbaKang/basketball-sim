@@ -185,16 +185,18 @@ model NewsItem {
 }
 
 model DraftPick {
-  id             String  @id @default(cuid())
-  leagueId       String
-  league         League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  seasonYear     Int
-  round          Int
-  pick           Int
-  originalTeamId String
-  ownerTeamId    String
-  ownerTeam      Team    @relation("PickOwner", fields: [ownerTeamId], references: [id], onDelete: Cascade)
-  playerId       String?
+  id               String  @id @default(cuid())
+  leagueId         String
+  league           League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonYear       Int
+  round            Int
+  pick             Int
+  originalTeamId   String
+  ownerTeamId      String
+  ownerTeam        Team    @relation("PickOwner", fields: [ownerTeamId], references: [id], onDelete: Cascade)
+  protectedThrough Int?
+  conveyanceTeamId String?
+  playerId         String?
 }
 
 model SeasonChampion {
