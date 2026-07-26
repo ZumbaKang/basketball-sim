@@ -27,19 +27,32 @@ test("mobile breakpoint stacks trade fields and keeps actions touch friendly", (
   assert.match(mobileRules, /@media \(max-width:\s*420px\)[^]*\.trade-actions\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
 });
 
-test("standings and history tables are focusable edge-to-edge mobile regions", () => {
+test("standings and history tables expose accessible mobile scroll instructions", () => {
   assert.match(standingsPage, /className="panel mobile-table-panel"/);
   assert.match(
     standingsPage,
-    /className="table-scroll" role="region" aria-label=\{`\$\{title\} standings`\} tabIndex=\{0\}/,
+    /id=\{hintId\}[^]*Offscreen columns include wins, losses, winning percentage, and point differential\./,
+  );
+  assert.match(
+    standingsPage,
+    /className="table-scroll"[^]*aria-label=\{`\$\{title\} standings`\}[^]*aria-describedby=\{hintId\}[^]*tabIndex=\{0\}/,
   );
   assert.match(historyPage, /className="panel mobile-table-panel"/);
   assert.match(
     historyPage,
-    /className="table-scroll" role="region" aria-label="Scoring leaders" tabIndex=\{0\}/,
+    /id="scoring-leaders-scroll-hint"[^]*Offscreen columns include games played, points, rebounds, and assists per game\./,
+  );
+  assert.match(
+    historyPage,
+    /className="table-scroll"[^]*aria-label="Scoring leaders"[^]*aria-describedby="scoring-leaders-scroll-hint"[^]*tabIndex=\{0\}/,
   );
 
   const mobileRules = css.slice(css.indexOf("@media (max-width: 720px)"));
+  assert.match(css, /\.table-scroll-hint\s*\{[^}]*display:\s*none/s);
+  assert.match(
+    mobileRules,
+    /\.mobile-table-panel \.table-scroll-hint\s*\{[^}]*display:\s*flex/s,
+  );
   assert.match(
     mobileRules,
     /\.mobile-table-panel\s*\{[^}]*overflow:\s*hidden[^}]*\}[^]*\.mobile-table-panel \.table-scroll\s*\{[^}]*width:\s*calc\(100% \+ 2rem\)[^}]*margin-inline:\s*-1rem/s,
