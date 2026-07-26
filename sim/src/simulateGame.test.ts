@@ -169,6 +169,50 @@ describe("simulateGame", () => {
     expect(() => assertRealisticGameResult(fatigued)).not.toThrow();
   });
 
+  it.each([
+    { side: "home" as const, seed: 6 },
+    { side: "away" as const, seed: 73 },
+  ])(
+    "keeps fatigued $side starters above 20 minutes during seeded garbage time",
+    ({ side, seed }) => {
+      const homePlayers = roster("t_home", "Harbor");
+      const awayPlayers = roster("t_away", "Metro");
+      const fatiguedRoster = side === "home" ? homePlayers : awayPlayers;
+      const secondNightPlayerIds = fatiguedRoster
+        .slice(0, 5)
+        .map((player) => player.id);
+      const result = simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers,
+        awayPlayers,
+        homeSecondNightPlayerIds:
+          side === "home" ? secondNightPlayerIds : undefined,
+        awaySecondNightPlayerIds:
+          side === "away" ? secondNightPlayerIds : undefined,
+        seed,
+      });
+      const fatiguedLine = result[side];
+      const starterLines = secondNightPlayerIds.map((playerId) =>
+        fatiguedLine.players.find((line) => line.playerId === playerId),
+      );
+      const teamMinutes = (team: typeof result.home) =>
+        team.players.reduce((total, player) => total + player.minutes, 0);
+
+      expect(Math.abs(result.home.pts - result.away.pts)).toBeGreaterThanOrEqual(
+        15,
+      );
+      expect(starterLines).not.toContain(undefined);
+      for (const line of starterLines) {
+        expect(line!.minutes).toBeGreaterThan(20);
+      }
+      expect(teamMinutes(result.home)).toBeCloseTo(240, 5);
+      expect(teamMinutes(result.away)).toBeCloseTo(240, 5);
+      expect(() => assertRealisticGameResult(result)).not.toThrow();
+    },
+  );
+
   it("keeps an injured player out of multiple games and restores their rotation on return", () => {
     const healthyHomePlayers = roster("t_home", "Harbor");
     const awayPlayers = roster("t_away", "Metro");

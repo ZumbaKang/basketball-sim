@@ -132,9 +132,12 @@ implementing anything — its PRs are expected to touch only this file.
       valuing future picks vs. present talent).
 - [x] `db`: add a composite `NewsItem` index for season transaction-log filters;
       use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
-- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+- [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
+- [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
+      stars still receive the closing-lineup usage shift while both teams stay
+      at 240 minutes; add seeded home and away regression cases.
 - [ ] `sim`: harden injury-shortened rotations with only five to seven available
       players so no player exceeds 48 minutes and the team remains at 240;
       verify each roster size with seeded realism checks.
@@ -229,3 +232,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Added accessible horizontal-scroll instructions to standings and history tables
 - 2026-07-25: Added expectation-based GM coach firing and hiring intents
 - 2026-07-25: Made root test-workspace coverage follow package declarations
+- 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
