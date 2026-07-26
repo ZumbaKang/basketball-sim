@@ -121,7 +121,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: wire unprotected draft-pick assets through `proposeTrade` and
       `applyTrade` by loading only owned, unselected picks and atomically
       transferring `ownerTeamId`; reject foreign/used picks in regression tests.
-- [ ] `sim`: harden injury-shortened rotations with only five to seven available
+- [x] `sim`: harden injury-shortened rotations with only five to seven available
       players so no player exceeds 48 minutes and the team remains at 240;
       verify each roster size with seeded realism checks.
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
@@ -166,12 +166,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
       stars still receive the closing-lineup usage shift while both teams stay
       at 240 minutes; add seeded home and away regression cases.
-- [ ] `sim`: harden injury-shortened rotations with only five to seven available
-      players so no player exceeds 48 minutes and the team remains at 240;
-      verify each roster size with seeded realism checks.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
+- [ ] `sim`: reject game inputs with fewer than five available players before
+      box-score generation; verify zero-to-four-player rosters fail with a
+      descriptive preflight error.
+- [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
+      rotations preserve fatigue priority; verify fatigued low-stamina players
+      do not gain more minutes than comparable rested teammates.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -249,3 +252,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Made root test-workspace coverage follow package declarations
 - 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
 - 2026-07-26: Wired owned, unselected draft picks into atomic persisted trades
+- 2026-07-26: Capped five-to-seven-player injury rotations at 48 minutes per player
