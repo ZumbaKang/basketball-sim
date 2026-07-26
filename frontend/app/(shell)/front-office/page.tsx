@@ -32,7 +32,13 @@ export default function FrontOfficePage() {
         (t: Team) => t.id !== json.home.snapshot.userTeamId,
       );
       if (roster[0]) setGiveId(roster[0].id);
-      if (others[0]) setToTeamId(others[0].id);
+      if (others[0]) {
+        setToTeamId(others[0].id);
+        const firstPartnerPlayer = json.home.snapshot.players.find(
+          (p: Player) => p.teamId === others[0]!.id,
+        );
+        setGetId(firstPartnerPlayer?.id ?? "");
+      }
       const fa = json.home.snapshot.players.filter((p: Player) => p.isFreeAgent);
       if (fa[0]) setFaId(fa[0].id);
     })();
@@ -49,6 +55,10 @@ export default function FrontOfficePage() {
   const otherTeams = home.snapshot.teams.filter((t) => t.id !== home.snapshot.userTeamId);
   const theirPlayers = home.snapshot.players.filter((p) => p.teamId === toTeamId);
   const freeAgents = home.snapshot.players.filter((p) => p.isFreeAgent).slice(0, 40);
+  const userTeam = home.snapshot.teams.find((t) => t.id === home.snapshot.userTeamId);
+  const selectedPartner = otherTeams.find((t) => t.id === toTeamId);
+  const selectedGive = home.roster.find((p) => p.id === giveId);
+  const selectedReceive = theirPlayers.find((p) => p.id === getId);
 
   async function propose() {
     setError(null);
@@ -156,7 +166,7 @@ export default function FrontOfficePage() {
               onChange={(e) => {
                 setToTeamId(e.target.value);
                 const first = home.snapshot.players.find((p) => p.teamId === e.target.value);
-                if (first) setGetId(first.id);
+                setGetId(first?.id ?? "");
               }}
             >
               {otherTeams.map((t) => (
@@ -176,6 +186,23 @@ export default function FrontOfficePage() {
               ))}
             </select>
           </label>
+        </div>
+        <div className="trade-summary" aria-label="Selected trade assets" aria-live="polite">
+          <div className="trade-summary-side">
+            <span className="trade-summary-label">You send</span>
+            <strong className="trade-summary-name">{selectedGive?.name ?? "No player selected"}</strong>
+            <span className="trade-summary-team">{userTeam?.name ?? "Your team"}</span>
+          </div>
+          <span className="trade-summary-divider" aria-hidden="true">
+            for
+          </span>
+          <div className="trade-summary-side">
+            <span className="trade-summary-label">You receive</span>
+            <strong className="trade-summary-name">
+              {selectedReceive?.name ?? "No player selected"}
+            </strong>
+            <span className="trade-summary-team">{selectedPartner?.name ?? "Trade partner"}</span>
+          </div>
         </div>
         <div className="cta-row trade-actions">
           <button type="button" className="btn btn-primary" onClick={() => void propose()}>
