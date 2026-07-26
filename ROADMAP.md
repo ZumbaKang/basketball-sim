@@ -132,7 +132,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: add a compact selected-assets summary above trade actions;
       verify long player and team names wrap at 320px without horizontal
       overflow.
-- [ ] `db`: bind transaction-log cursors to their league and season; reject
+- [x] `db`: bind transaction-log cursors to their league and season; reject
       cross-league and stale-season cursor reuse in regression tests.
 - [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
@@ -205,6 +205,8 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `db`: reject transaction-log cursors with negative days or noncanonical
+      timestamps; add malformed-cursor regressions for each invalid boundary.
 - [ ] `qa`: reject duplicate workspace selectors in the root test command; add
       a fixture that invokes one workspace by both path and package name.
 - [ ] `frontend`: show mobile table scroll hints only when columns actually
@@ -263,3 +265,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Wired owned, unselected draft picks into atomic persisted trades
 - 2026-07-26: Capped five-to-seven-player injury rotations at 48 minutes per player
 - 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
+- 2026-07-26: Bound transaction-log cursors to their issuing league and season
