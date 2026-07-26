@@ -246,6 +246,9 @@ describe("simulateGame", () => {
           Math.max(...team.players.map((player) => player.minutes)),
         ).toBeLessThanOrEqual(48);
       }
+      if (availableCount === 5) {
+        expect(Math.abs(result.home.pts - result.away.pts)).toBeLessThanOrEqual(5);
+      }
       expect(() => assertRealisticGameResult(result)).not.toThrow();
     },
   );
