@@ -199,7 +199,7 @@ describe("draft picks in persisted trades", () => {
     });
   });
 
-  it("rejects protected terms until conveyance is persisted", async () => {
+  it("persists protected terms while the original team retains the pick", async () => {
     const protectedPick = await prisma.draftPick.create({
       data: {
         leagueId,
@@ -224,13 +224,34 @@ describe("draft picks in persisted trades", () => {
       toAssets: [],
     });
 
-    expect(decision).toMatchObject({
+    expect(decision.accepted).toBe(true);
+    await expect(
+      prisma.draftPick.findUniqueOrThrow({ where: { id: protectedPick.id } }),
+    ).resolves.toMatchObject({
+      ownerTeamId: userTeamId,
+      originalTeamId: userTeamId,
+      protectedThrough: 5,
+      conveyanceTeamId: targetTeamId,
+    });
+
+    const secondDecision = await proposeTrade(userId, {
+      leagueId,
+      fromTeamId: userTeamId,
+      toTeamId: thirdTeamId,
+      fromAssets: [{ draftPickId: protectedPick.id }],
+      toAssets: [],
+    });
+    expect(secondDecision).toMatchObject({
       accepted: false,
       reason: "Draft pick details or protection terms are invalid.",
     });
     await expect(
       prisma.draftPick.findUniqueOrThrow({ where: { id: protectedPick.id } }),
-    ).resolves.toMatchObject({ ownerTeamId: userTeamId });
+    ).resolves.toMatchObject({
+      ownerTeamId: userTeamId,
+      protectedThrough: 5,
+      conveyanceTeamId: targetTeamId,
+    });
   });
 
   it("rolls back a pick transfer when another accepted asset cannot move", async () => {

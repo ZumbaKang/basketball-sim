@@ -1,5 +1,10 @@
 import type { Prisma } from "@prisma/client";
-import type { FreeAgentOffer, TradeDecision, TradeProposal } from "@basketball-sim/shared";
+import type {
+  FreeAgentOffer,
+  TradeAsset,
+  TradeDecision,
+  TradeProposal,
+} from "@basketball-sim/shared";
 import {
   evaluateTrade,
   findTradePackages,
@@ -31,6 +36,7 @@ async function loadTradableDraftPicks(
       leagueId,
       ownerTeamId,
       playerId: null,
+      conveyanceTeamId: null,
     },
     select: {
       id: true,
@@ -41,15 +47,24 @@ async function loadTradableDraftPicks(
   });
 }
 
+function isValidProtection(
+  protection: TradeAsset["draftPickProtection"],
+): boolean {
+  return (
+    !protection ||
+    protection.kind === "unprotected" ||
+    (protection.kind === "top" &&
+      Number.isInteger(protection.protectedThrough) &&
+      protection.protectedThrough >= 1 &&
+      protection.protectedThrough <= 30)
+  );
+}
+
 function invalidDraftPickDecision(proposal: TradeProposal): TradeDecision | null {
   const seen = new Set<string>();
   for (const asset of [...proposal.fromAssets, ...proposal.toAssets]) {
     if (!asset.draftPickId) continue;
-    if (
-      seen.has(asset.draftPickId) ||
-      (asset.draftPickProtection &&
-        asset.draftPickProtection.kind !== "unprotected")
-    ) {
+    if (seen.has(asset.draftPickId) || !isValidProtection(asset.draftPickProtection)) {
       return {
         accepted: false,
         reason: "Draft pick details or protection terms are invalid.",
@@ -59,6 +74,42 @@ function invalidDraftPickDecision(proposal: TradeProposal): TradeDecision | null
     seen.add(asset.draftPickId);
   }
   return null;
+}
+
+async function applyDraftPickAsset(
+  tx: Prisma.TransactionClient,
+  asset: TradeAsset,
+  leagueId: string,
+  sourceTeamId: string,
+  recipientTeamId: string,
+): Promise<void> {
+  if (!asset.draftPickId) return;
+
+  const protection = asset.draftPickProtection;
+  const isProtected = protection?.kind === "top";
+  const result = await tx.draftPick.updateMany({
+    where: {
+      id: asset.draftPickId,
+      leagueId,
+      ownerTeamId: sourceTeamId,
+      originalTeamId: isProtected ? sourceTeamId : undefined,
+      conveyanceTeamId: null,
+      playerId: null,
+    },
+    data: isProtected
+      ? {
+          protectedThrough: protection.protectedThrough,
+          conveyanceTeamId: recipientTeamId,
+        }
+      : {
+          ownerTeamId: recipientTeamId,
+          protectedThrough: null,
+          conveyanceTeamId: null,
+        },
+  });
+  if (result.count !== 1) {
+    throw new Error("Draft pick is no longer tradable");
+  }
 }
 
 export async function proposeTrade(userId: string, proposal: TradeProposal): Promise<TradeDecision> {
@@ -132,18 +183,13 @@ async function applyTrade(
       });
     }
     if (asset.draftPickId) {
-      const result = await tx.draftPick.updateMany({
-        where: {
-          id: asset.draftPickId,
-          leagueId,
-          ownerTeamId: proposal.fromTeamId,
-          playerId: null,
-        },
-        data: { ownerTeamId: proposal.toTeamId },
-      });
-      if (result.count !== 1) {
-        throw new Error("Draft pick is no longer tradable");
-      }
+      await applyDraftPickAsset(
+        tx,
+        asset,
+        leagueId,
+        proposal.fromTeamId,
+        proposal.toTeamId,
+      );
     }
   }
   for (const asset of proposal.toAssets) {
@@ -158,18 +204,13 @@ async function applyTrade(
       });
     }
     if (asset.draftPickId) {
-      const result = await tx.draftPick.updateMany({
-        where: {
-          id: asset.draftPickId,
-          leagueId,
-          ownerTeamId: proposal.toTeamId,
-          playerId: null,
-        },
-        data: { ownerTeamId: proposal.fromTeamId },
-      });
-      if (result.count !== 1) {
-        throw new Error("Draft pick is no longer tradable");
-      }
+      await applyDraftPickAsset(
+        tx,
+        asset,
+        leagueId,
+        proposal.toTeamId,
+        proposal.fromTeamId,
+      );
     }
   }
 }

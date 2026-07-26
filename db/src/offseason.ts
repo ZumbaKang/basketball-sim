@@ -2,6 +2,7 @@ import { prisma } from "./prisma.js";
 import { ratingsFromOverall, makeRoster } from "./seedData.js";
 import { generateSchedule } from "./schedule.js";
 import { generateDraftClass, runAiDraft } from "./draft.js";
+import { createDraftOrderAndResolveConveyance } from "./draftOrder.js";
 
 export async function runOffseason(leagueId: string) {
   const league = await prisma.league.findUniqueOrThrow({ where: { id: leagueId } });
@@ -41,8 +42,10 @@ export async function runOffseason(leagueId: string) {
     data: { yearsRemaining: { decrement: 1 } },
   });
 
-  await generateDraftClass(leagueId, seasonYear + 1);
-  await runAiDraft(leagueId, seasonYear + 1, league.userTeamId);
+  const draftSeasonYear = seasonYear + 1;
+  await createDraftOrderAndResolveConveyance(leagueId, draftSeasonYear);
+  await generateDraftClass(leagueId, draftSeasonYear);
+  await runAiDraft(leagueId, draftSeasonYear, league.userTeamId);
 
   // Reset records, bump season, new schedule
   const teams = await prisma.team.findMany({ where: { leagueId } });
