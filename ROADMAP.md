@@ -126,7 +126,10 @@ implementing anything — its PRs are expected to touch only this file.
       verify each roster size with seeded realism checks.
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
-- [ ] `frontend`: add a compact selected-assets summary above trade actions;
+      _Blocked: playoff bracket promotion can index incomplete Western
+      first-round winners when the Eastern first round finishes first, crashing
+      before awards and the offseason draft; persistence must fix this first._
+- [x] `frontend`: add a compact selected-assets summary above trade actions;
       verify long player and team names wrap at 320px without horizontal
       overflow.
 - [ ] `db`: bind transaction-log cursors to their league and season; reject
@@ -213,6 +216,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: show each team's current coach, style, and latest staffing
       rationale on front-office pages; verify long names and rationale wrap at
       320px without horizontal overflow.
+- [ ] `frontend`: disable trade actions while a proposal or finder request is in
+      flight and prevent duplicate submissions; verify rapid clicks issue only
+      one request and controls re-enable after success or failure.
+- [ ] `frontend`: announce trade-finder asset changes through the selected-assets
+      summary and move focus to it; verify keyboard and screen-reader users hear
+      both updated player and partner names.
 
 ## Later
 
@@ -253,3 +262,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
 - 2026-07-26: Wired owned, unselected draft picks into atomic persisted trades
 - 2026-07-26: Capped five-to-seven-player injury rotations at 48 minutes per player
+- 2026-07-26: Added a compact, mobile-safe selected-assets trade summary

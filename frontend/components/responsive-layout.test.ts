@@ -27,6 +27,36 @@ test("mobile breakpoint stacks trade fields and keeps actions touch friendly", (
   assert.match(mobileRules, /@media \(max-width:\s*420px\)[^]*\.trade-actions\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
 });
 
+test("trade actions include a mobile-safe selected-assets summary", () => {
+  assert.match(
+    frontOfficePage,
+    /className="trade-summary" aria-label="Selected trade assets" aria-live="polite"/,
+  );
+  assert.match(frontOfficePage, /\{selectedGive\?\.name \?\? "No player selected"\}/);
+  assert.match(frontOfficePage, /\{selectedReceive\?\.name \?\? "No player selected"\}/);
+  assert.match(frontOfficePage, /\{selectedPartner\?\.name \?\? "Trade partner"\}/);
+  assert.match(
+    frontOfficePage,
+    /className="trade-summary"[^]*className="cta-row trade-actions"/,
+  );
+
+  assert.match(
+    css,
+    /\.trade-summary\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\) auto minmax\(0,\s*1fr\)/s,
+  );
+  assert.match(css, /\.trade-summary-side\s*\{[^}]*min-width:\s*0/s);
+  assert.match(
+    css,
+    /\.trade-summary-name,\s*\.trade-summary-team\s*\{[^}]*overflow-wrap:\s*anywhere/s,
+  );
+
+  const mobileRules = css.slice(css.indexOf("@media (max-width: 720px)"));
+  assert.match(
+    mobileRules,
+    /\.trade-summary\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/s,
+  );
+});
+
 test("standings and history tables expose accessible mobile scroll instructions", () => {
   assert.match(standingsPage, /className="panel mobile-table-panel"/);
   assert.match(
