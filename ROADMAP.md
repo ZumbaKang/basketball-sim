@@ -207,6 +207,15 @@ implementing anything — its PRs are expected to touch only this file.
 
 ## Later
 
+- [ ] `qa`: assert the Docker image build steps cover every workspace declared in
+      the root `package.json` build script, the way `ci-workflow.test.ts` does for
+      CI, so a new workspace can't ship unbuilt to Fly.
+- [ ] `frontend`: hide the "Create account" tab and default to login when
+      registration is disabled on the deployment; verify the login-only screen
+      still renders at 320px.
+- [ ] `db`: add a documented volume backup path for the hosted save (copy
+      `/data/tipoff.db` out on demand); verify a restored copy opens and reports
+      the same league day and standings.
 - [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
       playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
@@ -242,3 +251,5 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Added expectation-based GM coach firing and hiring intents
 - 2026-07-25: Made root test-workspace coverage follow package declarations
 - 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
+- 2026-07-26: Added owner-requested Fly.io hosting (Docker image, volume-backed
+  SQLite, registration lockdown) so the sim is reachable away from home

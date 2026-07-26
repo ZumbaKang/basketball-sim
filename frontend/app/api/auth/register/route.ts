@@ -3,6 +3,12 @@ import { registerUser, ensureLeagueForUser } from "@basketball-sim/db";
 import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/session";
 
 export async function POST(request: Request) {
+  if (process.env.REGISTRATION_ENABLED === "false") {
+    return NextResponse.json(
+      { error: "Registration is disabled on this deployment" },
+      { status: 403 },
+    );
+  }
   try {
     const body = (await request.json()) as {
       email?: string;

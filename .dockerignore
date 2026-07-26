@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+**/node_modules
+.next
+**/.next
+**/dist
+**/*.tsbuildinfo
+
+# Never bake a local save or secrets into the image; the volume owns prod data.
+**/*.db
+**/*.db-journal
+**/*.db-wal
+.env
+**/.env
+**/.env.local

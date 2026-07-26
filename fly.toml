@@ -1,0 +1,32 @@
+app = "tipoff-basketball-sim"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "3000"
+  DATABASE_URL = "file:/data/tipoff.db"
+  # Private deployment: the owner account already exists in the save file, so
+  # nobody should be able to create another one from the public login screen.
+  REGISTRATION_ENABLED = "false"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  # SQLite has a single writer, so this app must never scale past one machine.
+  min_machines_running = 0
+  max_machines_running = 1
+
+[deploy]
+  # A single machine owns the volume, so it must be replaced rather than rolled.
+  strategy = "immediate"
+
+[mounts]
+  source = "tipoff_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
