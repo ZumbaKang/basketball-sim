@@ -1,5 +1,12 @@
+import type { Prisma } from "@prisma/client";
 import type { FreeAgentOffer, TradeDecision, TradeProposal } from "@basketball-sim/shared";
-import { evaluateTrade, findTradePackages, preferFreeAgent, type EvaluablePlayer } from "@basketball-sim/gm";
+import {
+  evaluateTrade,
+  findTradePackages,
+  preferFreeAgent,
+  type EvaluableDraftPick,
+  type EvaluablePlayer,
+} from "@basketball-sim/gm";
 import { prisma } from "./prisma.js";
 import { toPlayer } from "./mappers.js";
 
@@ -13,6 +20,45 @@ async function loadEvaluable(teamId: string): Promise<EvaluablePlayer[]> {
     salary: p.contracts[0]?.salary ?? 1_000_000,
     yearsRemaining: p.contracts[0]?.yearsRemaining ?? 1,
   }));
+}
+
+async function loadTradableDraftPicks(
+  leagueId: string,
+  ownerTeamId: string,
+): Promise<EvaluableDraftPick[]> {
+  return prisma.draftPick.findMany({
+    where: {
+      leagueId,
+      ownerTeamId,
+      playerId: null,
+    },
+    select: {
+      id: true,
+      seasonYear: true,
+      round: true,
+      pick: true,
+    },
+  });
+}
+
+function invalidDraftPickDecision(proposal: TradeProposal): TradeDecision | null {
+  const seen = new Set<string>();
+  for (const asset of [...proposal.fromAssets, ...proposal.toAssets]) {
+    if (!asset.draftPickId) continue;
+    if (
+      seen.has(asset.draftPickId) ||
+      (asset.draftPickProtection &&
+        asset.draftPickProtection.kind !== "unprotected")
+    ) {
+      return {
+        accepted: false,
+        reason: "Draft pick details or protection terms are invalid.",
+        proposal,
+      };
+    }
+    seen.add(asset.draftPickId);
+  }
+  return null;
 }
 
 export async function proposeTrade(userId: string, proposal: TradeProposal): Promise<TradeDecision> {
@@ -29,55 +75,102 @@ export async function proposeTrade(userId: string, proposal: TradeProposal): Pro
   });
   if (!theirTeam) throw new Error("Target team not found");
 
-  const ourPlayers = await loadEvaluable(proposal.fromTeamId);
-  const theirPlayers = await loadEvaluable(proposal.toTeamId);
+  const invalidPickDecision = invalidDraftPickDecision(proposal);
+  if (invalidPickDecision) return invalidPickDecision;
+
+  const [ourPlayers, theirPlayers, ourDraftPicks, theirDraftPicks] =
+    await Promise.all([
+      loadEvaluable(proposal.fromTeamId),
+      loadEvaluable(proposal.toTeamId),
+      loadTradableDraftPicks(league.id, proposal.fromTeamId),
+      loadTradableDraftPicks(league.id, proposal.toTeamId),
+    ]);
   // AI team perspective: they receive fromAssets, send toAssets
   const decision = evaluateTrade({
     proposal,
     direction: theirTeam.gmDirection as "contend" | "window" | "rebuild" | "tank" | "cheap",
     ourPlayers: theirPlayers,
     theirPlayers: ourPlayers,
+    ourDraftPicks: theirDraftPicks,
+    theirDraftPicks: ourDraftPicks,
+    currentSeasonYear: league.seasonYear,
   });
 
   if (decision.accepted) {
-    await applyTrade(proposal);
-    await prisma.newsItem.create({
-      data: {
-        leagueId: league.id,
-        seasonYear: league.seasonYear,
-        day: league.day,
-        kind: "trade",
-        headline: `Trade with ${theirTeam.name} completed`,
-        body: decision.reason,
-      },
+    await prisma.$transaction(async (tx) => {
+      await applyTrade(tx, proposal, league.id);
+      await tx.newsItem.create({
+        data: {
+          leagueId: league.id,
+          seasonYear: league.seasonYear,
+          day: league.day,
+          kind: "trade",
+          headline: `Trade with ${theirTeam.name} completed`,
+          body: decision.reason,
+        },
+      });
     });
   }
 
   return decision;
 }
 
-async function applyTrade(proposal: TradeProposal) {
+async function applyTrade(
+  tx: Prisma.TransactionClient,
+  proposal: TradeProposal,
+  leagueId: string,
+) {
   for (const asset of proposal.fromAssets) {
-    if (!asset.playerId) continue;
-    await prisma.player.update({
-      where: { id: asset.playerId },
-      data: { teamId: proposal.toTeamId },
-    });
-    await prisma.contract.updateMany({
-      where: { playerId: asset.playerId },
-      data: { teamId: proposal.toTeamId },
-    });
+    if (asset.playerId) {
+      await tx.player.update({
+        where: { id: asset.playerId },
+        data: { teamId: proposal.toTeamId },
+      });
+      await tx.contract.updateMany({
+        where: { playerId: asset.playerId },
+        data: { teamId: proposal.toTeamId },
+      });
+    }
+    if (asset.draftPickId) {
+      const result = await tx.draftPick.updateMany({
+        where: {
+          id: asset.draftPickId,
+          leagueId,
+          ownerTeamId: proposal.fromTeamId,
+          playerId: null,
+        },
+        data: { ownerTeamId: proposal.toTeamId },
+      });
+      if (result.count !== 1) {
+        throw new Error("Draft pick is no longer tradable");
+      }
+    }
   }
   for (const asset of proposal.toAssets) {
-    if (!asset.playerId) continue;
-    await prisma.player.update({
-      where: { id: asset.playerId },
-      data: { teamId: proposal.fromTeamId },
-    });
-    await prisma.contract.updateMany({
-      where: { playerId: asset.playerId },
-      data: { teamId: proposal.fromTeamId },
-    });
+    if (asset.playerId) {
+      await tx.player.update({
+        where: { id: asset.playerId },
+        data: { teamId: proposal.fromTeamId },
+      });
+      await tx.contract.updateMany({
+        where: { playerId: asset.playerId },
+        data: { teamId: proposal.fromTeamId },
+      });
+    }
+    if (asset.draftPickId) {
+      const result = await tx.draftPick.updateMany({
+        where: {
+          id: asset.draftPickId,
+          leagueId,
+          ownerTeamId: proposal.toTeamId,
+          playerId: null,
+        },
+        data: { ownerTeamId: proposal.fromTeamId },
+      });
+      if (result.count !== 1) {
+        throw new Error("Draft pick is no longer tradable");
+      }
+    }
   }
 }
 
