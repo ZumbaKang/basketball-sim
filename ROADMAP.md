@@ -118,7 +118,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: make root test-workspace coverage data-driven from `package.json`;
       add a regression fixture that omits one workspace declaring a `test`
       script and asserts the QA check fails.
-- [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
+- [x] `db`: wire unprotected draft-pick assets through `proposeTrade` and
       `applyTrade` by loading only owned, unselected picks and atomically
       transferring `ownerTeamId`; reject foreign/used picks in regression tests.
 - [ ] `sim`: harden injury-shortened rotations with only five to seven available
@@ -151,6 +151,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: persist protected-pick conveyance terms and resolve them during
       offseason draft-order creation; verify a protected slot stays with its
       original owner while an unprotected slot conveys.
+- [ ] `db`: validate every player asset belongs to its declaring team before
+      trade evaluation and guard player/contract moves inside the transaction;
+      verify a foreign-player injection leaves every mixed-trade asset unchanged.
+- [ ] `db`: add a composite index for tradable draft-pick reads across league,
+      owner, selection status, and season; prove the loader avoids a table scan
+      with an `EXPLAIN QUERY PLAN` regression.
 - [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
@@ -242,3 +248,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Added expectation-based GM coach firing and hiring intents
 - 2026-07-25: Made root test-workspace coverage follow package declarations
 - 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
+- 2026-07-26: Wired owned, unselected draft picks into atomic persisted trades
