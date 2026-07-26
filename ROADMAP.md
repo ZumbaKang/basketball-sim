@@ -118,6 +118,22 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: make root test-workspace coverage data-driven from `package.json`;
       add a regression fixture that omits one workspace declaring a `test`
       script and asserts the QA check fails.
+- [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
+      `applyTrade` by loading only owned, unselected picks and atomically
+      transferring `ownerTeamId`; reject foreign/used picks in regression tests.
+- [ ] `sim`: harden injury-shortened rotations with only five to seven available
+      players so no player exceeds 48 minutes and the team remains at 240;
+      verify each roster size with seeded realism checks.
+- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
+      end-to-end and asserts standings/awards/draft invariants hold.
+- [ ] `frontend`: add a compact selected-assets summary above trade actions;
+      verify long player and team names wrap at 320px without horizontal
+      overflow.
+- [ ] `db`: bind transaction-log cursors to their league and season; reject
+      cross-league and stale-season cursor reuse in regression tests.
+- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+      starters remain above 20 minutes and each team stays at 240 total minutes;
+      add seeded regression cases for both home and away teams.
 
 ## Next
 
@@ -132,57 +148,41 @@ implementing anything — its PRs are expected to touch only this file.
       valuing future picks vs. present talent).
 - [x] `db`: add a composite `NewsItem` index for season transaction-log filters;
       use an `EXPLAIN QUERY PLAN` regression assertion to prove the query uses it.
-- [ ] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
-      starters remain above 20 minutes and each team stays at 240 total minutes;
-      add seeded regression cases for both home and away teams.
-- [ ] `sim`: harden injury-shortened rotations with only five to seven available
-      players so no player exceeds 48 minutes and the team remains at 240;
-      verify each roster size with seeded realism checks.
-- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
-      games, redistributing the difference across healthy reserves; verify the
-      returning player ramps up without changing 240-minute team totals.
-- [ ] `db`: make next-game selection deterministic when malformed schedules
-      contain two user games on the same day; add a duplicate-matchup regression
-      fixture that asserts a stable tie-break.
-- [ ] `frontend`: add a compact selected-assets summary above trade actions;
-      verify long player and team names wrap at 320px without horizontal
-      overflow.
-- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
-      end-to-end and asserts standings/awards/draft invariants hold.
-- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
-      playoff games vs. regular season, matching real NBA tendencies).
-- [ ] `db`: add an `EXPLAIN QUERY PLAN` regression for current-season next-game
-      reads that proves the schedule index covers league, season, status,
-      playoff, and day-range filters.
-- [ ] `db`: bind transaction-log cursors to their league and season; reject
-      cross-league and stale-season cursor reuse in regression tests.
-- [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
-      prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
-- [ ] `frontend`: player detail page (season stats, career game log, contract
-      info) linked from roster views.
-- [ ] `db`: record draft selections and offseason contract expirations as
-      `draft`/`transaction` news items; verify the season transaction log
-      includes both move types.
-- [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
-      attempt transfers; verify every player shooting equation and all team
-      shooting and point totals still reconcile.
-- [ ] `qa`: assert every CI workspace build runs after Prisma generation as
-      well as before tests; add an out-of-order workflow fixture that fails the
-      QA check.
-- [ ] `qa`: extract shared workspace-manifest discovery for CI-build and
-      root-test coverage checks; verify object-form `workspaces.packages` with
-      a regression fixture.
-- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
-      a fixture that invokes one workspace by both path and package name.
-- [ ] `db`: wire unprotected draft-pick assets through `proposeTrade` and
-      `applyTrade` by loading only owned, unselected picks and atomically
-      transferring `ownerTeamId`; reject foreign/used picks in regression tests.
 - [ ] `db`: persist protected-pick conveyance terms and resolve them during
       offseason draft-order creation; verify a protected slot stays with its
       original owner while an unprotected slot conveys.
 - [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
+- [ ] `db`: make next-game selection deterministic when malformed schedules
+      contain two user games on the same day; add a duplicate-matchup regression
+      fixture that asserts a stable tie-break.
+- [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
+      attempt transfers; verify every player shooting equation and all team
+      shooting and point totals still reconcile.
+- [ ] `qa`: extract shared workspace-manifest discovery for CI-build and
+      root-test coverage checks; verify object-form `workspaces.packages` with
+      a regression fixture.
+- [ ] `qa`: assert every CI workspace build runs after Prisma generation as
+      well as before tests; add an out-of-order workflow fixture that fails the
+      QA check.
+- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
+      more cautious with teams that "won" a prior trade.
+- [ ] `db`: record draft selections and offseason contract expirations as
+      `draft`/`transaction` news items; verify the season transaction log
+      includes both move types.
+- [ ] `frontend`: player detail page (season stats, career game log, contract
+      info) linked from roster views.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
+- [ ] `db`: add an `EXPLAIN QUERY PLAN` regression for current-season next-game
+      reads that proves the schedule index covers league, season, status,
+      playoff, and day-range filters.
+- [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
+      prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
+      a fixture that invokes one workspace by both path and package name.
 - [ ] `frontend`: show mobile table scroll hints only when columns actually
       overflow and hide each hint after its region reaches the right edge; verify
       resize and scroll behavior at 320px and desktop widths.
@@ -195,12 +195,12 @@ implementing anything — its PRs are expected to touch only this file.
 
 ## Later
 
+- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
+      playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
 - [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
-- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
-      more cautious with teams that "won" a prior trade.
 
 ## Shipped
 
