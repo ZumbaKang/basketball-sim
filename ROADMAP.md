@@ -154,6 +154,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
+- [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+      starters remain above 20 minutes and each team stays at 240 total minutes;
+      add seeded regression cases for both home and away teams.
+- [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
+      stars still receive the closing-lineup usage shift while both teams stay
+      at 240 minutes; add seeded home and away regression cases.
+- [ ] `sim`: harden injury-shortened rotations with only five to seven available
+      players so no player exceeds 48 minutes and the team remains at 240;
+      verify each roster size with seeded realism checks.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -229,3 +241,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-25: Added accessible horizontal-scroll instructions to standings and history tables
 - 2026-07-25: Added expectation-based GM coach firing and hiring intents
 - 2026-07-25: Made root test-workspace coverage follow package declarations
+- 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
