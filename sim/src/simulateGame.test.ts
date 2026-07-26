@@ -213,6 +213,46 @@ describe("simulateGame", () => {
     },
   );
 
+  it.each([
+    { availableCount: 5, seed: 4 },
+    { availableCount: 6, seed: 5606 },
+    { availableCount: 7, seed: 5707 },
+  ])(
+    "keeps $availableCount-player injury rotations at 240 minutes without exceeding regulation",
+    ({ availableCount, seed }) => {
+      const shortenRoster = (players: Player[]) =>
+        players.map((player, index) => ({
+          ...player,
+          injuredDays: index < availableCount ? 0 : 2,
+        }));
+      const result = simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: shortenRoster(roster("t_home", "Harbor")),
+        awayPlayers: shortenRoster(roster("t_away", "Metro")),
+        seed,
+      });
+
+      for (const team of [result.home, result.away]) {
+        const teamMinutes = team.players.reduce(
+          (total, player) => total + player.minutes,
+          0,
+        );
+
+        expect(team.players).toHaveLength(availableCount);
+        expect(teamMinutes).toBe(240);
+        expect(
+          Math.max(...team.players.map((player) => player.minutes)),
+        ).toBeLessThanOrEqual(48);
+      }
+      if (availableCount === 5) {
+        expect(Math.abs(result.home.pts - result.away.pts)).toBeLessThanOrEqual(5);
+      }
+      expect(() => assertRealisticGameResult(result)).not.toThrow();
+    },
+  );
+
   it("keeps an injured player out of multiple games and restores their rotation on return", () => {
     const healthyHomePlayers = roster("t_home", "Harbor");
     const awayPlayers = roster("t_away", "Metro");

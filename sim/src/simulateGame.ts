@@ -49,6 +49,81 @@ function availablePlayers(players: Player[]): Player[] {
   return players.filter((player) => player.injuredDays <= 0);
 }
 
+const REGULATION_TEAM_MINUTES = 240;
+const MAX_PLAYER_MINUTES = 48;
+const MINUTE_PRECISION = 10;
+
+function balanceShortRotationMinutes(
+  minutes: Map<string, number>,
+  players: Player[],
+): Map<string, number> {
+  const minuteUnits = new Map(
+    players.map((player) => [
+      player.id,
+      Math.round(
+        clamp(minutes.get(player.id) ?? 0, 0, MAX_PLAYER_MINUTES) *
+          MINUTE_PRECISION,
+      ),
+    ]),
+  );
+  const targetUnits = REGULATION_TEAM_MINUTES * MINUTE_PRECISION;
+  const maximumUnits = MAX_PLAYER_MINUTES * MINUTE_PRECISION;
+  let assignedUnits = [...minuteUnits.values()].reduce((sum, value) => sum + value, 0);
+
+  while (assignedUnits < targetUnits) {
+    const eligible = players.filter(
+      (player) => (minuteUnits.get(player.id) ?? 0) < maximumUnits,
+    );
+    if (eligible.length === 0) break;
+
+    const share = Math.max(
+      1,
+      Math.floor((targetUnits - assignedUnits) / eligible.length),
+    );
+    for (const player of eligible) {
+      const current = minuteUnits.get(player.id) ?? 0;
+      const added = Math.min(
+        share,
+        maximumUnits - current,
+        targetUnits - assignedUnits,
+      );
+      minuteUnits.set(player.id, current + added);
+      assignedUnits += added;
+      if (assignedUnits === targetUnits) break;
+    }
+  }
+
+  while (assignedUnits > targetUnits) {
+    const eligible = [...players]
+      .reverse()
+      .filter((player) => (minuteUnits.get(player.id) ?? 0) > 0);
+    if (eligible.length === 0) break;
+
+    const share = Math.max(
+      1,
+      Math.floor((assignedUnits - targetUnits) / eligible.length),
+    );
+    for (const player of eligible) {
+      const current = minuteUnits.get(player.id) ?? 0;
+      const removed = Math.min(
+        share,
+        current,
+        assignedUnits - targetUnits,
+      );
+      minuteUnits.set(player.id, current - removed);
+      assignedUnits -= removed;
+      if (assignedUnits === targetUnits) break;
+    }
+  }
+
+  return new Map(
+    players.map((player) => [
+      player.id,
+      (minuteUnits.get(player.id) ?? 0) / MINUTE_PRECISION,
+    ]),
+  );
+}
+
 function allocateMinutes(
   players: Player[],
   rng: () => number,
@@ -76,6 +151,9 @@ function allocateMinutes(
     for (const [id, m] of raw) {
       minutes.set(id, round1(clamp(m * scale + (rng() - 0.5) * 2, 4, 40)));
     }
+    if (sorted.length >= 5 && sorted.length <= 7) {
+      return balanceShortRotationMinutes(minutes, sorted);
+    }
     const assigned = [...minutes.values()].reduce((a, b) => a + b, 0);
     const top = withTargets[0]!;
     minutes.set(top.id, round1((minutes.get(top.id) ?? 0) + (240 - assigned)));
@@ -95,10 +173,8 @@ function allocateMinutes(
   }
 
   if (bench.length === 0) {
-    // Redistribute leftover to starters
-    const extra = remaining / starters.length;
-    for (const p of starters) {
-      minutes.set(p.id, round1((minutes.get(p.id) ?? 0) + extra));
+    if (sorted.length >= 5) {
+      return balanceShortRotationMinutes(minutes, sorted);
     }
     return minutes;
   }
@@ -120,6 +196,10 @@ function allocateMinutes(
   const drift = remaining - assigned;
   const topBench = bench[0]!;
   minutes.set(topBench.id, round1((minutes.get(topBench.id) ?? 0) + drift));
+
+  if (sorted.length >= 5 && sorted.length <= 7) {
+    return balanceShortRotationMinutes(minutes, sorted);
+  }
 
   // Normalize to ~240 team minutes
   const total = [...minutes.values()].reduce((a, b) => a + b, 0);
