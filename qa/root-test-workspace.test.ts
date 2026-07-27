@@ -7,6 +7,7 @@ import {
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
 import {
+  npmWorkspaceScriptCommandSelectors,
   readPackageManifest,
   readWorkspacePackageManifest,
   workspacesWithScript,
@@ -14,19 +15,6 @@ import {
 } from "./workspace-manifest.js";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-
-function testCommandSelectors(command: string): ReadonlySet<string> {
-  const selectors = new Set<string>();
-  const workspaceCommand =
-    /\bnpm\s+run\s+test\s+(?:-w\s+|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s&|#]+))/g;
-
-  for (const match of command.matchAll(workspaceCommand)) {
-    const selector = match[1] ?? match[2] ?? match[3];
-    selectors.add(selector);
-  }
-
-  return selectors;
-}
 
 function assertTestWorkspaceCoverage(
   rootManifest: PackageManifest,
@@ -37,7 +25,7 @@ function assertTestWorkspaceCoverage(
     throw new Error("Root package is missing a test script");
   }
 
-  const selectors = testCommandSelectors(rootTestCommand);
+  const selectors = npmWorkspaceScriptCommandSelectors(rootTestCommand, "test");
   const missing = workspacesWithScript(
     rootManifest,
     "test",

@@ -150,11 +150,17 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
-- [ ] `qa`: move CI build-command and root-test-command selector parsers into
+- [x] `qa`: move CI build-command and root-test-command selector parsers into
       `workspace-manifest.ts` beside discovery; verify both omitted-workspace
       fixtures still fail with the same errors.
 - [ ] `qa`: add a nameless-package object-form fixture and assert coverage still
       matches workspaces by path alone when `package.json` omits `name`.
+- [ ] `qa`: treat `npm test -w <selector>` (without `run`) the same as
+      `npm run test -w` in the shared parser; verify a shorthand fixture still
+      counts as covered.
+- [ ] `qa`: move the build and root-test coverage assertion helpers into
+      `workspace-manifest.ts` beside the parsers; verify both omitted-workspace
+      fixtures still throw the same errors.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -166,6 +172,9 @@ implementing anything — its PRs are expected to touch only this file.
       roster produce different messages naming the cause.
 - [ ] `frontend`: surface the sim roster-shortage preflight message on the league
       play flow when a game cannot be simulated; verify the alert wraps at 320px.
+- [ ] `qa`: accept single-quoted and double-quoted workspace selectors that
+      contain spaces in both parsers; add a fixture path with a space and assert
+      coverage still matches.
 
 ## Next
 
@@ -336,6 +345,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-27: Moved CI build and root-test workspace selector parsers into shared workspace-manifest helpers
 - 2026-07-27: Extracted shared workspace-manifest discovery for CI-build and root-test coverage
 - 2026-07-27: Rejected sub-five available-player game inputs before box-score generation
 - 2026-07-27: Validated trade player assets against declaring teams and guarded moves

@@ -8,6 +8,7 @@ import {
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
+  npmWorkspaceScriptCommandPositions,
   readPackageManifest,
   readWorkspacePackageManifest,
   workspacesWithScript,
@@ -20,25 +21,12 @@ const ciWorkflow = readFileSync(
   "utf8",
 );
 
-function buildCommandPositions(workflow: string): ReadonlyMap<string, number> {
-  const positions = new Map<string, number>();
-  const command =
-    /\bnpm\s+run\s+build\s+(?:-w\s+|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s#]+))/g;
-
-  for (const match of workflow.matchAll(command)) {
-    const selector = match[1] ?? match[2] ?? match[3];
-    positions.set(selector, match.index);
-  }
-
-  return positions;
-}
-
 function assertBuildWorkspaceCoverage(
   rootManifest: PackageManifest,
   readWorkspaceManifest: (workspacePath: string) => PackageManifest,
   workflow: string,
 ): void {
-  const positions = buildCommandPositions(workflow);
+  const positions = npmWorkspaceScriptCommandPositions(workflow, "build");
   const testStep = workflow.indexOf("- name: Run tests");
   const missing: string[] = [];
   const late: string[] = [];

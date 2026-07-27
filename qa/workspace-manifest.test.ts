@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   coveredBuildWorkspaceObjectFormFixture,
+  omittedBuildWorkspaceFixture,
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
   coveredTestWorkspaceObjectFormFixture,
+  omittedTestWorkspaceFixture,
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
 import {
+  npmWorkspaceScriptCommandPositions,
+  npmWorkspaceScriptCommandSelectors,
   workspacePaths,
   workspacesWithScript,
   type PackageManifest,
@@ -97,5 +101,57 @@ describe("workspace-manifest discovery", () => {
       "alpha",
       "beta",
     ]);
+  });
+});
+
+describe("npm workspace script command parsers", () => {
+  it("parses build selectors and positions from a CI workflow snippet", () => {
+    const positions = npmWorkspaceScriptCommandPositions(
+      omittedBuildWorkspaceFixture.ciWorkflow,
+      "build",
+    );
+
+    expect([...positions.keys()]).toEqual(["alpha"]);
+    expect(positions.get("alpha")).toBeTypeOf("number");
+  });
+
+  it("parses chained root test selectors across shell operators", () => {
+    const selectors = npmWorkspaceScriptCommandSelectors(
+      coveredTestWorkspaceObjectFormFixture.rootPackage.scripts.test,
+      "test",
+    );
+
+    expect(selectors).toEqual(new Set(["alpha", "beta"]));
+  });
+
+  it("accepts -w, --workspace, and --workspace= selector forms", () => {
+    const command =
+      'npm run build -w alpha && npm run build --workspace beta && npm run build --workspace="@fixture/gamma"';
+    const positions = npmWorkspaceScriptCommandPositions(command, "build");
+
+    expect([...positions.keys()]).toEqual([
+      "alpha",
+      "beta",
+      "@fixture/gamma",
+    ]);
+    expect(positions.get("alpha")).toBeLessThan(positions.get("beta")!);
+    expect(positions.get("beta")).toBeLessThan(
+      positions.get("@fixture/gamma")!,
+    );
+  });
+
+  it("keeps omitted-workspace fixture selectors identical for consumers", () => {
+    expect(
+      npmWorkspaceScriptCommandSelectors(
+        omittedTestWorkspaceFixture.rootPackage.scripts.test,
+        "test",
+      ),
+    ).toEqual(new Set(["alpha"]));
+    expect(
+      npmWorkspaceScriptCommandSelectors(
+        omittedBuildWorkspaceFixture.ciWorkflow,
+        "build",
+      ),
+    ).toEqual(new Set(["alpha"]));
   });
 });
