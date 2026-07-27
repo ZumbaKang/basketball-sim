@@ -27,3 +27,43 @@ jobs:
         run: npm test
 `,
 } as const;
+
+/** Same coverage gap, but with object-form `workspaces.packages`. */
+export const omittedBuildWorkspaceObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta", "tests"],
+    },
+  },
+  workspacePackages: omittedBuildWorkspaceFixture.workspacePackages,
+  ciWorkflow: omittedBuildWorkspaceFixture.ciWorkflow,
+} as const;
+
+export const coveredBuildWorkspaceObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta"],
+    },
+  },
+  workspacePackages: {
+    alpha: {
+      name: "@fixture/alpha",
+      scripts: { build: "tsc" },
+    },
+    beta: {
+      name: "@fixture/beta",
+      scripts: { build: "tsc" },
+    },
+  },
+  ciWorkflow: `
+jobs:
+  test:
+    steps:
+      - name: Build workspaces
+        run: |
+          npm run build -w alpha
+          npm run build -w beta
+      - name: Run tests
+        run: npm test
+`,
+} as const;

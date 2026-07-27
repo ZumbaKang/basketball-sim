@@ -138,18 +138,23 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: reject game inputs with fewer than five available players before
       box-score generation; verify zero-to-four-player rosters fail with a
       descriptive preflight error.
-- [ ] `frontend`: disable trade actions while a proposal or finder request is in
+- [x] `frontend`: disable trade actions while a proposal or finder request is in
       flight and prevent duplicate submissions; verify rapid clicks issue only
       one request and controls re-enable after success or failure.
-- [ ] `qa`: extract shared workspace-manifest discovery for CI-build and
+- [x] `qa`: extract shared workspace-manifest discovery for CI-build and
       root-test coverage checks; verify object-form `workspaces.packages` with
       a regression fixture.
 - [ ] `db`: record protected-pick draft-order resolutions as transaction news
       items; verify retained and conveyed outcomes identify the slot and recipient
       exactly once.
-- [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
+- [x] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
+- [ ] `qa`: move CI build-command and root-test-command selector parsers into
+      `workspace-manifest.ts` beside discovery; verify both omitted-workspace
+      fixtures still fail with the same errors.
+- [ ] `qa`: add a nameless-package object-form fixture and assert coverage still
+      matches workspaces by path alone when `package.json` omits `name`.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -331,6 +336,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-27: Extracted shared workspace-manifest discovery for CI-build and root-test coverage
 - 2026-07-27: Rejected sub-five available-player game inputs before box-score generation
 - 2026-07-27: Validated trade player assets against declaring teams and guarded moves
 - 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)

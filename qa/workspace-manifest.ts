@@ -1,0 +1,46 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+export interface PackageManifest {
+  name?: string;
+  workspaces?: readonly string[] | { packages?: readonly string[] };
+  scripts?: Readonly<Record<string, string>>;
+}
+
+export interface WorkspacePackage {
+  name?: string;
+  path: string;
+}
+
+/** Resolve workspace paths from either array or object-form package.json. */
+export function workspacePaths(manifest: PackageManifest): readonly string[] {
+  if (Array.isArray(manifest.workspaces)) {
+    return manifest.workspaces;
+  }
+
+  return manifest.workspaces?.packages ?? [];
+}
+
+export function workspacesWithScript(
+  rootManifest: PackageManifest,
+  scriptName: string,
+  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
+): WorkspacePackage[] {
+  return workspacePaths(rootManifest).flatMap((workspacePath) => {
+    const manifest = readWorkspaceManifest(workspacePath);
+    return manifest.scripts?.[scriptName]
+      ? [{ name: manifest.name, path: workspacePath }]
+      : [];
+  });
+}
+
+export function readPackageManifest(path: string): PackageManifest {
+  return JSON.parse(readFileSync(path, "utf8")) as PackageManifest;
+}
+
+export function readWorkspacePackageManifest(
+  repoRoot: string,
+  workspacePath: string,
+): PackageManifest {
+  return readPackageManifest(join(repoRoot, workspacePath, "package.json"));
+}
