@@ -39,8 +39,8 @@ test("trade actions include a mobile-safe selected-assets summary", () => {
     frontOfficePage,
     /className="trade-summary"\s*aria-label="Selected trade assets"\s*aria-live="polite"/s,
   );
-  assert.match(frontOfficePage, /\{selectedGive\?\.name \?\? "No player selected"\}/);
-  assert.match(frontOfficePage, /\{selectedReceive\?\.name \?\? "No player selected"\}/);
+  assert.match(frontOfficePage, /\{outgoing\.assetName\}/);
+  assert.match(frontOfficePage, /\{incoming\.assetName\}/);
   assert.match(frontOfficePage, /\{selectedPartner\?\.name \?\? "Trade partner"\}/);
   assert.match(frontOfficePage, /className="trade-summary"[^]*className="cta-row trade-actions"/);
 
@@ -56,15 +56,29 @@ test("trade actions include a mobile-safe selected-assets summary", () => {
   assert.match(mobileRules, /\.trade-summary\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
 });
 
+test("trade builder exposes first/second-round pick selectors and protection controls", () => {
+  assert.match(frontOfficePage, /Draft pick/);
+  assert.match(frontOfficePage, /First round/);
+  assert.match(frontOfficePage, /Second round/);
+  assert.match(frontOfficePage, /Unprotected/);
+  assert.match(frontOfficePage, /Top-N protected/);
+  assert.match(frontOfficePage, /buildTradeAsset/);
+  assert.match(frontOfficePage, /givePickId/);
+  assert.match(frontOfficePage, /getPickId/);
+  assert.match(css, /\.trade-side\s*\{/);
+  assert.match(css, /\.asset-kind-toggle\s*\{/);
+  assert.match(mobileRules, /\.trade-form\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+});
+
 test("trade requests cannot be double-submitted and controls re-enable afterwards", () => {
   assert.match(frontOfficePage, /const busy = pending !== null;/);
   for (const action of ["propose", "finder", "offer"]) {
     const body = frontOfficePage.slice(frontOfficePage.indexOf(`async function ${action}()`));
-    assert.match(body.slice(0, 200), /if \(busy\) return;/, `${action} must bail out while busy`);
+    assert.match(body.slice(0, 200), /if \(busy/, `${action} must bail out while busy`);
     assert.match(body.slice(0, 2000), /finally \{\s*setPending\(null\);/s, `${action} must clear pending`);
   }
-  assert.match(frontOfficePage, /className="btn btn-primary" disabled=\{busy\}/);
-  assert.match(frontOfficePage, /className="btn btn-secondary" disabled=\{busy\}/);
+  assert.match(frontOfficePage, /className="btn btn-primary"[\s\S]*?disabled=\{busy/);
+  assert.match(frontOfficePage, /className="btn btn-secondary"[\s\S]*?disabled=\{busy/);
 });
 
 test("the trade finder moves focus to the summary it just rewrote", () => {

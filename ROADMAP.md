@@ -163,7 +163,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: add a composite index for tradable draft-pick reads across league,
       owner, selection status, and season; prove the loader avoids a table scan
       with an `EXPLAIN QUERY PLAN` regression.
-- [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
+- [x] `frontend`: add first/second-round pick selectors and top-N/unprotected
       controls to the trade builder; verify mixed player/pick proposals serialize
       correctly and remain usable at 320px.
 - [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
@@ -244,6 +244,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
       the franchise and front-office pages once seeded contracts respect the cap;
       verify the readout wraps at 320px.
+- [ ] `frontend`: let the trade finder return mixed player/pick packages and
+      hydrate both asset kinds in the builder; verify a pick-heavy finder result
+      focuses the summary and stays usable at 320px.
+- [ ] `frontend`: show each team's owned future picks on the front-office page
+      as a read-only chip list beside the builder; verify long labels wrap at
+      320px without horizontal overflow.
 - [ ] `qa`: fail the build when a CSS custom property is referenced but never
       declared for a theme — an undefined `--font-*` alias silently dropped every
       page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
@@ -294,3 +300,5 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Made table scroll hints appear only while columns are actually offscreen
 - 2026-07-26: Added a player detail page with attributes, contract, and recent game log
 - 2026-07-26: Locked trade actions while a request is in flight and focused the updated summary
+- 2026-07-26: Modernized the frontend (cool slate light theme, motion, brand-first auth)
+      and shipped trade-builder draft-pick selectors with protection controls

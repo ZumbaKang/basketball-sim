@@ -351,4 +351,6 @@ export type FranchiseHome = {
   news: NewsItem[];
   roster: Player[];
   payroll: number;
+  /** Owned, unselected picks available to trade (both sides of the league). */
+  draftPicks: DraftPick[];
 };

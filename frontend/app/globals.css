@@ -41,38 +41,39 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --bg-base: #f4f1ea;
-  --bg-raise: #fffdf8;
-  --surface: rgba(255, 253, 248, 0.86);
-  --surface-solid: #fffdf8;
-  --surface-hover: rgba(255, 255, 255, 0.95);
-  --surface-sunken: rgba(24, 32, 48, 0.04);
+  /* Cool slate court — avoids the cream/terracotta AI-default cluster. */
+  --bg-base: #e8edf4;
+  --bg-raise: #f5f7fb;
+  --surface: rgba(245, 247, 251, 0.88);
+  --surface-solid: #f5f7fb;
+  --surface-hover: rgba(255, 255, 255, 0.96);
+  --surface-sunken: rgba(18, 28, 44, 0.06);
 
-  --text: #131a27;
-  --text-soft: #4d5a72;
-  --text-faint: #6d7a92;
+  --text: #101826;
+  --text-soft: #445066;
+  --text-faint: #6a768c;
 
-  --line: rgba(19, 26, 39, 0.14);
-  --line-strong: rgba(19, 26, 39, 0.26);
+  --line: rgba(16, 24, 38, 0.12);
+  --line-strong: rgba(16, 24, 38, 0.22);
 
-  --accent: #c2571a;
-  --accent-strong: #a3450f;
-  --accent-ink: #fff8f1;
-  --accent-glow: rgba(194, 87, 26, 0.16);
+  --accent: #e85d1c;
+  --accent-strong: #cf4a0e;
+  --accent-ink: #fff7f2;
+  --accent-glow: rgba(232, 93, 28, 0.14);
 
-  --cool: #0f7fa8;
-  --good: #16794f;
-  --danger: #b3382b;
-  --warn: #96650b;
+  --cool: #0b7ea0;
+  --good: #0f7a52;
+  --danger: #c0392b;
+  --warn: #9a6b10;
 
-  --shadow-sm: 0 1px 2px rgba(19, 26, 39, 0.08);
-  --shadow-md: 0 14px 30px -18px rgba(19, 26, 39, 0.4);
-  --shadow-lg: 0 30px 60px -30px rgba(19, 26, 39, 0.45);
+  --shadow-sm: 0 1px 2px rgba(16, 24, 38, 0.08);
+  --shadow-md: 0 14px 30px -18px rgba(16, 24, 38, 0.32);
+  --shadow-lg: 0 30px 60px -30px rgba(16, 24, 38, 0.38);
 
   --court-wash:
-    radial-gradient(1100px 620px at 8% -12%, rgba(194, 87, 26, 0.14), transparent 60%),
-    radial-gradient(900px 560px at 98% 4%, rgba(15, 127, 168, 0.1), transparent 55%),
-    linear-gradient(180deg, #f7f3ec 0%, #f2eee5 55%, #ece7dc 100%);
+    radial-gradient(1100px 620px at 8% -12%, rgba(232, 93, 28, 0.12), transparent 60%),
+    radial-gradient(900px 560px at 98% 4%, rgba(11, 126, 160, 0.1), transparent 55%),
+    linear-gradient(180deg, #eef2f8 0%, #e8edf4 55%, #e2e8f0 100%);
 }
 
 :root {
@@ -431,6 +432,70 @@ h3 {
 
 .trade-form {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.trade-side {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.trade-side legend {
+  padding: 0 0.35rem;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.trade-partner {
+  align-self: center;
+}
+
+.asset-kind-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--bg-raise);
+}
+
+.chip {
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 160ms var(--ease),
+    background 160ms var(--ease),
+    transform 160ms var(--ease);
+}
+
+.chip:hover {
+  color: var(--text);
+}
+
+.chip-active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.chip:active {
+  transform: scale(0.97);
 }
 
 .free-agent-form {
@@ -462,6 +527,12 @@ h3 {
   font-size: 1.15rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  transition: transform 180ms var(--ease), color 180ms var(--ease);
+}
+
+.app-nav .mark:hover {
+  transform: translateY(-1px);
+  color: var(--accent);
 }
 
 .app-nav .mark::before {
@@ -1017,6 +1088,10 @@ a.feed-item:hover {
 
 /* ---------- Auth ---------- */
 
+.auth-shell {
+  width: min(1100px, calc(100% - 2.5rem));
+}
+
 .auth-layout {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -1026,6 +1101,10 @@ a.feed-item:hover {
   padding-block: 3rem;
 }
 
+.auth-hero .brand {
+  animation: pop 700ms var(--ease) both;
+}
+
 .auth-card {
   padding: 1.75rem;
   border: 1px solid var(--line);
@@ -1033,6 +1112,7 @@ a.feed-item:hover {
   background: var(--surface);
   backdrop-filter: blur(14px);
   box-shadow: var(--shadow-lg);
+  animation: rise 560ms var(--ease) 80ms both;
 }
 
 .auth-tabs {
