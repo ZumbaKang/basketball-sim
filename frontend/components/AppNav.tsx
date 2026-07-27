@@ -4,6 +4,7 @@ import type { User } from "@basketball-sim/shared";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 import { getActiveNavHref, NAV_ITEMS } from "./navigation";
 
 export function AppNav() {
@@ -64,7 +65,13 @@ export function AppNav() {
       </nav>
       <div className="app-nav-account">
         {user && <span className="app-nav-user">{user.displayName}</span>}
-        <button type="button" className="app-nav-logout" disabled={loggingOut} onClick={() => void logout()}>
+        <ThemeToggle />
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          disabled={loggingOut}
+          onClick={() => void logout()}
+        >
           {loggingOut ? "Logging out…" : "Log out"}
         </button>
       </div>

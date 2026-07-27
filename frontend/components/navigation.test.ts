@@ -11,11 +11,12 @@ test("navigation exposes every persistent league destination", () => {
   ]);
 });
 
-test("navigation marks league pages and game pages consistently", () => {
+test("navigation marks league pages and their drilldowns consistently", () => {
   assert.equal(getActiveNavHref("/league"), "/league");
   assert.equal(getActiveNavHref("/standings"), "/standings");
   assert.equal(getActiveNavHref("/front-office"), "/front-office");
   assert.equal(getActiveNavHref("/history"), "/history");
   assert.equal(getActiveNavHref("/games/game-123"), "/league");
+  assert.equal(getActiveNavHref("/players/player-123"), "/league");
   assert.equal(getActiveNavHref("/"), null);
 });

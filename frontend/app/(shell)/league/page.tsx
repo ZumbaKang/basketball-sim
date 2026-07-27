@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FranchiseHome, Team } from "@basketball-sim/shared";
+import { ScrollableTable } from "@/components/ScrollableTable";
+import { millions, record } from "@/lib/format";
 
 type Choice = Pick<Team, "id" | "name" | "abbreviation" | "conference" | "division" | "gmDirection">;
 
@@ -10,7 +13,6 @@ export default function LeaguePage() {
   const router = useRouter();
   const [home, setHome] = useState<FranchiseHome | null>(null);
   const [choices, setChoices] = useState<Choice[] | null>(null);
-  const [leagueId, setLeagueId] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,6 @@ export default function LeaguePage() {
     const json = await res.json();
     if (json.needsFranchise) {
       setChoices(json.choices);
-      setLeagueId(json.leagueId);
       setHome(null);
     } else {
       setHome(json.home);
@@ -103,27 +104,26 @@ export default function LeaguePage() {
 
   if (choices) {
     return (
-      <main>
-        <h1 className="brand" style={{ fontSize: "clamp(2rem, 6vw, 3.4rem)" }}>
-          Pick your franchise
-        </h1>
-        <p className="tagline">Thirty clubs. One desk. You run the roster — AI owners run the rest.</p>
-        {error && <p className="error">{error}</p>}
-        <div className="grid-teams" style={{ marginTop: "1.5rem" }}>
+      <main className="rise">
+        <div className="page-head">
+          <div>
+            <p className="eyebrow">New franchise</p>
+            <h1 className="page-title">Pick your club</h1>
+            <p className="page-sub">Thirty teams. One desk. You run the roster — AI owners run the rest.</p>
+          </div>
+        </div>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="grid-teams">
           {choices.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className="team"
-              style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--line)", width: "100%" }}
-              disabled={busy}
-              onClick={() => void pickTeam(t.id)}
-            >
-              <h3>
-                {t.abbreviation} · {t.name}
-              </h3>
+            <button key={t.id} type="button" className="team" disabled={busy} onClick={() => void pickTeam(t.id)}>
+              <span className="team-abbr">{t.abbreviation}</span>
+              <h3>{t.name}</h3>
               <p>
-                {t.conference} / {t.division} · AI vibe: {t.gmDirection}
+                {t.conference} · {t.division} · plays {t.gmDirection}
               </p>
             </button>
           ))}
@@ -135,29 +135,82 @@ export default function LeaguePage() {
   if (!home) {
     return (
       <main>
-        <p className="muted">Loading franchise…</p>
+        <div className="skeleton-stack" aria-busy="true" aria-live="polite">
+          <span className="sr-only">Loading franchise…</span>
+          <div className="skeleton" style={{ height: "2.5rem", width: "40%" }} />
+          <div className="skeleton" style={{ height: "5rem" }} />
+          <div className="skeleton" style={{ height: "14rem" }} />
+        </div>
       </main>
     );
   }
 
+  const league = home.snapshot.league;
   const my = home.snapshot.teams.find((t) => t.id === home.snapshot.userTeamId);
   const myStanding = home.standings.find((s) => s.teamId === home.snapshot.userTeamId);
+  const healthy = home.roster.filter((p) => p.injuredDays === 0).length;
 
   return (
-    <main className="league-dashboard">
-      <h1 className="brand" style={{ fontSize: "clamp(2rem, 6vw, 3.4rem)" }}>
-        {my?.name ?? "Franchise"}
-      </h1>
-      <p className="tagline">
-        {home.snapshot.league.seasonYear} · Day {home.snapshot.league.day} · {home.snapshot.league.phase}
-        {myStanding ? ` · ${myStanding.wins}-${myStanding.losses} (#${myStanding.rank} ${myStanding.conference})` : ""}
-      </p>
+    <main className="rise">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">
+            {league.seasonYear} · Day {league.day} · {league.phase}
+          </p>
+          <h1 className="page-title">{my?.name ?? "Franchise"}</h1>
+        </div>
+        <div className="cta-row">
+          <Link className="btn btn-secondary btn-sm" href="/standings">
+            Standings
+          </Link>
+          <Link className="btn btn-secondary btn-sm" href="/front-office">
+            Front office
+          </Link>
+        </div>
+      </div>
+
+      <div className="stat-strip">
+        <div className="stat">
+          <p className="stat-label">Record</p>
+          <p className="stat-value">{myStanding ? record(myStanding.wins, myStanding.losses) : "—"}</p>
+        </div>
+        <div className="stat">
+          <p className="stat-label">Conference</p>
+          <p className="stat-value stat-value-accent">
+            {myStanding ? `#${myStanding.rank}` : "—"}
+            <span style={{ fontSize: "0.8rem", marginLeft: "0.35rem" }}>{myStanding?.conference ?? ""}</span>
+          </p>
+        </div>
+        <div className="stat">
+          <p className="stat-label">Payroll</p>
+          <p className="stat-value">{millions(home.payroll)}</p>
+        </div>
+        <div className="stat">
+          <p className="stat-label">Available</p>
+          <p className="stat-value">
+            {healthy}
+            <span style={{ fontSize: "0.8rem", color: "var(--text-faint)" }}>/{home.roster.length}</span>
+          </p>
+        </div>
+      </div>
 
       {message && <p className="muted">{message}</p>}
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
 
-      <section className="panel dashboard-advance">
-        <h2>Advance</h2>
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Advance</h2>
+          {home.nextGame && (
+            <p className="panel-note">
+              Next game · day {home.nextGame.day}
+              {home.nextGame.isPlayoff ? " · playoffs" : ""}
+            </p>
+          )}
+        </div>
         <div className="cta-row dashboard-actions">
           <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void playNext()}>
             {busy ? "Working…" : "Play next game"}
@@ -175,76 +228,102 @@ export default function LeaguePage() {
             Sim season
           </button>
         </div>
-        {home.nextGame && (
-          <p className="muted" style={{ marginTop: "0.75rem" }}>
-            Next on schedule: day {home.nextGame.day}
-            {home.nextGame.isPlayoff ? " (playoffs)" : ""}
-          </p>
-        )}
       </section>
 
-      <section className="panel roster-panel">
-        <h2>Roster · payroll ${(home.payroll / 1_000_000).toFixed(1)}M</h2>
-        <div className="table-scroll" role="region" aria-label="Franchise roster" tabIndex={0}>
+      <section className="panel mobile-table-panel roster-panel">
+        <div className="panel-head">
+          <h2>Roster</h2>
+          <p className="panel-note">{millions(home.payroll)} payroll</p>
+        </div>
+        <ScrollableTable
+          label="Franchise roster"
+          offscreenColumns="age, overall, potential, target minutes, and injury status"
+        >
           <table className="box-table">
             <thead>
               <tr>
-                <th>Player</th>
-                <th>Pos</th>
-                <th>Age</th>
-                <th>OVR</th>
-                <th>POT</th>
-                <th>MIN</th>
-                <th>INJ</th>
+                <th scope="col">Player</th>
+                <th scope="col">Pos</th>
+                <th scope="col">Age</th>
+                <th scope="col">OVR</th>
+                <th scope="col">POT</th>
+                <th scope="col">MIN</th>
+                <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>
               {home.roster.map((p) => (
                 <tr key={p.id}>
-                  <td>{p.name}</td>
+                  <td>
+                    <Link className="cell-link" href={`/players/${p.id}`}>
+                      {p.name}
+                    </Link>
+                  </td>
                   <td>{p.position}</td>
                   <td>{p.age}</td>
                   <td>{p.ratings.overall}</td>
                   <td>{p.potential}</td>
                   <td>{p.targetMinutes}</td>
-                  <td>{p.injuredDays > 0 ? `${p.injuredDays}d` : "—"}</td>
+                  <td>
+                    {p.injuredDays > 0 ? (
+                      <span className="tag tag-danger">out {p.injuredDays}d</span>
+                    ) : (
+                      <span className="muted">active</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </ScrollableTable>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Recent box scores</h2>
         </div>
-      </section>
-
-      <section className="panel">
-        <h2>News</h2>
-        <ul className="game-list">
-          {home.news.map((n) => (
-            <li key={n.id}>
-              <a href="#news">
-                <span>{n.headline}</span>
-                <span className="muted">
-                  D{n.day} · {n.kind}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="panel">
-        <h2>Recent box scores</h2>
         {home.recentGames.length === 0 ? (
           <p className="muted">No games yet — advance the calendar.</p>
         ) : (
-          <ul className="game-list">
-            {home.recentGames.map((game) => (
-              <li key={game.id}>
-                <a href={`/games/${game.id}`}>
-                  <span>
-                    {game.home.teamName} {game.home.pts} — {game.away.pts} {game.away.teamName}
-                  </span>
-                  <span className="muted">{game.isPlayoff ? "Playoffs" : "RS"}</span>
-                </a>
+          <ul className="feed">
+            {home.recentGames.map((game) => {
+              const homeWon = game.home.pts > game.away.pts;
+              return (
+                <li key={game.id}>
+                  <Link className="feed-item" href={`/games/${game.id}`}>
+                    <span>
+                      <strong style={{ color: homeWon ? "var(--accent)" : undefined }}>
+                        {game.home.teamName} {game.home.pts}
+                      </strong>
+                      {" — "}
+                      <strong style={{ color: homeWon ? undefined : "var(--accent)" }}>
+                        {game.away.pts} {game.away.teamName}
+                      </strong>
+                    </span>
+                    <span className="feed-meta">{game.isPlayoff ? "Playoffs" : "Regular season"}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>League wire</h2>
+          <p className="panel-note">{home.news.length} updates</p>
+        </div>
+        {home.news.length === 0 ? (
+          <p className="muted">Nothing on the wire yet.</p>
+        ) : (
+          <ul className="feed">
+            {home.news.map((n) => (
+              <li key={n.id} className="feed-item">
+                <span>{n.headline}</span>
+                <span className="feed-meta">
+                  <span className="tag">{n.kind}</span> day {n.day}
+                </span>
               </li>
             ))}
           </ul>

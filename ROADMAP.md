@@ -170,6 +170,33 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: persist protected-pick conveyance terms and resolve them during
       offseason draft-order creation; verify a protected slot stays with its
       original owner while an unprotected slot conveys.
+- [ ] `db`: record protected-pick draft-order resolutions as transaction news
+      items; verify retained and conveyed outcomes identify the slot and recipient
+      exactly once.
+- [ ] `db`: validate every player asset belongs to its declaring team before
+      trade evaluation and guard player/contract moves inside the transaction;
+      verify a foreign-player injection leaves every mixed-trade asset unchanged.
+- [ ] `db`: add a composite index for tradable draft-pick reads across league,
+      owner, selection status, and season; prove the loader avoids a table scan
+      with an `EXPLAIN QUERY PLAN` regression.
+- [x] `frontend`: add first/second-round pick selectors and top-N/unprotected
+      controls to the trade builder; verify mixed player/pick proposals serialize
+      correctly and remain usable at 320px.
+- [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
+      starters remain above 20 minutes and each team stays at 240 total minutes;
+      add seeded regression cases for both home and away teams.
+- [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
+      stars still receive the closing-lineup usage shift while both teams stay
+      at 240 minutes; add seeded home and away regression cases.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
+- [ ] `sim`: reject game inputs with fewer than five available players before
+      box-score generation; verify zero-to-four-player rosters fail with a
+      descriptive preflight error.
+- [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
+      rotations preserve fatigue priority; verify fatigued low-stamina players
+      do not gain more minutes than comparable rested teammates.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -207,6 +234,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: record draft selections and offseason contract expirations as
       `draft`/`transaction` news items; verify the season transaction log
       includes both move types.
+- [x] `frontend`: player detail page linked from roster and box-score views —
+      attributes, contract, rotation role, injury status, and a recent game log
+      built from the existing league payload.
+- [ ] `db`: expose per-player season totals and career game log through an
+      owned query/endpoint; the player page can only show the last ten league
+      games until this lands.
+- [ ] `frontend`: extend the player page with season averages and a full career
+      game log once the `db` endpoint above exists; verify the added columns stay
+      scrollable at 320px.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 - [ ] `frontend`: player detail page (season stats, career game log, contract
       info) linked from roster views.
 - [ ] `db`: add an `EXPLAIN QUERY PLAN` regression for current-season next-game
@@ -214,11 +253,52 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `db`: reject transaction-log cursors with negative days or noncanonical
+      timestamps; add malformed-cursor regressions for each invalid boundary.
+- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
+      a fixture that invokes one workspace by both path and package name.
+- [x] `frontend`: show mobile table scroll hints only when columns actually
+      overflow and hide each hint after its region reaches the right edge; verify
+      resize and scroll behavior at 320px and desktop widths.
+- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
+      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
+      staffing intents; verify replacements cannot be hired by two teams.
+- [ ] `frontend`: show each team's current coach, style, and latest staffing
+      rationale on front-office pages; verify long names and rationale wrap at
+      320px without horizontal overflow.
+- [x] `frontend`: disable trade actions while a proposal or finder request is in
+      flight and prevent duplicate submissions; verify rapid clicks issue only
+      one request and controls re-enable after success or failure.
+- [x] `frontend`: announce trade-finder asset changes through the selected-assets
+      summary and move focus to it; verify keyboard and screen-reader users hear
+      both updated player and partner names.
+- [ ] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
+      single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
+      no line exceeds a credible FTA-per-FGA ratio while team totals still
+      reconcile.
+- [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
+      totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
+      currently meaningless; verify every seeded team opens within cap.
+- [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
+      the franchise and front-office pages once seeded contracts respect the cap;
+      verify the readout wraps at 320px.
+- [ ] `frontend`: let the trade finder return mixed player/pick packages and
+      hydrate both asset kinds in the builder; verify a pick-heavy finder result
+      focuses the summary and stays usable at 320px.
+- [ ] `frontend`: show each team's owned future picks on the front-office page
+      as a read-only chip list beside the builder; verify long labels wrap at
+      320px without horizontal overflow.
+- [ ] `qa`: fail the build when a CSS custom property is referenced but never
+      declared for a theme — an undefined `--font-*` alias silently dropped every
+      page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
 
 ## Later
 
 - [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
       playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
+      a `shared/` contract update first before any domain touches it.
+- [x] `frontend`: dark/light theme toggle and accessibility pass (contrast,
 - [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
@@ -264,3 +344,9 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
 - 2026-07-26: Bound transaction-log cursors to their issuing league and season
 - 2026-07-26: Persisted and resolved protected-pick conveyance during offseason draft ordering
+- 2026-07-26: Rebuilt the UI on a dark-first design system with a light theme toggle
+- 2026-07-26: Made table scroll hints appear only while columns are actually offscreen
+- 2026-07-26: Added a player detail page with attributes, contract, and recent game log
+- 2026-07-26: Locked trade actions while a request is in flight and focused the updated summary
+- 2026-07-26: Modernized the frontend (cool slate light theme, motion, brand-first auth)
+      and shipped trade-builder draft-pick selectors with protection controls

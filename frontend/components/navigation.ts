@@ -5,8 +5,9 @@ export const NAV_ITEMS = [
   { href: "/history", label: "History" },
 ] as const;
 
+/** Box scores and player pages are drilldowns from the franchise hub, not their own tabs. */
 export function getActiveNavHref(pathname: string): string | null {
-  if (pathname === "/league" || pathname.startsWith("/games/")) {
+  if (pathname === "/league" || pathname.startsWith("/games/") || pathname.startsWith("/players/")) {
     return "/league";
   }
 
