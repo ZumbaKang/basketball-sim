@@ -135,7 +135,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: validate every player asset belongs to its declaring team before
       trade evaluation and guard player/contract moves inside the transaction;
       verify a foreign-player injection leaves every mixed-trade asset unchanged.
-- [ ] `sim`: reject game inputs with fewer than five available players before
+- [x] `sim`: reject game inputs with fewer than five available players before
       box-score generation; verify zero-to-four-player rosters fail with a
       descriptive preflight error.
 - [ ] `frontend`: disable trade actions while a proposal or finder request is in
@@ -153,6 +153,14 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
+- [ ] `db`: when a scheduled game has fewer than five healthy players, fail before
+      persist instead of substituting injured players into `simulateGame`; verify
+      no `final` row or game news is written.
+- [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
+      preflight error; verify a zero-length input and a fully injured ten-man
+      roster produce different messages naming the cause.
+- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
+      play flow when a game cannot be simulated; verify the alert wraps at 320px.
 
 ## Next
 
@@ -191,7 +199,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
-- [ ] `sim`: reject game inputs with fewer than five available players before
+- [x] `sim`: reject game inputs with fewer than five available players before
       box-score generation; verify zero-to-four-player rosters fail with a
       descriptive preflight error.
 - [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
@@ -323,6 +331,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-27: Rejected sub-five available-player game inputs before box-score generation
 - 2026-07-27: Validated trade player assets against declaring teams and guarded moves
 - 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
