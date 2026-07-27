@@ -124,11 +124,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: harden injury-shortened rotations with only five to seven available
       players so no player exceeds 48 minutes and the team remains at 240;
       verify each roster size with seeded realism checks.
-- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
-      end-to-end and asserts standings/awards/draft invariants hold.
-      _Blocked: playoff bracket promotion can index incomplete Western
-      first-round winners when the Eastern first round finishes first, crashing
-      before awards and the offseason draft; persistence must fix this first._
 - [x] `frontend`: add a compact selected-assets summary above trade actions;
       verify long player and team names wrap at 320px without horizontal
       overflow.
@@ -137,6 +132,27 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
+- [ ] `db`: validate every player asset belongs to its declaring team before
+      trade evaluation and guard player/contract moves inside the transaction;
+      verify a foreign-player injection leaves every mixed-trade asset unchanged.
+- [ ] `sim`: reject game inputs with fewer than five available players before
+      box-score generation; verify zero-to-four-player rosters fail with a
+      descriptive preflight error.
+- [ ] `frontend`: disable trade actions while a proposal or finder request is in
+      flight and prevent duplicate submissions; verify rapid clicks issue only
+      one request and controls re-enable after success or failure.
+- [ ] `qa`: extract shared workspace-manifest discovery for CI-build and
+      root-test coverage checks; verify object-form `workspaces.packages` with
+      a regression fixture.
+- [ ] `db`: record protected-pick draft-order resolutions as transaction news
+      items; verify retained and conveyed outcomes identify the slot and recipient
+      exactly once.
+- [ ] `frontend`: add first/second-round pick selectors and top-N/unprotected
+      controls to the trade builder; verify mixed player/pick proposals serialize
+      correctly and remain usable at 320px.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 
 ## Next
 
@@ -184,17 +200,37 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
+- [ ] `db`: reject transaction-log cursors with negative days or noncanonical
+      timestamps; add malformed-cursor regressions for each invalid boundary.
 - [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
       attempt transfers; verify every player shooting equation and all team
       shooting and point totals still reconcile.
-- [ ] `qa`: extract shared workspace-manifest discovery for CI-build and
-      root-test coverage checks; verify object-form `workspaces.packages` with
-      a regression fixture.
+- [ ] `frontend`: show mobile table scroll hints only when columns actually
+      overflow and hide each hint after its region reaches the right edge; verify
+      resize and scroll behavior at 320px and desktop widths.
+- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
+      a fixture that invokes one workspace by both path and package name.
+- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
+      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
+      staffing intents; verify replacements cannot be hired by two teams.
+- [ ] `frontend`: show each team's current coach, style, and latest staffing
+      rationale on front-office pages; verify long names and rationale wrap at
+      320px without horizontal overflow.
+- [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
+      stars still receive the closing-lineup usage shift while both teams stay
+      at 240 minutes; add seeded home and away regression cases.
+- [ ] `db`: add a composite index for tradable draft-pick reads across league,
+      owner, selection status, and season; prove the loader avoids a table scan
+      with an `EXPLAIN QUERY PLAN` regression.
+- [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
+      rotations preserve fatigue priority; verify fatigued low-stamina players
+      do not gain more minutes than comparable rested teammates.
 - [ ] `qa`: assert every CI workspace build runs after Prisma generation as
       well as before tests; add an out-of-order workflow fixture that fails the
       QA check.
-- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
-      more cautious with teams that "won" a prior trade.
+- [ ] `frontend`: announce trade-finder asset changes through the selected-assets
+      summary and move focus to it; verify keyboard and screen-reader users hear
+      both updated player and partner names.
 - [ ] `db`: record draft selections and offseason contract expirations as
       `draft`/`transaction` news items; verify the season transaction log
       includes both move types.
@@ -210,6 +246,8 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
+- [ ] `frontend`: player detail page (season stats, career game log, contract
+      info) linked from roster views.
 - [ ] `db`: add an `EXPLAIN QUERY PLAN` regression for current-season next-game
       reads that proves the schedule index covers league, season, status,
       playoff, and day-range filters.
@@ -261,7 +299,17 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
 - [x] `frontend`: dark/light theme toggle and accessibility pass (contrast,
+- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
+- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
+      more cautious with teams that "won" a prior trade.
+- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
+      end-to-end and asserts standings/awards/draft invariants hold.
+      _Blocked: playoff bracket promotion can index incomplete Western
+      first-round winners when the Eastern first round finishes first, crashing
+      before awards and the offseason draft; persistence must fix this first._
+- [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
+      a `shared/` contract update first before any domain touches it.
 
 ## Shipped
 
