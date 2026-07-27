@@ -2,44 +2,23 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { omittedBuildWorkspaceFixture } from "./fixtures/ci-workspace-coverage.js";
+import {
+  coveredBuildWorkspaceObjectFormFixture,
+  omittedBuildWorkspaceFixture,
+  omittedBuildWorkspaceObjectFormFixture,
+} from "./fixtures/ci-workspace-coverage.js";
+import {
+  readPackageManifest,
+  readWorkspacePackageManifest,
+  workspacesWithScript,
+  type PackageManifest,
+} from "./workspace-manifest.js";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const ciWorkflow = readFileSync(
   new URL("../.github/workflows/ci.yml", import.meta.url),
   "utf8",
 );
-
-interface PackageManifest {
-  name?: string;
-  workspaces?: readonly string[] | { packages?: readonly string[] };
-  scripts?: Readonly<Record<string, string>>;
-}
-
-interface BuildableWorkspace {
-  name?: string;
-  path: string;
-}
-
-function workspacePaths(manifest: PackageManifest): readonly string[] {
-  if (Array.isArray(manifest.workspaces)) {
-    return manifest.workspaces;
-  }
-
-  return manifest.workspaces?.packages ?? [];
-}
-
-function buildableWorkspaces(
-  rootManifest: PackageManifest,
-  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
-): BuildableWorkspace[] {
-  return workspacePaths(rootManifest).flatMap((workspacePath) => {
-    const manifest = readWorkspaceManifest(workspacePath);
-    return manifest.scripts?.build
-      ? [{ name: manifest.name, path: workspacePath }]
-      : [];
-  });
-}
 
 function buildCommandPositions(workflow: string): ReadonlyMap<string, number> {
   const positions = new Map<string, number>();
@@ -64,8 +43,9 @@ function assertBuildWorkspaceCoverage(
   const missing: string[] = [];
   const late: string[] = [];
 
-  for (const workspace of buildableWorkspaces(
+  for (const workspace of workspacesWithScript(
     rootManifest,
+    "build",
     readWorkspaceManifest,
   )) {
     const position = [workspace.path, workspace.name]
@@ -96,10 +76,6 @@ function assertBuildWorkspaceCoverage(
   }
 }
 
-function readPackageManifest(path: string): PackageManifest {
-  return JSON.parse(readFileSync(path, "utf8")) as PackageManifest;
-}
-
 describe("CI workflow", () => {
   it("builds every buildable root workspace before running tests", () => {
     const rootManifest = readPackageManifest(join(repoRoot, "package.json"));
@@ -108,7 +84,7 @@ describe("CI workflow", () => {
       assertBuildWorkspaceCoverage(
         rootManifest,
         (workspacePath) =>
-          readPackageManifest(join(repoRoot, workspacePath, "package.json")),
+          readWorkspacePackageManifest(repoRoot, workspacePath),
         ciWorkflow,
       ),
     ).not.toThrow();
@@ -127,5 +103,35 @@ describe("CI workflow", () => {
         fixture.ciWorkflow,
       ),
     ).toThrowError("Missing CI build commands for: beta");
+  });
+
+  it("fails when an object-form workspace with a build script is omitted", () => {
+    const fixture = omittedBuildWorkspaceObjectFormFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("Missing CI build commands for: beta");
+  });
+
+  it("accepts object-form workspaces.packages when every build is covered", () => {
+    const fixture = coveredBuildWorkspaceObjectFormFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).not.toThrow();
   });
 });

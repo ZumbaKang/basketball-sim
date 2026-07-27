@@ -1,41 +1,19 @@
-import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { omittedTestWorkspaceFixture } from "./fixtures/root-test-workspace-coverage.js";
+import {
+  coveredTestWorkspaceObjectFormFixture,
+  omittedTestWorkspaceFixture,
+  omittedTestWorkspaceObjectFormFixture,
+} from "./fixtures/root-test-workspace-coverage.js";
+import {
+  readPackageManifest,
+  readWorkspacePackageManifest,
+  workspacesWithScript,
+  type PackageManifest,
+} from "./workspace-manifest.js";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-
-interface PackageManifest {
-  name?: string;
-  workspaces?: readonly string[] | { packages?: readonly string[] };
-  scripts?: Readonly<Record<string, string>>;
-}
-
-interface TestableWorkspace {
-  name?: string;
-  path: string;
-}
-
-function workspacePaths(manifest: PackageManifest): readonly string[] {
-  if (Array.isArray(manifest.workspaces)) {
-    return manifest.workspaces;
-  }
-
-  return manifest.workspaces?.packages ?? [];
-}
-
-function testableWorkspaces(
-  rootManifest: PackageManifest,
-  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
-): TestableWorkspace[] {
-  return workspacePaths(rootManifest).flatMap((workspacePath) => {
-    const manifest = readWorkspaceManifest(workspacePath);
-    return manifest.scripts?.test
-      ? [{ name: manifest.name, path: workspacePath }]
-      : [];
-  });
-}
 
 function testCommandSelectors(command: string): ReadonlySet<string> {
   const selectors = new Set<string>();
@@ -60,8 +38,9 @@ function assertTestWorkspaceCoverage(
   }
 
   const selectors = testCommandSelectors(rootTestCommand);
-  const missing = testableWorkspaces(
+  const missing = workspacesWithScript(
     rootManifest,
+    "test",
     readWorkspaceManifest,
   ).flatMap((workspace) =>
     [workspace.path, workspace.name].some(
@@ -78,17 +57,13 @@ function assertTestWorkspaceCoverage(
   }
 }
 
-function readPackageManifest(path: string): PackageManifest {
-  return JSON.parse(readFileSync(path, "utf8")) as PackageManifest;
-}
-
 describe("root test workspace coverage", () => {
   it("runs every root workspace that declares a test script", () => {
     const rootManifest = readPackageManifest(join(repoRoot, "package.json"));
 
     expect(() =>
       assertTestWorkspaceCoverage(rootManifest, (workspacePath) =>
-        readPackageManifest(join(repoRoot, workspacePath, "package.json")),
+        readWorkspacePackageManifest(repoRoot, workspacePath),
       ),
     ).not.toThrow();
   });
@@ -105,5 +80,33 @@ describe("root test workspace coverage", () => {
           ],
       ),
     ).toThrowError("Missing root test commands for: beta");
+  });
+
+  it("fails when an object-form workspace with a test script is omitted", () => {
+    const fixture = omittedTestWorkspaceObjectFormFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).toThrowError("Missing root test commands for: beta");
+  });
+
+  it("accepts object-form workspaces.packages when every test is covered", () => {
+    const fixture = coveredTestWorkspaceObjectFormFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
   });
 });

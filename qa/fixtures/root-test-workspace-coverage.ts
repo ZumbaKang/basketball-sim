@@ -20,3 +20,28 @@ export const omittedTestWorkspaceFixture = {
     },
   },
 } as const;
+
+/** Same coverage gap, but with object-form `workspaces.packages`. */
+export const omittedTestWorkspaceObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta", "build-only"],
+    },
+    scripts: {
+      test: "npm run test -w alpha",
+    },
+  },
+  workspacePackages: omittedTestWorkspaceFixture.workspacePackages,
+} as const;
+
+export const coveredTestWorkspaceObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta", "build-only"],
+    },
+    scripts: {
+      test: "npm run test -w alpha && npm run test -w beta",
+    },
+  },
+  workspacePackages: omittedTestWorkspaceFixture.workspacePackages,
+} as const;
