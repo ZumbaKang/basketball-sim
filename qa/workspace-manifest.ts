@@ -44,3 +44,38 @@ export function readWorkspacePackageManifest(
 ): PackageManifest {
   return readPackageManifest(join(repoRoot, workspacePath, "package.json"));
 }
+
+/**
+ * Match `npm run <script> -w|--workspace <selector>` occurrences in a shell
+ * command or CI workflow snippet. Unquoted selectors stop at whitespace or
+ * common shell operators (`&`, `|`, `#`) so chained commands parse cleanly.
+ */
+export function npmWorkspaceScriptCommandPositions(
+  command: string,
+  scriptName: string,
+): ReadonlyMap<string, number> {
+  const positions = new Map<string, number>();
+  const escapedScript = scriptName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(
+    String.raw`\bnpm\s+run\s+${escapedScript}\s+(?:-w\s+|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s&#|]+))`,
+    "g",
+  );
+
+  for (const match of command.matchAll(pattern)) {
+    const selector = match[1] ?? match[2] ?? match[3];
+    if (selector !== undefined && match.index !== undefined) {
+      positions.set(selector, match.index);
+    }
+  }
+
+  return positions;
+}
+
+export function npmWorkspaceScriptCommandSelectors(
+  command: string,
+  scriptName: string,
+): ReadonlySet<string> {
+  return new Set(
+    npmWorkspaceScriptCommandPositions(command, scriptName).keys(),
+  );
+}
