@@ -198,8 +198,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: record draft selections and offseason contract expirations as
       `draft`/`transaction` news items; verify the season transaction log
       includes both move types.
-- [ ] `frontend`: player detail page (season stats, career game log, contract
-      info) linked from roster views.
+- [x] `frontend`: player detail page linked from roster and box-score views —
+      attributes, contract, rotation role, injury status, and a recent game log
+      built from the existing league payload.
+- [ ] `db`: expose per-player season totals and career game log through an
+      owned query/endpoint; the player page can only show the last ten league
+      games until this lands.
+- [ ] `frontend`: extend the player page with season averages and a full career
+      game log once the `db` endpoint above exists; verify the added columns stay
+      scrollable at 320px.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -212,7 +219,7 @@ implementing anything — its PRs are expected to touch only this file.
       timestamps; add malformed-cursor regressions for each invalid boundary.
 - [ ] `qa`: reject duplicate workspace selectors in the root test command; add
       a fixture that invokes one workspace by both path and package name.
-- [ ] `frontend`: show mobile table scroll hints only when columns actually
+- [x] `frontend`: show mobile table scroll hints only when columns actually
       overflow and hide each hint after its region reaches the right edge; verify
       resize and scroll behavior at 320px and desktop widths.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
@@ -221,12 +228,25 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: show each team's current coach, style, and latest staffing
       rationale on front-office pages; verify long names and rationale wrap at
       320px without horizontal overflow.
-- [ ] `frontend`: disable trade actions while a proposal or finder request is in
+- [x] `frontend`: disable trade actions while a proposal or finder request is in
       flight and prevent duplicate submissions; verify rapid clicks issue only
       one request and controls re-enable after success or failure.
-- [ ] `frontend`: announce trade-finder asset changes through the selected-assets
+- [x] `frontend`: announce trade-finder asset changes through the selected-assets
       summary and move focus to it; verify keyboard and screen-reader users hear
       both updated player and partner names.
+- [ ] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
+      single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
+      no line exceeds a credible FTA-per-FGA ratio while team totals still
+      reconcile.
+- [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
+      totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
+      currently meaningless; verify every seeded team opens within cap.
+- [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
+      the franchise and front-office pages once seeded contracts respect the cap;
+      verify the readout wraps at 320px.
+- [ ] `qa`: fail the build when a CSS custom property is referenced but never
+      declared for a theme — an undefined `--font-*` alias silently dropped every
+      page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
 
 ## Later
 
@@ -234,7 +254,7 @@ implementing anything — its PRs are expected to touch only this file.
       playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
-- [ ] `frontend`: dark/light theme toggle and accessibility pass (contrast,
+- [x] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
 
 ## Shipped
@@ -270,3 +290,7 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
 - 2026-07-26: Bound transaction-log cursors to their issuing league and season
 - 2026-07-26: Persisted and resolved protected-pick conveyance during offseason draft ordering
+- 2026-07-26: Rebuilt the UI on a dark-first design system with a light theme toggle
+- 2026-07-26: Made table scroll hints appear only while columns are actually offscreen
+- 2026-07-26: Added a player detail page with attributes, contract, and recent game log
+- 2026-07-26: Locked trade actions while a request is in flight and focused the updated summary
