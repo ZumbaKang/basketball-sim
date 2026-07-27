@@ -154,7 +154,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: persist protected-pick conveyance terms and resolve them during
       offseason draft-order creation; verify a protected slot stays with its
       original owner while an unprotected slot conveys.
-- [ ] `db`: record protected-pick draft-order resolutions as transaction news
+- [x] `db`: record protected-pick draft-order resolutions as transaction news
       items; verify retained and conveyed outcomes identify the slot and recipient
       exactly once.
 - [ ] `db`: validate every player asset belongs to its declaring team before
@@ -227,6 +227,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: announce trade-finder asset changes through the selected-assets
       summary and move focus to it; verify keyboard and screen-reader users hear
       both updated player and partner names.
+- [ ] `db`: record a transaction news item when a trade attaches top-N protection
+      to a pick, naming both teams and the protection level; verify protected
+      transfers emit exactly one item and unprotected transfers emit none.
+- [ ] `frontend`: add a season transaction-log view that pages through the
+      `listSeasonTransactions` cursor API with a "load more" control; verify the
+      first page renders and paging appends without duplicate entries.
+- [ ] `qa`: assert in the multi-season soak that every protected pick resolved
+      during an offseason appears exactly once in the following season's
+      transaction log.
 
 ## Later
 
@@ -270,3 +279,4 @@ implementing anything — its PRs are expected to touch only this file.
 - 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
 - 2026-07-26: Bound transaction-log cursors to their issuing league and season
 - 2026-07-26: Persisted and resolved protected-pick conveyance during offseason draft ordering
+- 2026-07-27: Logged protected-pick draft-order resolutions as season transaction news
