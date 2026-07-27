@@ -132,7 +132,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: cover combined garbage-time and back-to-back rotations so fatigued
       starters remain above 20 minutes and each team stays at 240 total minutes;
       add seeded regression cases for both home and away teams.
-- [ ] `db`: validate every player asset belongs to its declaring team before
+- [x] `db`: validate every player asset belongs to its declaring team before
       trade evaluation and guard player/contract moves inside the transaction;
       verify a foreign-player injection leaves every mixed-trade asset unchanged.
 - [ ] `sim`: reject game inputs with fewer than five available players before
@@ -173,7 +173,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: record protected-pick draft-order resolutions as transaction news
       items; verify retained and conveyed outcomes identify the slot and recipient
       exactly once.
-- [ ] `db`: validate every player asset belongs to its declaring team before
+- [x] `db`: validate every player asset belongs to its declaring team before
       trade evaluation and guard player/contract moves inside the transaction;
       verify a foreign-player injection leaves every mixed-trade asset unchanged.
 - [ ] `db`: add a composite index for tradable draft-pick reads across league,
@@ -291,6 +291,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: fail the build when a CSS custom property is referenced but never
       declared for a theme — an undefined `--font-*` alias silently dropped every
       page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
+- [ ] `db`: reject proposals that list the same `playerId` more than once across
+      `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
+      contracts unchanged.
+- [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
+      injected into a mixed package; verify the FA row and any null-team contract
+      stay put while owned picks remain with their teams.
+- [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
+      trade news row is written and sibling pick moves roll back; add a fixture
+      that retargets a player between validation and apply.
 
 ## Later
 
@@ -314,6 +323,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-27: Validated trade player assets against declaring teams and guarded moves
 - 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)
 - 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
 - 2026-07-23: GM trade evaluation now values expiring/bad contracts (PR #16)
