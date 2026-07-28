@@ -164,7 +164,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: add a mixed named/nameless object-form fixture covered by a package
       name for one workspace and a path for the other; verify CI-build and
       root-test assertions both pass.
-- [ ] `qa`: add a late-build CI fixture where a workspace is built after
+- [x] `qa`: add a late-build CI fixture where a workspace is built after
       `- name: Run tests` and assert `assertBuildWorkspaceCoverage` throws the
       precede-tests error for that path.
 - [ ] `qa`: add a root package fixture with no `scripts.test` and assert
@@ -189,6 +189,13 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
       nameless workspace is covered by path in the same CI/root command; verify
       both assertions pass.
+- [ ] `qa`: when a workspace is built both before and after `- name: Run tests`,
+      keep the earliest build position so a pre-test build still passes; verify
+      with a duplicate-build fixture that currently would fail on the last match.
+- [ ] `qa`: when the CI workflow omits `- name: Run tests` entirely, assert every
+      buildable workspace is reported as late; verify with a no-test-step fixture.
+- [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
+      precede-tests error lists both paths; verify with a dual late-build fixture.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -373,6 +380,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
 - 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
 - 2026-07-28: Moved CI-build and root-test coverage assertion helpers into workspace-manifest
 - 2026-07-28: Treated `npm test -w` shorthand as covered in the shared workspace parser

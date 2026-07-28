@@ -3,6 +3,7 @@ import {
   coveredBuildWorkspaceMixedNameObjectFormFixture,
   coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
+  lateBuildWorkspaceFixture,
   omittedBuildWorkspaceFixture,
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
@@ -283,5 +284,20 @@ describe("workspace coverage assertion helpers", () => {
           ],
       ),
     ).not.toThrow();
+  });
+
+  it("throws the same late-build precede-tests error from the shared helper", () => {
+    const fixture = lateBuildWorkspaceFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("CI build commands must precede tests for: beta");
   });
 });
