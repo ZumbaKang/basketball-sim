@@ -150,6 +150,52 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: move CI build-command and root-test-command selector parsers into
       `workspace-manifest.ts` beside discovery; verify both omitted-workspace
       fixtures still fail with the same errors.
+- [x] `qa`: add a nameless-package object-form fixture and assert coverage still
+      matches workspaces by path alone when `package.json` omits `name`.
+- [x] `qa`: treat `npm test -w <selector>` (without `run`) the same as
+      `npm run test -w` in the shared parser; verify a shorthand fixture still
+      counts as covered.
+- [x] `qa`: move the build and root-test coverage assertion helpers into
+      `workspace-manifest.ts` beside the parsers; verify both omitted-workspace
+      fixtures still throw the same errors.
+- [x] `qa`: add a mixed named/nameless object-form fixture covered by a package
+      name for one workspace and a path for the other; verify CI-build and
+      root-test assertions both pass.
+- [x] `qa`: add a late-build CI fixture where a workspace is built after
+      `- name: Run tests` and assert `assertBuildWorkspaceCoverage` throws the
+      precede-tests error for that path.
+- [ ] `qa`: add a root package fixture with no `scripts.test` and assert
+      `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
+- [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
+      `npm test -w alpha; npm test -w beta` still counts both; verify with a
+      chained fixture.
+- [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
+      coverage still matches by path only; verify a `"name": ""` fixture fails
+      when its path is missing from the command.
+- [ ] `qa`: cover a mixed root-test command that chains both `npm test -w` and
+      `npm run test -w`; verify both selector forms count toward coverage.
+- [ ] `qa`: accept lifecycle shorthands for `start`/`stop`/`restart` the same
+      way as `test`; verify an `npm start -w` fixture counts when checking a
+      start script and still rejects `npm build -w`.
+- [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
+      no `run`) the same as spaced `--workspace`; verify a fixture using the
+      equals form still counts as covered.
+- [ ] `qa`: fail mixed named/nameless coverage when only the named package is
+      selected and the nameless path is omitted; verify CI-build and root-test
+      assertions both throw for the missing path.
+- [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
+      nameless workspace is covered by path in the same CI/root command; verify
+      both assertions pass.
+- [ ] `qa`: when a workspace is built both before and after `- name: Run tests`,
+      keep the earliest build position so a pre-test build still passes; verify
+      with a duplicate-build fixture that currently would fail on the last match.
+- [ ] `qa`: when the CI workflow omits `- name: Run tests` entirely, assert every
+      buildable workspace is reported as late; verify with a no-test-step fixture.
+- [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
+      precede-tests error lists both paths; verify with a dual late-build fixture.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 - [ ] `db`: when a scheduled game has fewer than five healthy players, fail before
       persist instead of substituting injured players into `simulateGame`; verify
       no `final` row or game news is written.
@@ -306,6 +352,11 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
+- 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
+- 2026-07-28: Moved CI-build and root-test coverage assertion helpers into workspace-manifest
+- 2026-07-28: Treated `npm test -w` shorthand as covered in the shared workspace parser
+- 2026-07-28: Asserted nameless object-form packages still match CI/root coverage by path
 - 2026-07-27: Moved CI build and root-test workspace selector parsers into shared workspace-manifest helpers
 - 2026-07-27: Extracted shared workspace-manifest discovery for CI-build and root-test coverage
 - 2026-07-27: Rejected sub-five available-player game inputs before box-score generation

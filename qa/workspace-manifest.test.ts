@@ -1,15 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
+  coveredBuildWorkspaceMixedNameObjectFormFixture,
+  coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
+  lateBuildWorkspaceFixture,
   omittedBuildWorkspaceFixture,
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
+  coveredTestWorkspaceMixedNameObjectFormFixture,
+  coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
+  coveredTestWorkspaceShorthandFixture,
   omittedTestWorkspaceFixture,
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
 import {
+  assertBuildWorkspaceCoverage,
+  assertTestWorkspaceCoverage,
   npmWorkspaceScriptCommandPositions,
   npmWorkspaceScriptCommandSelectors,
   workspacePaths,
@@ -102,6 +110,34 @@ describe("workspace-manifest discovery", () => {
       "beta",
     ]);
   });
+
+  it("discovers nameless object-form packages by path alone", () => {
+    const buildable = workspacesWithScript(
+      coveredBuildWorkspaceNamelessObjectFormFixture.rootPackage,
+      "build",
+      (workspacePath) =>
+        coveredBuildWorkspaceNamelessObjectFormFixture.workspacePackages[
+          workspacePath as keyof typeof coveredBuildWorkspaceNamelessObjectFormFixture.workspacePackages
+        ],
+    );
+    const testable = workspacesWithScript(
+      coveredTestWorkspaceNamelessObjectFormFixture.rootPackage,
+      "test",
+      (workspacePath) =>
+        coveredTestWorkspaceNamelessObjectFormFixture.workspacePackages[
+          workspacePath as keyof typeof coveredTestWorkspaceNamelessObjectFormFixture.workspacePackages
+        ],
+    );
+
+    expect(buildable).toEqual([
+      { name: undefined, path: "alpha" },
+      { name: undefined, path: "beta" },
+    ]);
+    expect(testable).toEqual([
+      { name: undefined, path: "alpha" },
+      { name: undefined, path: "beta" },
+    ]);
+  });
 });
 
 describe("npm workspace script command parsers", () => {
@@ -153,5 +189,115 @@ describe("npm workspace script command parsers", () => {
         "build",
       ),
     ).toEqual(new Set(["alpha"]));
+  });
+
+  it("treats npm test -w shorthand the same as npm run test -w", () => {
+    const selectors = npmWorkspaceScriptCommandSelectors(
+      coveredTestWorkspaceShorthandFixture.rootPackage.scripts.test,
+      "test",
+    );
+
+    expect(selectors).toEqual(new Set(["alpha", "beta"]));
+  });
+
+  it("does not treat npm build -w as a valid build shorthand", () => {
+    expect(
+      npmWorkspaceScriptCommandSelectors(
+        "npm build -w alpha && npm run build -w beta",
+        "build",
+      ),
+    ).toEqual(new Set(["beta"]));
+  });
+});
+
+describe("workspace coverage assertion helpers", () => {
+  it("throws the same omitted-build error from the shared helper", () => {
+    const fixture = omittedBuildWorkspaceFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("Missing CI build commands for: beta");
+  });
+
+  it("throws the same omitted-test error from the shared helper", () => {
+    const fixture = omittedTestWorkspaceFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).toThrowError("Missing root test commands for: beta");
+  });
+
+  it("accepts covered object-form build and test fixtures", () => {
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        coveredBuildWorkspaceObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredBuildWorkspaceObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredBuildWorkspaceObjectFormFixture.workspacePackages
+          ],
+        coveredBuildWorkspaceObjectFormFixture.ciWorkflow,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        coveredTestWorkspaceObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredTestWorkspaceObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredTestWorkspaceObjectFormFixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
+  });
+
+  it("accepts mixed named/nameless coverage by package name and path", () => {
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        coveredBuildWorkspaceMixedNameObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredBuildWorkspaceMixedNameObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredBuildWorkspaceMixedNameObjectFormFixture.workspacePackages
+          ],
+        coveredBuildWorkspaceMixedNameObjectFormFixture.ciWorkflow,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        coveredTestWorkspaceMixedNameObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredTestWorkspaceMixedNameObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredTestWorkspaceMixedNameObjectFormFixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
+  });
+
+  it("throws the same late-build precede-tests error from the shared helper", () => {
+    const fixture = lateBuildWorkspaceFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("CI build commands must precede tests for: beta");
   });
 });
