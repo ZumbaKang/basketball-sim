@@ -99,3 +99,31 @@ export const coveredTestWorkspaceShorthandFixture = {
   },
   workspacePackages: omittedTestWorkspaceFixture.workspacePackages,
 } as const;
+
+/**
+ * Mixed object-form packages: alpha is covered by its package name, beta is
+ * nameless and must match by path alone. Both selectors must count.
+ */
+export const coveredTestWorkspaceMixedNameObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta", "build-only"],
+    },
+    scripts: {
+      test: "npm run test -w @fixture/alpha && npm run test -w beta",
+    },
+  },
+  workspacePackages: {
+    alpha: {
+      name: "@fixture/alpha",
+      scripts: { test: "vitest run" },
+    },
+    beta: {
+      scripts: { test: "vitest run" },
+    },
+    "build-only": {
+      name: "@fixture/build-only",
+      scripts: { build: "tsc" },
+    },
+  },
+} as const;
