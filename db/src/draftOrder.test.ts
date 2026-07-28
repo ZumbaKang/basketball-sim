@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDraftOrderAndResolveConveyance } from "./draftOrder.js";
 import { prisma } from "./prisma.js";
+import { listSeasonTransactions } from "./transactionLog.js";
 
 describe("offseason draft order and pick conveyance", () => {
   let userId: string;
@@ -141,5 +142,57 @@ describe("offseason draft order and pick conveyance", () => {
       ownerTeamId: recipientTeamId,
     });
     expect(secondRoundPick.pick).toBe(8);
+  });
+
+  it("records the retained and conveyed outcomes once each as transaction news", async () => {
+    const news = await prisma.newsItem.findMany({
+      where: { leagueId, seasonYear: 2100, kind: "transaction" },
+      orderBy: { headline: "asc" },
+    });
+
+    expect(news).toHaveLength(2);
+    const [retained, conveyed] = news;
+    expect(retained!.headline).toBe("2100 Round 1 Pick 1 stays with Worst");
+    expect(retained!.body).toContain("No. 1 overall");
+    expect(retained!.body).toContain("top-2 protection");
+    expect(retained!.body).toContain("Best receives nothing");
+    expect(conveyed!.headline).toBe("2100 Round 1 Pick 3 conveys to Best");
+    expect(conveyed!.body).toContain("No. 3 overall");
+    expect(conveyed!.body).toContain("Third sends it to Best");
+    expect(news.every((item) => item.day === 1)).toBe(true);
+  });
+
+  it("leaves picks without protection terms out of the transaction log", async () => {
+    const news = await prisma.newsItem.findMany({
+      where: { leagueId, seasonYear: 2100, kind: "transaction" },
+    });
+
+    expect(news.some((item) => item.headline.includes("Pick 2"))).toBe(false);
+    expect(news.some((item) => item.headline.includes("Round 2"))).toBe(false);
+  });
+
+  it("does not re-announce resolutions when draft order is rebuilt", async () => {
+    await createDraftOrderAndResolveConveyance(leagueId, 2100);
+
+    const news = await prisma.newsItem.findMany({
+      where: { leagueId, seasonYear: 2100, kind: "transaction" },
+    });
+    expect(news).toHaveLength(2);
+  });
+
+  it("surfaces both resolutions exactly once in the season transaction log", async () => {
+    await prisma.league.update({
+      where: { id: leagueId },
+      data: { seasonYear: 2100 },
+    });
+
+    const page = await listSeasonTransactions(userId, leagueId);
+
+    const headlines = page.transactions.map((item) => item.headline).sort();
+    expect(headlines).toEqual([
+      "2100 Round 1 Pick 1 stays with Worst",
+      "2100 Round 1 Pick 3 conveys to Best",
+    ]);
+    expect(page.nextCursor).toBeNull();
   });
 });
