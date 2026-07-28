@@ -46,9 +46,22 @@ export function readWorkspacePackageManifest(
 }
 
 /**
+ * npm lifecycle scripts that also accept the shorthand form
+ * `npm <script>` (without `run`), e.g. `npm test -w alpha`.
+ */
+const NPM_LIFECYCLE_SHORTCUTS = new Set([
+  "test",
+  "start",
+  "stop",
+  "restart",
+]);
+
+/**
  * Match `npm run <script> -w|--workspace <selector>` occurrences in a shell
- * command or CI workflow snippet. Unquoted selectors stop at whitespace or
- * common shell operators (`&`, `|`, `#`) so chained commands parse cleanly.
+ * command or CI workflow snippet. For lifecycle scripts (`test`, `start`,
+ * `stop`, `restart`), also accept the shorthand `npm <script> -w` form.
+ * Unquoted selectors stop at whitespace or common shell operators
+ * (`&`, `|`, `#`) so chained commands parse cleanly.
  */
 export function npmWorkspaceScriptCommandPositions(
   command: string,
@@ -56,8 +69,11 @@ export function npmWorkspaceScriptCommandPositions(
 ): ReadonlyMap<string, number> {
   const positions = new Map<string, number>();
   const escapedScript = scriptName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const runPrefix = NPM_LIFECYCLE_SHORTCUTS.has(scriptName)
+    ? String.raw`(?:run\s+)?`
+    : String.raw`run\s+`;
   const pattern = new RegExp(
-    String.raw`\bnpm\s+run\s+${escapedScript}\s+(?:-w\s+|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s&#|]+))`,
+    String.raw`\bnpm\s+${runPrefix}${escapedScript}\s+(?:-w\s+|--workspace(?:=|\s+))(?:"([^"]+)"|'([^']+)'|([^\s&#|]+))`,
     "g",
   );
 
