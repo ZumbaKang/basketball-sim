@@ -67,3 +67,51 @@ jobs:
         run: npm test
 `,
 } as const;
+
+/**
+ * Object-form workspaces whose package.json omits `name`. Coverage must
+ * match by path alone — package-name selectors are unavailable.
+ */
+export const coveredBuildWorkspaceNamelessObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta"],
+    },
+  },
+  workspacePackages: {
+    alpha: {
+      scripts: { build: "tsc" },
+    },
+    beta: {
+      scripts: { build: "tsc" },
+    },
+  },
+  ciWorkflow: `
+jobs:
+  test:
+    steps:
+      - name: Build workspaces
+        run: |
+          npm run build -w alpha
+          npm run build -w beta
+      - name: Run tests
+        run: npm test
+`,
+} as const;
+
+/** Same nameless packages, but CI only builds one path — beta is omitted. */
+export const omittedBuildWorkspaceNamelessObjectFormFixture = {
+  rootPackage: coveredBuildWorkspaceNamelessObjectFormFixture.rootPackage,
+  workspacePackages:
+    coveredBuildWorkspaceNamelessObjectFormFixture.workspacePackages,
+  ciWorkflow: `
+jobs:
+  test:
+    steps:
+      - name: Build workspaces
+        run: |
+          npm run build -w alpha
+      - name: Run tests
+        run: npm test
+`,
+} as const;

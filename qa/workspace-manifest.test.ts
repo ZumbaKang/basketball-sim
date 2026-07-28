@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
   omittedBuildWorkspaceFixture,
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
+  coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
   omittedTestWorkspaceFixture,
   omittedTestWorkspaceObjectFormFixture,
@@ -100,6 +102,34 @@ describe("workspace-manifest discovery", () => {
     expect(testable.map((workspace) => workspace.path)).toEqual([
       "alpha",
       "beta",
+    ]);
+  });
+
+  it("discovers nameless object-form packages by path alone", () => {
+    const buildable = workspacesWithScript(
+      coveredBuildWorkspaceNamelessObjectFormFixture.rootPackage,
+      "build",
+      (workspacePath) =>
+        coveredBuildWorkspaceNamelessObjectFormFixture.workspacePackages[
+          workspacePath as keyof typeof coveredBuildWorkspaceNamelessObjectFormFixture.workspacePackages
+        ],
+    );
+    const testable = workspacesWithScript(
+      coveredTestWorkspaceNamelessObjectFormFixture.rootPackage,
+      "test",
+      (workspacePath) =>
+        coveredTestWorkspaceNamelessObjectFormFixture.workspacePackages[
+          workspacePath as keyof typeof coveredTestWorkspaceNamelessObjectFormFixture.workspacePackages
+        ],
+    );
+
+    expect(buildable).toEqual([
+      { name: undefined, path: "alpha" },
+      { name: undefined, path: "beta" },
+    ]);
+    expect(testable).toEqual([
+      { name: undefined, path: "alpha" },
+      { name: undefined, path: "beta" },
     ]);
   });
 });
