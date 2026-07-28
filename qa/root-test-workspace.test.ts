@@ -2,6 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  coveredTestWorkspaceMixedNameObjectFormFixture,
   coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
   coveredTestWorkspaceShorthandFixture,
@@ -100,6 +101,20 @@ describe("root test workspace coverage", () => {
 
   it("counts npm test -w shorthand selectors as covered", () => {
     const fixture = coveredTestWorkspaceShorthandFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
+  });
+
+  it("accepts mixed named/nameless object-form packages covered by name and path", () => {
+    const fixture = coveredTestWorkspaceMixedNameObjectFormFixture;
 
     expect(() =>
       assertTestWorkspaceCoverage(

@@ -115,3 +115,35 @@ jobs:
         run: npm test
 `,
 } as const;
+
+/**
+ * Mixed object-form packages: alpha is covered by its package name, beta is
+ * nameless and must match by path alone. Both selectors must count.
+ */
+export const coveredBuildWorkspaceMixedNameObjectFormFixture = {
+  rootPackage: {
+    workspaces: {
+      packages: ["alpha", "beta"],
+    },
+  },
+  workspacePackages: {
+    alpha: {
+      name: "@fixture/alpha",
+      scripts: { build: "tsc" },
+    },
+    beta: {
+      scripts: { build: "tsc" },
+    },
+  },
+  ciWorkflow: `
+jobs:
+  test:
+    steps:
+      - name: Build workspaces
+        run: |
+          npm run build -w @fixture/alpha
+          npm run build -w beta
+      - name: Run tests
+        run: npm test
+`,
+} as const;

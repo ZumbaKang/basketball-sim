@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  coveredBuildWorkspaceMixedNameObjectFormFixture,
   coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
   omittedBuildWorkspaceFixture,
@@ -108,5 +109,20 @@ describe("CI workflow", () => {
         fixture.ciWorkflow,
       ),
     ).toThrowError("Missing CI build commands for: beta");
+  });
+
+  it("accepts mixed named/nameless object-form packages covered by name and path", () => {
+    const fixture = coveredBuildWorkspaceMixedNameObjectFormFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).not.toThrow();
   });
 });

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  coveredBuildWorkspaceMixedNameObjectFormFixture,
   coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
   omittedBuildWorkspaceFixture,
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
+  coveredTestWorkspaceMixedNameObjectFormFixture,
   coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
   coveredTestWorkspaceShorthandFixture,
@@ -255,6 +257,29 @@ describe("workspace coverage assertion helpers", () => {
         (workspacePath) =>
           coveredTestWorkspaceObjectFormFixture.workspacePackages[
             workspacePath as keyof typeof coveredTestWorkspaceObjectFormFixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
+  });
+
+  it("accepts mixed named/nameless coverage by package name and path", () => {
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        coveredBuildWorkspaceMixedNameObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredBuildWorkspaceMixedNameObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredBuildWorkspaceMixedNameObjectFormFixture.workspacePackages
+          ],
+        coveredBuildWorkspaceMixedNameObjectFormFixture.ciWorkflow,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        coveredTestWorkspaceMixedNameObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredTestWorkspaceMixedNameObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredTestWorkspaceMixedNameObjectFormFixture.workspacePackages
           ],
       ),
     ).not.toThrow();

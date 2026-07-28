@@ -161,7 +161,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: move the build and root-test coverage assertion helpers into
       `workspace-manifest.ts` beside the parsers; verify both omitted-workspace
       fixtures still throw the same errors.
-- [ ] `qa`: add a mixed named/nameless object-form fixture covered by a package
+- [x] `qa`: add a mixed named/nameless object-form fixture covered by a package
       name for one workspace and a path for the other; verify CI-build and
       root-test assertions both pass.
 - [ ] `qa`: add a late-build CI fixture where a workspace is built after
@@ -183,6 +183,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
       no `run`) the same as spaced `--workspace`; verify a fixture using the
       equals form still counts as covered.
+- [ ] `qa`: fail mixed named/nameless coverage when only the named package is
+      selected and the nameless path is omitted; verify CI-build and root-test
+      assertions both throw for the missing path.
+- [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
+      nameless workspace is covered by path in the same CI/root command; verify
+      both assertions pass.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -367,6 +373,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
 - 2026-07-28: Moved CI-build and root-test coverage assertion helpers into workspace-manifest
 - 2026-07-28: Treated `npm test -w` shorthand as covered in the shared workspace parser
 - 2026-07-28: Asserted nameless object-form packages still match CI/root coverage by path
