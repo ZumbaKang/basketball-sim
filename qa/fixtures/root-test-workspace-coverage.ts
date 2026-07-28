@@ -85,3 +85,17 @@ export const omittedTestWorkspaceNamelessObjectFormFixture = {
   workspacePackages:
     coveredTestWorkspaceNamelessObjectFormFixture.workspacePackages,
 } as const;
+
+/**
+ * Full coverage via the lifecycle shorthand `npm test -w` (no `run`).
+ * The shared parser must treat this the same as `npm run test -w`.
+ */
+export const coveredTestWorkspaceShorthandFixture = {
+  rootPackage: {
+    workspaces: ["alpha", "beta", "build-only"],
+    scripts: {
+      test: "npm test -w alpha && npm test -w beta",
+    },
+  },
+  workspacePackages: omittedTestWorkspaceFixture.workspacePackages,
+} as const;

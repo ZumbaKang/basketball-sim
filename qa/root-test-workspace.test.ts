@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
+  coveredTestWorkspaceShorthandFixture,
   omittedTestWorkspaceFixture,
   omittedTestWorkspaceNamelessObjectFormFixture,
   omittedTestWorkspaceObjectFormFixture,
@@ -126,5 +127,19 @@ describe("root test workspace coverage", () => {
           ],
       ),
     ).toThrowError("Missing root test commands for: beta");
+  });
+
+  it("counts npm test -w shorthand selectors as covered", () => {
+    const fixture = coveredTestWorkspaceShorthandFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
   });
 });

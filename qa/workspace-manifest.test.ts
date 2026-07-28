@@ -8,6 +8,7 @@ import {
 import {
   coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
+  coveredTestWorkspaceShorthandFixture,
   omittedTestWorkspaceFixture,
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
@@ -183,5 +184,23 @@ describe("npm workspace script command parsers", () => {
         "build",
       ),
     ).toEqual(new Set(["alpha"]));
+  });
+
+  it("treats npm test -w shorthand the same as npm run test -w", () => {
+    const selectors = npmWorkspaceScriptCommandSelectors(
+      coveredTestWorkspaceShorthandFixture.rootPackage.scripts.test,
+      "test",
+    );
+
+    expect(selectors).toEqual(new Set(["alpha", "beta"]));
+  });
+
+  it("does not treat npm build -w as a valid build shorthand", () => {
+    expect(
+      npmWorkspaceScriptCommandSelectors(
+        "npm build -w alpha && npm run build -w beta",
+        "build",
+      ),
+    ).toEqual(new Set(["beta"]));
   });
 });

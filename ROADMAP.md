@@ -155,7 +155,7 @@ implementing anything — its PRs are expected to touch only this file.
       fixtures still fail with the same errors.
 - [x] `qa`: add a nameless-package object-form fixture and assert coverage still
       matches workspaces by path alone when `package.json` omits `name`.
-- [ ] `qa`: treat `npm test -w <selector>` (without `run`) the same as
+- [x] `qa`: treat `npm test -w <selector>` (without `run`) the same as
       `npm run test -w` in the shared parser; verify a shorthand fixture still
       counts as covered.
 - [ ] `qa`: move the build and root-test coverage assertion helpers into
@@ -167,6 +167,14 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
       coverage still matches by path only; verify a `"name": ""` fixture fails
       when its path is missing from the command.
+- [ ] `qa`: cover a mixed root-test command that chains both `npm test -w` and
+      `npm run test -w`; verify both selector forms count toward coverage.
+- [ ] `qa`: accept lifecycle shorthands for `start`/`stop`/`restart` the same
+      way as `test`; verify an `npm start -w` fixture counts when checking a
+      start script and still rejects `npm build -w`.
+- [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
+      no `run`) the same as spaced `--workspace`; verify a fixture using the
+      equals form still counts as covered.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -351,6 +359,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Treated `npm test -w` shorthand as covered in the shared workspace parser
 - 2026-07-28: Asserted nameless object-form packages still match CI/root coverage by path
 - 2026-07-27: Moved CI build and root-test workspace selector parsers into shared workspace-manifest helpers
 - 2026-07-27: Extracted shared workspace-manifest discovery for CI-build and root-test coverage
