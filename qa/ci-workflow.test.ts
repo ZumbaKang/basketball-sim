@@ -3,8 +3,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
   omittedBuildWorkspaceFixture,
+  omittedBuildWorkspaceNamelessObjectFormFixture,
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
@@ -121,5 +123,35 @@ describe("CI workflow", () => {
         fixture.ciWorkflow,
       ),
     ).not.toThrow();
+  });
+
+  it("matches nameless object-form packages by path alone when every build is covered", () => {
+    const fixture = coveredBuildWorkspaceNamelessObjectFormFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).not.toThrow();
+  });
+
+  it("fails when a nameless object-form workspace path is omitted from CI builds", () => {
+    const fixture = omittedBuildWorkspaceNamelessObjectFormFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("Missing CI build commands for: beta");
   });
 });

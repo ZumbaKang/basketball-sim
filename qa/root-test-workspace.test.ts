@@ -2,8 +2,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  coveredTestWorkspaceNamelessObjectFormFixture,
   coveredTestWorkspaceObjectFormFixture,
   omittedTestWorkspaceFixture,
+  omittedTestWorkspaceNamelessObjectFormFixture,
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
 import {
@@ -96,5 +98,33 @@ describe("root test workspace coverage", () => {
           ],
       ),
     ).not.toThrow();
+  });
+
+  it("matches nameless object-form packages by path alone when every test is covered", () => {
+    const fixture = coveredTestWorkspaceNamelessObjectFormFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
+  });
+
+  it("fails when a nameless object-form workspace path is omitted from root tests", () => {
+    const fixture = omittedTestWorkspaceNamelessObjectFormFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).toThrowError("Missing root test commands for: beta");
   });
 });

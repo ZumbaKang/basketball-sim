@@ -153,7 +153,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: move CI build-command and root-test-command selector parsers into
       `workspace-manifest.ts` beside discovery; verify both omitted-workspace
       fixtures still fail with the same errors.
-- [ ] `qa`: add a nameless-package object-form fixture and assert coverage still
+- [x] `qa`: add a nameless-package object-form fixture and assert coverage still
       matches workspaces by path alone when `package.json` omits `name`.
 - [ ] `qa`: treat `npm test -w <selector>` (without `run`) the same as
       `npm run test -w` in the shared parser; verify a shorthand fixture still
@@ -161,6 +161,12 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: move the build and root-test coverage assertion helpers into
       `workspace-manifest.ts` beside the parsers; verify both omitted-workspace
       fixtures still throw the same errors.
+- [ ] `qa`: add a mixed named/nameless object-form fixture covered by a package
+      name for one workspace and a path for the other; verify CI-build and
+      root-test assertions both pass.
+- [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
+      coverage still matches by path only; verify a `"name": ""` fixture fails
+      when its path is missing from the command.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
@@ -345,6 +351,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Asserted nameless object-form packages still match CI/root coverage by path
 - 2026-07-27: Moved CI build and root-test workspace selector parsers into shared workspace-manifest helpers
 - 2026-07-27: Extracted shared workspace-manifest discovery for CI-build and root-test coverage
 - 2026-07-27: Rejected sub-five available-player game inputs before box-score generation
