@@ -13,6 +13,8 @@ import {
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
 import {
+  assertBuildWorkspaceCoverage,
+  assertTestWorkspaceCoverage,
   npmWorkspaceScriptCommandPositions,
   npmWorkspaceScriptCommandSelectors,
   workspacePaths,
@@ -202,5 +204,59 @@ describe("npm workspace script command parsers", () => {
         "build",
       ),
     ).toEqual(new Set(["beta"]));
+  });
+});
+
+describe("workspace coverage assertion helpers", () => {
+  it("throws the same omitted-build error from the shared helper", () => {
+    const fixture = omittedBuildWorkspaceFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("Missing CI build commands for: beta");
+  });
+
+  it("throws the same omitted-test error from the shared helper", () => {
+    const fixture = omittedTestWorkspaceFixture;
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+      ),
+    ).toThrowError("Missing root test commands for: beta");
+  });
+
+  it("accepts covered object-form build and test fixtures", () => {
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        coveredBuildWorkspaceObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredBuildWorkspaceObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredBuildWorkspaceObjectFormFixture.workspacePackages
+          ],
+        coveredBuildWorkspaceObjectFormFixture.ciWorkflow,
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      assertTestWorkspaceCoverage(
+        coveredTestWorkspaceObjectFormFixture.rootPackage,
+        (workspacePath) =>
+          coveredTestWorkspaceObjectFormFixture.workspacePackages[
+            workspacePath as keyof typeof coveredTestWorkspaceObjectFormFixture.workspacePackages
+          ],
+      ),
+    ).not.toThrow();
   });
 });
