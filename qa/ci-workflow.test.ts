@@ -6,6 +6,7 @@ import {
   coveredBuildWorkspaceMixedNameObjectFormFixture,
   coveredBuildWorkspaceNamelessObjectFormFixture,
   coveredBuildWorkspaceObjectFormFixture,
+  lateBuildWorkspaceFixture,
   omittedBuildWorkspaceFixture,
   omittedBuildWorkspaceNamelessObjectFormFixture,
   omittedBuildWorkspaceObjectFormFixture,
@@ -124,5 +125,20 @@ describe("CI workflow", () => {
         fixture.ciWorkflow,
       ),
     ).not.toThrow();
+  });
+
+  it("fails when a workspace build runs after the Run tests step", () => {
+    const fixture = lateBuildWorkspaceFixture;
+
+    expect(() =>
+      assertBuildWorkspaceCoverage(
+        fixture.rootPackage,
+        (workspacePath) =>
+          fixture.workspacePackages[
+            workspacePath as keyof typeof fixture.workspacePackages
+          ],
+        fixture.ciWorkflow,
+      ),
+    ).toThrowError("CI build commands must precede tests for: beta");
   });
 });
