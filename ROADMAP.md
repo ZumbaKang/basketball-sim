@@ -164,7 +164,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: add a late-build CI fixture where a workspace is built after
       `- name: Run tests` and assert `assertBuildWorkspaceCoverage` throws the
       precede-tests error for that path.
-- [ ] `db`: when a scheduled game has fewer than five healthy players, fail before
+- [x] `db`: when a scheduled game has fewer than five healthy players, fail before
       persist instead of substituting injured players into `simulateGame`; verify
       no `final` row or game news is written.
 - [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
@@ -172,6 +172,12 @@ implementing anything — its PRs are expected to touch only this file.
       roster produce different messages naming the cause.
 - [ ] `frontend`: surface the sim roster-shortage preflight message on the league
       play flow when a game cannot be simulated; verify the alert wraps at 320px.
+- [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
+      `scheduled`, write a non-game news item naming the short team, and keep
+      simulating sibling games that day; verify advance does not abort mid-slate.
+- [ ] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
+      failure cannot leave a `Game` row without matching `final` status or game
+      news; add a fixture that forces a post-`Game` write error.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
@@ -341,6 +347,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
 - 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
 - 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
 - 2026-07-28: Moved CI-build and root-test coverage assertion helpers into workspace-manifest

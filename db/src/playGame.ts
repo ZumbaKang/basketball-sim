@@ -1,5 +1,5 @@
 import type { GameResult, Player, Team } from "@basketball-sim/shared";
-import { simulateGame } from "@basketball-sim/sim";
+import { MIN_AVAILABLE_PLAYERS, simulateGame } from "@basketball-sim/sim";
 import { prisma } from "./prisma.js";
 import { toPlayer, toTeam } from "./mappers.js";
 
@@ -7,6 +7,27 @@ function availablePlayers(players: Player[]): Player[] {
   return players
     .filter((p) => p.injuredDays <= 0)
     .sort((a, b) => a.rotationOrder - b.rotationOrder || b.ratings.overall - a.ratings.overall);
+}
+
+function assertHealthyRosters(homeTeam: Team, homePlayers: Player[], awayTeam: Team, awayPlayers: Player[]): void {
+  const shortages: string[] = [];
+  if (homePlayers.length < MIN_AVAILABLE_PLAYERS) {
+    shortages.push(
+      `home team ${homeTeam.name} has ${homePlayers.length} healthy player${
+        homePlayers.length === 1 ? "" : "s"
+      } (need at least ${MIN_AVAILABLE_PLAYERS})`,
+    );
+  }
+  if (awayPlayers.length < MIN_AVAILABLE_PLAYERS) {
+    shortages.push(
+      `away team ${awayTeam.name} has ${awayPlayers.length} healthy player${
+        awayPlayers.length === 1 ? "" : "s"
+      } (need at least ${MIN_AVAILABLE_PLAYERS})`,
+    );
+  }
+  if (shortages.length > 0) {
+    throw new Error(`Cannot simulate scheduled game: ${shortages.join("; ")}.`);
+  }
 }
 
 export async function simulateScheduledGame(scheduledGameId: string): Promise<GameResult> {
@@ -28,13 +49,15 @@ export async function simulateScheduledGame(scheduledGameId: string): Promise<Ga
   const awayTeam = toTeam(sg.awayTeam);
   const homePlayers = availablePlayers(sg.homeTeam.players.map(toPlayer));
   const awayPlayers = availablePlayers(sg.awayTeam.players.map(toPlayer));
+  // Fail closed before simulate/persist — never substitute injured players to fill a short roster.
+  assertHealthyRosters(homeTeam, homePlayers, awayTeam, awayPlayers);
 
   const result = simulateGame({
     leagueId: sg.leagueId,
     homeTeam,
     awayTeam,
-    homePlayers: homePlayers.length ? homePlayers : sg.homeTeam.players.map(toPlayer),
-    awayPlayers: awayPlayers.length ? awayPlayers : sg.awayTeam.players.map(toPlayer),
+    homePlayers,
+    awayPlayers,
     seed: hashSeed(sg.id),
   });
   result.scheduledGameId = sg.id;
