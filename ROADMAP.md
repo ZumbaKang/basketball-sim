@@ -164,38 +164,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: add a late-build CI fixture where a workspace is built after
       `- name: Run tests` and assert `assertBuildWorkspaceCoverage` throws the
       precede-tests error for that path.
-- [ ] `qa`: add a root package fixture with no `scripts.test` and assert
-      `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
-- [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
-      `npm test -w alpha; npm test -w beta` still counts both; verify with a
-      chained fixture.
-- [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
-      coverage still matches by path only; verify a `"name": ""` fixture fails
-      when its path is missing from the command.
-- [ ] `qa`: cover a mixed root-test command that chains both `npm test -w` and
-      `npm run test -w`; verify both selector forms count toward coverage.
-- [ ] `qa`: accept lifecycle shorthands for `start`/`stop`/`restart` the same
-      way as `test`; verify an `npm start -w` fixture counts when checking a
-      start script and still rejects `npm build -w`.
-- [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
-      no `run`) the same as spaced `--workspace`; verify a fixture using the
-      equals form still counts as covered.
-- [ ] `qa`: fail mixed named/nameless coverage when only the named package is
-      selected and the nameless path is omitted; verify CI-build and root-test
-      assertions both throw for the missing path.
-- [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
-      nameless workspace is covered by path in the same CI/root command; verify
-      both assertions pass.
-- [ ] `qa`: when a workspace is built both before and after `- name: Run tests`,
-      keep the earliest build position so a pre-test build still passes; verify
-      with a duplicate-build fixture that currently would fail on the last match.
-- [ ] `qa`: when the CI workflow omits `- name: Run tests` entirely, assert every
-      buildable workspace is reported as late; verify with a no-test-step fixture.
-- [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
-      precede-tests error lists both paths; verify with a dual late-build fixture.
-- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
-      games, redistributing the difference across healthy reserves; verify the
-      returning player ramps up without changing 240-minute team totals.
 - [ ] `db`: when a scheduled game has fewer than five healthy players, fail before
       persist instead of substituting injured players into `simulateGame`; verify
       no `final` row or game news is written.
@@ -204,11 +172,6 @@ implementing anything — its PRs are expected to touch only this file.
       roster produce different messages naming the cause.
 - [ ] `frontend`: surface the sim roster-shortage preflight message on the league
       play flow when a game cannot be simulated; verify the alert wraps at 320px.
-- [ ] `qa`: add a nameless-package object-form fixture and assert coverage still
-      matches workspaces by path alone when `package.json` omits `name`.
-- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
-      games, redistributing the difference across healthy reserves; verify the
-      returning player ramps up without changing 240-minute team totals.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
@@ -219,9 +182,17 @@ implementing anything — its PRs are expected to touch only this file.
       single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
       no line exceeds a credible FTA-per-FGA ratio while team totals still
       reconcile.
-- [ ] `db`: record protected-pick draft-order resolutions as transaction news
-      items; verify retained and conveyed outcomes identify the slot and recipient
-      exactly once.
+- [ ] `db`: reject proposals that list the same `playerId` more than once across
+      `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
+      contracts unchanged.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
+- [ ] `qa`: fail the build when a CSS custom property is referenced but never
+      declared for a theme — an undefined `--font-*` alias silently dropped every
+      page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
+- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
+      more cautious with teams that "won" a prior trade.
 
 ## Next
 
@@ -263,9 +234,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: announce trade-finder asset changes through the selected-assets
       summary and move focus to it; verify keyboard and screen-reader users hear
       both updated player and partner names.
-- [ ] `db`: reject proposals that list the same `playerId` more than once across
-      `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
-      contracts unchanged.
 - [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
       injected into a mixed package; verify the FA row and any null-team contract
       stay put while owned picks remain with their teams.
@@ -301,6 +269,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: record draft selections and offseason contract expirations as
       `draft`/`transaction` news items; verify the season transaction log
       includes both move types.
+- [ ] `db`: record protected-pick draft-order resolutions as transaction news
+      items; verify retained and conveyed outcomes identify the slot and recipient
+      exactly once.
 - [ ] `frontend`: let the trade finder return mixed player/pick packages and
       hydrate both asset kinds in the builder; verify a pick-heavy finder result
       focuses the summary and stays usable at 320px.
@@ -315,12 +286,32 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
-- [ ] `qa`: treat `npm test -w <selector>` (without `run`) the same as
-      `npm run test -w` in the shared parser; verify a shorthand fixture still
-      counts as covered.
-- [ ] `qa`: move the build and root-test coverage assertion helpers into
-      `workspace-manifest.ts` beside the parsers; verify both omitted-workspace
-      fixtures still throw the same errors.
+- [ ] `qa`: add a root package fixture with no `scripts.test` and assert
+      `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
+- [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
+      `npm test -w alpha; npm test -w beta` still counts both; verify with a
+      chained fixture.
+- [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
+      coverage still matches by path only; verify a `"name": ""` fixture fails
+      when its path is missing from the command.
+- [ ] `qa`: cover a mixed root-test command that chains both `npm test -w` and
+      `npm run test -w`; verify both selector forms count toward coverage.
+- [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
+      no `run`) the same as spaced `--workspace`; verify a fixture using the
+      equals form still counts as covered.
+- [ ] `qa`: fail mixed named/nameless coverage when only the named package is
+      selected and the nameless path is omitted; verify CI-build and root-test
+      assertions both throw for the missing path.
+- [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
+      nameless workspace is covered by path in the same CI/root command; verify
+      both assertions pass.
+- [ ] `qa`: when a workspace is built both before and after `- name: Run tests`,
+      keep the earliest build position so a pre-test build still passes; verify
+      with a duplicate-build fixture that currently would fail on the last match.
+- [ ] `qa`: when the CI workflow omits `- name: Run tests` entirely, assert every
+      buildable workspace is reported as late; verify with a no-test-step fixture.
+- [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
+      precede-tests error lists both paths; verify with a dual late-build fixture.
 - [ ] `qa`: accept single-quoted and double-quoted workspace selectors that
       contain spaces in both parsers; add a fixture path with a space and assert
       coverage still matches.
@@ -329,11 +320,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: assert every CI workspace build runs after Prisma generation as
       well as before tests; add an out-of-order workflow fixture that fails the
       QA check.
-- [ ] `qa`: fail the build when a CSS custom property is referenced but never
-      declared for a theme — an undefined `--font-*` alias silently dropped every
-      page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
-- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
-      more cautious with teams that "won" a prior trade.
 
 ## Later
 
@@ -348,6 +334,9 @@ implementing anything — its PRs are expected to touch only this file.
       _Blocked: playoff bracket promotion can index incomplete Western
       first-round winners when the Eastern first round finishes first, crashing
       before awards and the offseason draft; persistence must fix this first._
+- [ ] `qa`: accept lifecycle shorthands for `start`/`stop`/`restart` the same
+      way as `test`; verify an `npm start -w` fixture counts when checking a
+      start script and still rejects `npm build -w`.
 
 ## Shipped
 
