@@ -1,5 +1,6 @@
 import type {
   Contract,
+  DraftPick,
   GameResult,
   League,
   NewsItem,
@@ -181,6 +182,28 @@ export function toNews(row: {
     headline: row.headline,
     body: row.body,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export function toDraftPick(row: {
+  id: string;
+  leagueId: string;
+  seasonYear: number;
+  round: number;
+  pick: number;
+  originalTeamId: string;
+  ownerTeamId: string;
+  playerId: string | null;
+}): DraftPick {
+  return {
+    id: row.id,
+    leagueId: row.leagueId,
+    seasonYear: row.seasonYear,
+    round: row.round,
+    pick: row.pick,
+    originalTeamId: row.originalTeamId,
+    ownerTeamId: row.ownerTeamId,
+    playerId: row.playerId,
   };
 }
 

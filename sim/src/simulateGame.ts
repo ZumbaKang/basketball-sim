@@ -52,6 +52,34 @@ function availablePlayers(players: Player[]): Player[] {
 const REGULATION_TEAM_MINUTES = 240;
 const MAX_PLAYER_MINUTES = 48;
 const MINUTE_PRECISION = 10;
+/** NBA games require five players on the floor; short of that we refuse to sim. */
+export const MIN_AVAILABLE_PLAYERS = 5;
+
+function assertMinimumAvailablePlayers(
+  homeTeam: Team,
+  homeAvailable: Player[],
+  awayTeam: Team,
+  awayAvailable: Player[],
+): void {
+  const shortages: string[] = [];
+  if (homeAvailable.length < MIN_AVAILABLE_PLAYERS) {
+    shortages.push(
+      `home team ${homeTeam.name} has ${homeAvailable.length} available player${
+        homeAvailable.length === 1 ? "" : "s"
+      } (need at least ${MIN_AVAILABLE_PLAYERS})`,
+    );
+  }
+  if (awayAvailable.length < MIN_AVAILABLE_PLAYERS) {
+    shortages.push(
+      `away team ${awayTeam.name} has ${awayAvailable.length} available player${
+        awayAvailable.length === 1 ? "" : "s"
+      } (need at least ${MIN_AVAILABLE_PLAYERS})`,
+    );
+  }
+  if (shortages.length > 0) {
+    throw new Error(`Cannot simulate game: ${shortages.join("; ")}.`);
+  }
+}
 
 function balanceShortRotationMinutes(
   minutes: Map<string, number>,
@@ -361,6 +389,12 @@ export function simulateGame(input: SimulateGameInput): GameResult {
   const rng = createRng(seed);
   const homePlayers = availablePlayers(input.homePlayers);
   const awayPlayers = availablePlayers(input.awayPlayers);
+  assertMinimumAvailablePlayers(
+    input.homeTeam,
+    homePlayers,
+    input.awayTeam,
+    awayPlayers,
+  );
 
   const homeDef =
     homePlayers.reduce((a, p) => a + p.ratings.defense, 0) / Math.max(1, homePlayers.length);

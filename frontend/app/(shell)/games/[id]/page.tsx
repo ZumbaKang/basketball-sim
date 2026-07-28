@@ -1,79 +1,94 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { GameResult, PlayerGameLine, TeamGameLine } from "@basketball-sim/shared";
+import { ScrollableTable } from "@/components/ScrollableTable";
+
+function shooting(made: number, attempted: number): string {
+  if (attempted === 0) return "—";
+  return `${((made / attempted) * 100).toFixed(0)}%`;
+}
 
 function BoxTable({ line }: { line: TeamGameLine }) {
   return (
-    <div style={{ overflowX: "auto", marginBottom: "1.25rem" }}>
-      <h3 style={{ fontFamily: "var(--font-display)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-        {line.teamName}
-      </h3>
-      <table className="box-table">
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>MIN</th>
-            <th>PTS</th>
-            <th>REB</th>
-            <th>AST</th>
-            <th>STL</th>
-            <th>BLK</th>
-            <th>TOV</th>
-            <th>FG</th>
-            <th>3P</th>
-            <th>FT</th>
-          </tr>
-        </thead>
-        <tbody>
-          {line.players.map((p: PlayerGameLine) => (
-            <tr key={p.playerId}>
-              <td>{p.playerName}</td>
-              <td>{p.minutes.toFixed(1)}</td>
-              <td>{p.pts}</td>
-              <td>{p.reb}</td>
-              <td>{p.ast}</td>
-              <td>{p.stl}</td>
-              <td>{p.blk}</td>
-              <td>{p.tov}</td>
+    <section className="panel mobile-table-panel">
+      <div className="panel-head">
+        <h2>{line.teamName}</h2>
+        <p className="panel-note">
+          {line.pts} pts · {shooting(line.fgm, line.fga)} FG · {shooting(line.tpm, line.tpa)} 3P
+        </p>
+      </div>
+      <ScrollableTable
+        label={`${line.teamName} box score`}
+        offscreenColumns="minutes, rebounds, assists, steals, blocks, turnovers, and shooting splits"
+      >
+        <table className="box-table">
+          <thead>
+            <tr>
+              <th scope="col">Player</th>
+              <th scope="col">MIN</th>
+              <th scope="col">PTS</th>
+              <th scope="col">REB</th>
+              <th scope="col">AST</th>
+              <th scope="col">STL</th>
+              <th scope="col">BLK</th>
+              <th scope="col">TOV</th>
+              <th scope="col">FG</th>
+              <th scope="col">3P</th>
+              <th scope="col">FT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {line.players.map((p: PlayerGameLine) => (
+              <tr key={p.playerId}>
+                <td>
+                  <Link className="cell-link" href={`/players/${p.playerId}`}>
+                    {p.playerName}
+                  </Link>
+                </td>
+                <td>{p.minutes.toFixed(1)}</td>
+                <td>{p.pts}</td>
+                <td>{p.reb}</td>
+                <td>{p.ast}</td>
+                <td>{p.stl}</td>
+                <td>{p.blk}</td>
+                <td>{p.tov}</td>
+                <td>
+                  {p.fgm}-{p.fga}
+                </td>
+                <td>
+                  {p.tpm}-{p.tpa}
+                </td>
+                <td>
+                  {p.ftm}-{p.fta}
+                </td>
+              </tr>
+            ))}
+            <tr className="row-total">
+              <td>Team</td>
+              <td />
+              <td>{line.pts}</td>
+              <td>{line.reb}</td>
+              <td>{line.ast}</td>
+              <td>{line.stl}</td>
+              <td>{line.blk}</td>
+              <td>{line.tov}</td>
               <td>
-                {p.fgm}-{p.fga}
+                {line.fgm}-{line.fga}
               </td>
               <td>
-                {p.tpm}-{p.tpa}
+                {line.tpm}-{line.tpa}
               </td>
               <td>
-                {p.ftm}-{p.fta}
+                {line.ftm}-{line.fta}
               </td>
             </tr>
-          ))}
-          <tr>
-            <td>
-              <strong>Team</strong>
-            </td>
-            <td />
-            <td>
-              <strong>{line.pts}</strong>
-            </td>
-            <td>{line.reb}</td>
-            <td>{line.ast}</td>
-            <td>{line.stl}</td>
-            <td>{line.blk}</td>
-            <td>{line.tov}</td>
-            <td>
-              {line.fgm}-{line.fga}
-            </td>
-            <td>
-              {line.tpm}-{line.tpa}
-            </td>
-            <td>
-              {line.ftm}-{line.fta}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </ScrollableTable>
+    </section>
   );
 }
 
@@ -102,7 +117,12 @@ export default function GamePage() {
   if (error) {
     return (
       <main>
-        <p className="error">{error}</p>
+        <p className="error" role="alert">
+          {error}
+        </p>
+        <Link className="btn btn-secondary btn-sm" href="/league">
+          Back to franchise
+        </Link>
       </main>
     );
   }
@@ -110,34 +130,41 @@ export default function GamePage() {
   if (!game) {
     return (
       <main>
-        <p className="muted">Loading box score…</p>
+        <div className="skeleton-stack" aria-busy="true" aria-live="polite">
+          <span className="sr-only">Loading box score…</span>
+          <div className="skeleton" style={{ height: "8rem" }} />
+          <div className="skeleton" style={{ height: "16rem" }} />
+        </div>
       </main>
     );
   }
 
+  const homeWon = game.home.pts > game.away.pts;
+
   return (
-    <main>
+    <main className="rise">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">{game.isPlayoff ? "Playoffs" : "Regular season"} · final</p>
+          <h1 className="page-title">Box score</h1>
+        </div>
+        <p className="panel-note">{new Date(game.playedAt).toLocaleString()}</p>
+      </div>
+
       <div className="scoreboard">
-        <div className="side">
+        <div className={`side${homeWon ? " side-winner" : ""}`}>
           <div className="name">{game.home.teamName}</div>
           <div className="pts">{game.home.pts}</div>
         </div>
         <div className="vs">FINAL</div>
-        <div className="side">
+        <div className={`side${homeWon ? "" : " side-winner"}`}>
           <div className="name">{game.away.teamName}</div>
           <div className="pts">{game.away.pts}</div>
         </div>
       </div>
 
-      <p className="muted" style={{ marginTop: 0 }}>
-        {new Date(game.playedAt).toLocaleString()}
-      </p>
-
-      <section className="panel">
-        <h2>Box score</h2>
-        <BoxTable line={game.home} />
-        <BoxTable line={game.away} />
-      </section>
+      <BoxTable line={game.home} />
+      <BoxTable line={game.away} />
     </main>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ScrollableTable } from "@/components/ScrollableTable";
 
 type Payload = {
   champions: { seasonYear: number; teamName: string }[];
@@ -27,30 +28,44 @@ export default function HistoryPage() {
   if (!data) {
     return (
       <main>
-        <p className="muted">Loading history…</p>
+        <div className="skeleton-stack" aria-busy="true" aria-live="polite">
+          <span className="sr-only">Loading history…</span>
+          <div className="skeleton" style={{ height: "2.5rem", width: "35%" }} />
+          <div className="skeleton" style={{ height: "9rem" }} />
+          <div className="skeleton" style={{ height: "9rem" }} />
+        </div>
       </main>
     );
   }
 
   return (
-    <main>
-      <h1 className="brand" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>
-        History
-      </h1>
-      <p className="tagline">Champions, awards, and scoring leaders.</p>
+    <main className="rise">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">Record book</p>
+          <h1 className="page-title">History</h1>
+          <p className="page-sub">Champions, awards, and the current scoring race.</p>
+        </div>
+      </div>
 
       <section className="panel">
-        <h2>Champions</h2>
+        <div className="panel-head">
+          <h2>Champions</h2>
+          <p className="panel-note">{data.champions.length} titles</p>
+        </div>
         {data.champions.length === 0 ? (
-          <p className="muted">No cups yet — finish a playoff.</p>
+          <p className="muted">No banners yet — finish a playoff run.</p>
         ) : (
-          <ul className="game-list">
+          <ul className="feed">
             {data.champions.map((c) => (
-              <li key={`${c.seasonYear}-${c.teamName}`}>
-                <a href="#champ">
-                  <span>{c.teamName}</span>
-                  <span className="muted">{c.seasonYear}</span>
-                </a>
+              <li key={`${c.seasonYear}-${c.teamName}`} className="feed-item">
+                <span>
+                  <span className="tag tag-accent" style={{ marginRight: "0.6rem" }}>
+                    Champion
+                  </span>
+                  {c.teamName}
+                </span>
+                <span className="feed-meta">{c.seasonYear}</span>
               </li>
             ))}
           </ul>
@@ -58,19 +73,22 @@ export default function HistoryPage() {
       </section>
 
       <section className="panel">
-        <h2>Awards</h2>
+        <div className="panel-head">
+          <h2>Awards</h2>
+        </div>
         {data.awards.length === 0 ? (
           <p className="muted">Awards post when a season crowns a champion.</p>
         ) : (
-          <ul className="game-list">
+          <ul className="feed">
             {data.awards.map((a, i) => (
-              <li key={`${a.seasonYear}-${a.kind}-${i}`}>
-                <a href="#award">
-                  <span>
-                    {a.kind}: {a.playerName}
+              <li key={`${a.seasonYear}-${a.kind}-${i}`} className="feed-item">
+                <span>
+                  <span className="tag" style={{ marginRight: "0.6rem" }}>
+                    {a.kind}
                   </span>
-                  <span className="muted">{a.seasonYear}</span>
-                </a>
+                  {a.playerName}
+                </span>
+                <span className="feed-meta">{a.seasonYear}</span>
               </li>
             ))}
           </ul>
@@ -78,29 +96,21 @@ export default function HistoryPage() {
       </section>
 
       <section className="panel mobile-table-panel">
-        <h2>Scoring leaders</h2>
-        <p className="table-scroll-hint" id="scoring-leaders-scroll-hint">
-          Scroll horizontally to view all columns.
-          <span className="sr-only">
-            {" "}
-            Offscreen columns include games played, points, rebounds, and assists per game.
-          </span>
-        </p>
-        <div
-          className="table-scroll"
-          role="region"
-          aria-label="Scoring leaders"
-          aria-describedby="scoring-leaders-scroll-hint"
-          tabIndex={0}
+        <div className="panel-head">
+          <h2>Scoring leaders</h2>
+        </div>
+        <ScrollableTable
+          label="Scoring leaders"
+          offscreenColumns="games played, points, rebounds, and assists per game"
         >
           <table className="box-table">
             <thead>
               <tr>
-                <th>Player</th>
-                <th>GP</th>
-                <th>PPG</th>
-                <th>RPG</th>
-                <th>APG</th>
+                <th scope="col">Player</th>
+                <th scope="col">GP</th>
+                <th scope="col">PPG</th>
+                <th scope="col">RPG</th>
+                <th scope="col">APG</th>
               </tr>
             </thead>
             <tbody>
@@ -115,7 +125,7 @@ export default function HistoryPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollableTable>
       </section>
     </main>
   );

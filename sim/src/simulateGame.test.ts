@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Player, Team } from "@basketball-sim/shared";
-import { assertRealisticGameResult, simulateGame } from "../src/index.js";
+import {
+  assertRealisticGameResult,
+  MIN_AVAILABLE_PLAYERS,
+  simulateGame,
+} from "../src/index.js";
 
 function ratings(overall: number) {
   return {
@@ -212,6 +216,79 @@ describe("simulateGame", () => {
       expect(() => assertRealisticGameResult(result)).not.toThrow();
     },
   );
+
+  it.each([0, 1, 2, 3, 4])(
+    "rejects a home roster with only %i available players before box-score generation",
+    (availableCount) => {
+      const shortenRoster = (players: Player[], count: number) =>
+        players.map((player, index) => ({
+          ...player,
+          injuredDays: index < count ? 0 : 2,
+        }));
+
+      expect(() =>
+        simulateGame({
+          leagueId: "lg1",
+          homeTeam,
+          awayTeam,
+          homePlayers: shortenRoster(roster("t_home", "Harbor"), availableCount),
+          awayPlayers: roster("t_away", "Metro"),
+          seed: 4100 + availableCount,
+        }),
+      ).toThrow(
+        `Cannot simulate game: home team Harbor Hawks has ${availableCount} available player${
+          availableCount === 1 ? "" : "s"
+        } (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+      );
+    },
+  );
+
+  it.each([0, 1, 2, 3, 4])(
+    "rejects an away roster with only %i available players before box-score generation",
+    (availableCount) => {
+      const shortenRoster = (players: Player[], count: number) =>
+        players.map((player, index) => ({
+          ...player,
+          injuredDays: index < count ? 0 : 2,
+        }));
+
+      expect(() =>
+        simulateGame({
+          leagueId: "lg1",
+          homeTeam,
+          awayTeam,
+          homePlayers: roster("t_home", "Harbor"),
+          awayPlayers: shortenRoster(roster("t_away", "Metro"), availableCount),
+          seed: 4200 + availableCount,
+        }),
+      ).toThrow(
+        `Cannot simulate game: away team Metro Foxes has ${availableCount} available player${
+          availableCount === 1 ? "" : "s"
+        } (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+      );
+    },
+  );
+
+  it("rejects both sides when each has fewer than five available players", () => {
+    const shortenRoster = (players: Player[], count: number) =>
+      players.map((player, index) => ({
+        ...player,
+        injuredDays: index < count ? 0 : 2,
+      }));
+
+    expect(() =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: shortenRoster(roster("t_home", "Harbor"), 2),
+        awayPlayers: shortenRoster(roster("t_away", "Metro"), 0),
+        seed: 4300,
+      }),
+    ).toThrow(
+      `Cannot simulate game: home team Harbor Hawks has 2 available players (need at least ${MIN_AVAILABLE_PLAYERS}); away team Metro Foxes has 0 available players (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+    );
+  });
 
   it.each([
     { availableCount: 5, seed: 4 },

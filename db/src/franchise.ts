@@ -2,7 +2,7 @@ import type { FranchiseHome } from "@basketball-sim/shared";
 import { prisma } from "./prisma.js";
 import { ensureLeagueForUser, listGamesForLeague } from "./league.js";
 import { getStandings } from "./standings.js";
-import { toNews, toPlayer, toScheduleGame, toUser } from "./mappers.js";
+import { toDraftPick, toNews, toPlayer, toScheduleGame, toUser } from "./mappers.js";
 import { findNextUserRegularSeasonGame } from "./nextGame.js";
 
 export async function getFranchiseHome(userId: string): Promise<FranchiseHome> {
@@ -26,6 +26,15 @@ export async function getFranchiseHome(userId: string): Promise<FranchiseHome> {
     take: 20,
   });
 
+  const draftPickRows = await prisma.draftPick.findMany({
+    where: {
+      leagueId: snapshot.league.id,
+      playerId: null,
+      conveyanceTeamId: null,
+    },
+    orderBy: [{ seasonYear: "asc" }, { round: "asc" }, { pick: "asc" }],
+  });
+
   const roster = snapshot.userTeamId
     ? snapshot.players
         .filter((p) => p.teamId === snapshot.userTeamId)
@@ -45,6 +54,7 @@ export async function getFranchiseHome(userId: string): Promise<FranchiseHome> {
     news: newsRows.map(toNews),
     roster: roster.map((p) => p),
     payroll,
+    draftPicks: draftPickRows.map(toDraftPick),
   };
 }
 

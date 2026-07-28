@@ -40,6 +40,8 @@ describe("franchise persistence", () => {
     const home = await getFranchiseHome(user.id);
     expect(home.roster.length).toBeGreaterThan(10);
     expect(home.standings).toHaveLength(30);
+    expect(home.draftPicks.length).toBeGreaterThan(0);
+    expect(home.draftPicks.every((p) => p.playerId === null)).toBe(true);
 
     const away = snapshot.teams[1]!.id;
     const result = await playGame(user.id, {

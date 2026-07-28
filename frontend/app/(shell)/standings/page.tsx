@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { League, StandingsRow } from "@basketball-sim/shared";
+import { ScrollableTable } from "@/components/ScrollableTable";
+import { pct, signed } from "@/lib/format";
 
 export default function StandingsPage() {
   const router = useRouter();
@@ -22,70 +24,75 @@ export default function StandingsPage() {
     })();
   }, [router]);
 
-  const east = standings.filter((s) => s.conference === "East");
-  const west = standings.filter((s) => s.conference === "West");
+  const userTeamId = league?.userTeamId ?? null;
 
-  function table(rows: StandingsRow[], title: string, id: string) {
-    const hintId = `${id}-scroll-hint`;
-
+  function table(rows: StandingsRow[], title: string) {
     return (
       <section className="panel mobile-table-panel">
-        <h2>{title}</h2>
-        <p className="table-scroll-hint" id={hintId}>
-          Scroll horizontally to view all columns.
-          <span className="sr-only">
-            {" "}
-            Offscreen columns include wins, losses, winning percentage, and point differential.
-          </span>
-        </p>
-        <div
-          className="table-scroll"
-          role="region"
-          aria-label={`${title} standings`}
-          aria-describedby={hintId}
-          tabIndex={0}
+        <div className="panel-head">
+          <h2>{title}</h2>
+          <p className="panel-note">{rows.length} teams</p>
+        </div>
+        <ScrollableTable
+          label={`${title} standings`}
+          offscreenColumns="wins, losses, winning percentage, and point differential"
         >
           <table className="box-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Team</th>
-                <th>W</th>
-                <th>L</th>
-                <th>PCT</th>
-                <th>DIFF</th>
+                <th scope="col">#</th>
+                <th scope="col" className="col-name">
+                  Team
+                </th>
+                <th scope="col">W</th>
+                <th scope="col">L</th>
+                <th scope="col">PCT</th>
+                <th scope="col">DIFF</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.teamId}>
+                <tr key={r.teamId} className={r.teamId === userTeamId ? "row-highlight" : undefined}>
                   <td>{r.rank}</td>
-                  <td>
-                    {r.abbreviation} {r.teamName}
+                  <td className="col-name">
+                    <span className="tag" style={{ marginRight: "0.5rem" }}>
+                      {r.abbreviation}
+                    </span>
+                    {r.teamName}
                   </td>
                   <td>{r.wins}</td>
                   <td>{r.losses}</td>
-                  <td>{r.winPct.toFixed(3)}</td>
-                  <td>{r.pointDiff > 0 ? `+${r.pointDiff}` : r.pointDiff}</td>
+                  <td>{pct(r.winPct)}</td>
+                  <td style={{ color: r.pointDiff > 0 ? "var(--good)" : r.pointDiff < 0 ? "var(--danger)" : undefined }}>
+                    {signed(r.pointDiff)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollableTable>
       </section>
     );
   }
 
   return (
-    <main>
-      <h1 className="brand" style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}>
-        Standings
-      </h1>
-      <p className="tagline">
-        {league ? `${league.seasonYear} · Day ${league.day} · ${league.phase}` : "Loading…"}
-      </p>
-      {table(east, "Eastern Conference", "eastern-standings")}
-      {table(west, "Western Conference", "western-standings")}
+    <main className="rise">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">
+            {league ? `${league.seasonYear} · Day ${league.day} · ${league.phase}` : "Loading…"}
+          </p>
+          <h1 className="page-title">Standings</h1>
+        </div>
+      </div>
+      {table(
+        standings.filter((s) => s.conference === "East"),
+        "Eastern Conference",
+      )}
+      {table(
+        standings.filter((s) => s.conference === "West"),
+        "Western Conference",
+      )}
     </main>
   );
 }
