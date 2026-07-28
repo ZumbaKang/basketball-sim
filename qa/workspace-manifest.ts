@@ -95,3 +95,84 @@ export function npmWorkspaceScriptCommandSelectors(
     npmWorkspaceScriptCommandPositions(command, scriptName).keys(),
   );
 }
+
+/**
+ * Assert every workspace that declares a `build` script appears in the CI
+ * workflow via `npm run build -w|--workspace`, and that those builds precede
+ * the "Run tests" step.
+ */
+export function assertBuildWorkspaceCoverage(
+  rootManifest: PackageManifest,
+  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
+  workflow: string,
+): void {
+  const positions = npmWorkspaceScriptCommandPositions(workflow, "build");
+  const testStep = workflow.indexOf("- name: Run tests");
+  const missing: string[] = [];
+  const late: string[] = [];
+
+  for (const workspace of workspacesWithScript(
+    rootManifest,
+    "build",
+    readWorkspaceManifest,
+  )) {
+    const position = [workspace.path, workspace.name]
+      .filter((selector): selector is string => Boolean(selector))
+      .map((selector) => positions.get(selector))
+      .find((candidate) => candidate !== undefined);
+
+    if (position === undefined) {
+      missing.push(workspace.path);
+    } else if (testStep < 0 || position > testStep) {
+      late.push(workspace.path);
+    }
+  }
+
+  if (missing.length > 0 || late.length > 0) {
+    throw new Error(
+      [
+        missing.length > 0
+          ? `Missing CI build commands for: ${missing.join(", ")}`
+          : "",
+        late.length > 0
+          ? `CI build commands must precede tests for: ${late.join(", ")}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(". "),
+    );
+  }
+}
+
+/**
+ * Assert every workspace that declares a `test` script is invoked from the
+ * root package `test` script via `npm [run] test -w|--workspace`.
+ */
+export function assertTestWorkspaceCoverage(
+  rootManifest: PackageManifest,
+  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
+): void {
+  const rootTestCommand = rootManifest.scripts?.test;
+  if (!rootTestCommand) {
+    throw new Error("Root package is missing a test script");
+  }
+
+  const selectors = npmWorkspaceScriptCommandSelectors(rootTestCommand, "test");
+  const missing = workspacesWithScript(
+    rootManifest,
+    "test",
+    readWorkspaceManifest,
+  ).flatMap((workspace) =>
+    [workspace.path, workspace.name].some(
+      (selector) => selector !== undefined && selectors.has(selector),
+    )
+      ? []
+      : [workspace.path],
+  );
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing root test commands for: ${missing.join(", ")}`,
+    );
+  }
+}

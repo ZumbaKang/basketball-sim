@@ -10,11 +10,9 @@ import {
   omittedBuildWorkspaceObjectFormFixture,
 } from "./fixtures/ci-workspace-coverage.js";
 import {
-  npmWorkspaceScriptCommandPositions,
+  assertBuildWorkspaceCoverage,
   readPackageManifest,
   readWorkspacePackageManifest,
-  workspacesWithScript,
-  type PackageManifest,
 } from "./workspace-manifest.js";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -22,49 +20,6 @@ const ciWorkflow = readFileSync(
   new URL("../.github/workflows/ci.yml", import.meta.url),
   "utf8",
 );
-
-function assertBuildWorkspaceCoverage(
-  rootManifest: PackageManifest,
-  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
-  workflow: string,
-): void {
-  const positions = npmWorkspaceScriptCommandPositions(workflow, "build");
-  const testStep = workflow.indexOf("- name: Run tests");
-  const missing: string[] = [];
-  const late: string[] = [];
-
-  for (const workspace of workspacesWithScript(
-    rootManifest,
-    "build",
-    readWorkspaceManifest,
-  )) {
-    const position = [workspace.path, workspace.name]
-      .filter((selector): selector is string => Boolean(selector))
-      .map((selector) => positions.get(selector))
-      .find((candidate) => candidate !== undefined);
-
-    if (position === undefined) {
-      missing.push(workspace.path);
-    } else if (testStep < 0 || position > testStep) {
-      late.push(workspace.path);
-    }
-  }
-
-  if (missing.length > 0 || late.length > 0) {
-    throw new Error(
-      [
-        missing.length > 0
-          ? `Missing CI build commands for: ${missing.join(", ")}`
-          : "",
-        late.length > 0
-          ? `CI build commands must precede tests for: ${late.join(", ")}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(". "),
-    );
-  }
-}
 
 describe("CI workflow", () => {
   it("builds every buildable root workspace before running tests", () => {

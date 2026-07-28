@@ -10,43 +10,12 @@ import {
   omittedTestWorkspaceObjectFormFixture,
 } from "./fixtures/root-test-workspace-coverage.js";
 import {
-  npmWorkspaceScriptCommandSelectors,
+  assertTestWorkspaceCoverage,
   readPackageManifest,
   readWorkspacePackageManifest,
-  workspacesWithScript,
-  type PackageManifest,
 } from "./workspace-manifest.js";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-
-function assertTestWorkspaceCoverage(
-  rootManifest: PackageManifest,
-  readWorkspaceManifest: (workspacePath: string) => PackageManifest,
-): void {
-  const rootTestCommand = rootManifest.scripts?.test;
-  if (!rootTestCommand) {
-    throw new Error("Root package is missing a test script");
-  }
-
-  const selectors = npmWorkspaceScriptCommandSelectors(rootTestCommand, "test");
-  const missing = workspacesWithScript(
-    rootManifest,
-    "test",
-    readWorkspaceManifest,
-  ).flatMap((workspace) =>
-    [workspace.path, workspace.name].some(
-      (selector) => selector !== undefined && selectors.has(selector),
-    )
-      ? []
-      : [workspace.path],
-  );
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing root test commands for: ${missing.join(", ")}`,
-    );
-  }
-}
 
 describe("root test workspace coverage", () => {
   it("runs every root workspace that declares a test script", () => {

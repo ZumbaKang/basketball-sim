@@ -158,12 +158,20 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: treat `npm test -w <selector>` (without `run`) the same as
       `npm run test -w` in the shared parser; verify a shorthand fixture still
       counts as covered.
-- [ ] `qa`: move the build and root-test coverage assertion helpers into
+- [x] `qa`: move the build and root-test coverage assertion helpers into
       `workspace-manifest.ts` beside the parsers; verify both omitted-workspace
       fixtures still throw the same errors.
 - [ ] `qa`: add a mixed named/nameless object-form fixture covered by a package
       name for one workspace and a path for the other; verify CI-build and
       root-test assertions both pass.
+- [ ] `qa`: add a late-build CI fixture where a workspace is built after
+      `- name: Run tests` and assert `assertBuildWorkspaceCoverage` throws the
+      precede-tests error for that path.
+- [ ] `qa`: add a root package fixture with no `scripts.test` and assert
+      `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
+- [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
+      `npm test -w alpha; npm test -w beta` still counts both; verify with a
+      chained fixture.
 - [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
       coverage still matches by path only; verify a `"name": ""` fixture fails
       when its path is missing from the command.
@@ -359,6 +367,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-28: Moved CI-build and root-test coverage assertion helpers into workspace-manifest
 - 2026-07-28: Treated `npm test -w` shorthand as covered in the shared workspace parser
 - 2026-07-28: Asserted nameless object-form packages still match CI/root coverage by path
 - 2026-07-27: Moved CI build and root-test workspace selector parsers into shared workspace-manifest helpers
