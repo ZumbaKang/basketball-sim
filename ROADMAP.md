@@ -167,7 +167,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: when a scheduled game has fewer than five healthy players, fail before
       persist instead of substituting injured players into `simulateGame`; verify
       no `final` row or game news is written.
-- [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
+- [x] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
 - [ ] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
@@ -202,6 +202,16 @@ implementing anything — its PRs are expected to touch only this file.
       contracts unchanged.
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
+- [ ] `db`: when advancing past a postponed short-handed game, either retry it once
+      healthy enough or move it to a future open day so stranded `scheduled` rows
+      cannot be skipped by season-end / playoff start; verify a day-4 postpone is
+      resolved before playoffs.
+- [ ] `db`: apply the same short-handed skip + injury-news path in playoff
+      advance so a depleted roster does not abort the rest of that round's slate;
+      verify sibling playoff games still finalize.
+- [ ] `db`: mirror sim's empty-vs-all-injured preflight wording in
+      `assertHealthyRosters` / `ShortHandedRosterError` so scheduled-game failures
+      name the cause; verify zero-length and fully injured roster fixtures.
 
 ## Next
 
@@ -347,6 +357,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-29: Day advance skips short-handed games with injury news and finishes the rest of the slate
 - 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
 - 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
 - 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path

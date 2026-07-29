@@ -15,7 +15,7 @@ export {
   listFranchiseChoices,
   assignFranchise,
 } from "./league.js";
-export { playGame, simulateScheduledGame } from "./playGame.js";
+export { playGame, simulateScheduledGame, ShortHandedRosterError } from "./playGame.js";
 export { advanceLeague, playUserNextGame } from "./advance.js";
 export { getStandings } from "./standings.js";
 export { getFranchiseHome } from "./franchise.js";

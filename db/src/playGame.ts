@@ -3,6 +3,17 @@ import { MIN_AVAILABLE_PLAYERS, simulateGame } from "@basketball-sim/sim";
 import { prisma } from "./prisma.js";
 import { toPlayer, toTeam } from "./mappers.js";
 
+/** Thrown when a scheduled game cannot tip because a side has too few healthy players. */
+export class ShortHandedRosterError extends Error {
+  readonly shortTeamNames: string[];
+
+  constructor(shortages: string[], shortTeamNames: string[]) {
+    super(`Cannot simulate scheduled game: ${shortages.join("; ")}.`);
+    this.name = "ShortHandedRosterError";
+    this.shortTeamNames = shortTeamNames;
+  }
+}
+
 function availablePlayers(players: Player[]): Player[] {
   return players
     .filter((p) => p.injuredDays <= 0)
@@ -11,12 +22,14 @@ function availablePlayers(players: Player[]): Player[] {
 
 function assertHealthyRosters(homeTeam: Team, homePlayers: Player[], awayTeam: Team, awayPlayers: Player[]): void {
   const shortages: string[] = [];
+  const shortTeamNames: string[] = [];
   if (homePlayers.length < MIN_AVAILABLE_PLAYERS) {
     shortages.push(
       `home team ${homeTeam.name} has ${homePlayers.length} healthy player${
         homePlayers.length === 1 ? "" : "s"
       } (need at least ${MIN_AVAILABLE_PLAYERS})`,
     );
+    shortTeamNames.push(homeTeam.name);
   }
   if (awayPlayers.length < MIN_AVAILABLE_PLAYERS) {
     shortages.push(
@@ -24,9 +37,10 @@ function assertHealthyRosters(homeTeam: Team, homePlayers: Player[], awayTeam: T
         awayPlayers.length === 1 ? "" : "s"
       } (need at least ${MIN_AVAILABLE_PLAYERS})`,
     );
+    shortTeamNames.push(awayTeam.name);
   }
   if (shortages.length > 0) {
-    throw new Error(`Cannot simulate scheduled game: ${shortages.join("; ")}.`);
+    throw new ShortHandedRosterError(shortages, shortTeamNames);
   }
 }
 
