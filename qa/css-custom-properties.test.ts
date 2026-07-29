@@ -2,12 +2,15 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   assertCssCustomPropertiesDeclared,
+  assertThemeTokenSetsAligned,
   collectCssVarReferences,
   collectThemeCustomPropertyDeclarations,
+  findThemeTokenSetSkew,
   findUndeclaredCssCustomProperties,
 } from "./css-custom-properties.js";
 import {
   danglingFontAliasStylesheet,
+  halfLightPaletteStylesheet,
   missingLightThemeTokenStylesheet,
   validThemedStylesheet,
 } from "./fixtures/css-custom-properties.js";
@@ -20,6 +23,10 @@ describe("CSS custom property theme declarations", () => {
     expect(findUndeclaredCssCustomProperties(validThemedStylesheet)).toEqual(
       [],
     );
+    expect(() =>
+      assertThemeTokenSetsAligned(validThemedStylesheet, "valid fixture"),
+    ).not.toThrow();
+    expect(findThemeTokenSetSkew(validThemedStylesheet)).toEqual([]);
   });
 
   it("fails a fixture stylesheet with a dangling font var()", () => {
@@ -53,6 +60,33 @@ describe("CSS custom property theme declarations", () => {
     ]);
   });
 
+  it("flags dark/light token set skew even when :root keeps values available", () => {
+    expect(findUndeclaredCssCustomProperties(halfLightPaletteStylesheet)).toEqual(
+      [],
+    );
+    expect(findThemeTokenSetSkew(halfLightPaletteStylesheet)).toEqual([
+      {
+        property: "--cool",
+        declaredIn: ["dark"],
+        omittedFrom: ["light"],
+      },
+      {
+        property: "--surface",
+        declaredIn: ["dark"],
+        omittedFrom: ["light"],
+      },
+    ]);
+
+    expect(() =>
+      assertThemeTokenSetsAligned(
+        halfLightPaletteStylesheet,
+        "half-light.css",
+      ),
+    ).toThrowError(
+      "Theme token set skew in half-light.css: --cool (declared under dark, omitted from light); --surface (declared under dark, omitted from light)",
+    );
+  });
+
   it("treats var() fallbacks as intentional external tokens", () => {
     const refs = collectCssVarReferences(validThemedStylesheet);
     const loaded = refs.find((ref) => ref.property === "--font-body-loaded");
@@ -72,6 +106,16 @@ describe("CSS custom property theme declarations", () => {
     expect(sets.light.has("--font-body")).toBe(false);
   });
 
+  it("ignores :root-only shared tokens when computing theme skew", () => {
+    const sets = collectThemeCustomPropertyDeclarations(halfLightPaletteStylesheet);
+    expect(sets.root.has("--radius-sm")).toBe(true);
+    expect(sets.dark.has("--radius-sm")).toBe(false);
+    expect(sets.light.has("--radius-sm")).toBe(false);
+    expect(
+      findThemeTokenSetSkew(halfLightPaletteStylesheet).map((row) => row.property),
+    ).not.toContain("--radius-sm");
+  });
+
   it("passes the frontend globals stylesheet for both themes", () => {
     const globalsCss = readFileSync(
       new URL("../frontend/app/globals.css", import.meta.url),
@@ -83,6 +127,9 @@ describe("CSS custom property theme declarations", () => {
         globalsCss,
         "frontend/app/globals.css",
       ),
+    ).not.toThrow();
+    expect(() =>
+      assertThemeTokenSetsAligned(globalsCss, "frontend/app/globals.css"),
     ).not.toThrow();
   });
 });

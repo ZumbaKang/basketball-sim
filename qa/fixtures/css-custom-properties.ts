@@ -70,3 +70,37 @@ export const missingLightThemeTokenStylesheet = `
   background: var(--accent);
 }
 `;
+
+/**
+ * Light theme only redefines half the dark palette. `:root` still carries the
+ * full set, so undeclared-var checks pass — theme-token skew must still fail.
+ */
+export const halfLightPaletteStylesheet = `
+:root,
+[data-theme="dark"] {
+  --text: #eef2fb;
+  --accent: #ff8a3d;
+  --surface: #141a28;
+  --cool: #4dd6ff;
+}
+
+[data-theme="light"] {
+  --text: #101826;
+  --accent: #e85d1c;
+}
+
+:root {
+  --radius-sm: 8px;
+}
+
+body {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--cool);
+  border-radius: var(--radius-sm);
+}
+
+.btn {
+  background: var(--accent);
+}
+`;
