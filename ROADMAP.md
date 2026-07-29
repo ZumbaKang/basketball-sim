@@ -170,7 +170,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
-- [ ] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
+- [x] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
       single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
       no line exceeds a credible FTA-per-FGA ratio while team totals still
       reconcile.
@@ -183,6 +183,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
       preflight error; verify a zero-length input and a fully injured ten-man
       roster produce different messages naming the cause.
+- [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
+      instead of only the minute leader; verify under-scored seeds still land in
+      the 95–125 band without one player exceeding 40 FGA.
+- [ ] `sim`: when garbage time transfers FGA, also shift a matching share of FTA
+      (still under the credibility cap) so donors never need post-hoc FT→FG
+      conversion; verify with seeded 15- and 25-point blowouts.
+- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
+      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
+      box-score fixture.
 - [ ] `frontend`: surface the sim roster-shortage preflight message on the league
       play flow when a game cannot be simulated; verify the alert wraps at 320px.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
@@ -347,6 +356,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-29: Capped free-throw volume to a credible FTA-per-FGA ratio (no more FT-only scoring nudges)
 - 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
 - 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
 - 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
