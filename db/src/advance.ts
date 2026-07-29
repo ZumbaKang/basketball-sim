@@ -1,7 +1,7 @@
 import type { AdvanceRequest, AdvanceResult, GameResult } from "@basketball-sim/shared";
 import { prisma } from "./prisma.js";
 import { toLeague, toScheduleGame } from "./mappers.js";
-import { simulateScheduledGame } from "./playGame.js";
+import { ShortHandedRosterError, simulateScheduledGame } from "./playGame.js";
 import { getStandings } from "./standings.js";
 import { maybeStartPlayoffs, advancePlayoffsIfNeeded } from "./playoffs.js";
 import { runOffseason } from "./offseason.js";
@@ -100,8 +100,24 @@ export async function advanceLeague(userId: string, request: AdvanceRequest): Pr
             break;
           }
         }
-        const result = await simulateScheduledGame(g.id);
-        gamesPlayed.push(result);
+        try {
+          const result = await simulateScheduledGame(g.id);
+          gamesPlayed.push(result);
+        } catch (err) {
+          if (!(err instanceof ShortHandedRosterError)) throw err;
+          // Leave the row scheduled, note the short team(s), and keep the rest of the slate.
+          const shortTeams = err.shortTeamNames.join(" and ");
+          await prisma.newsItem.create({
+            data: {
+              leagueId: league.id,
+              seasonYear: current.seasonYear,
+              day: current.day,
+              kind: "injury",
+              headline: `${shortTeams} short-handed — game postponed`,
+              body: `${err.message} The matchup remains scheduled; other games on this day still tip.`,
+            },
+          });
+        }
       }
 
       await prisma.league.update({ where: { id: league.id }, data: { day: { increment: 1 } } });
