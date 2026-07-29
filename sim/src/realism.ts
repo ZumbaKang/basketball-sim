@@ -1,4 +1,5 @@
 import type { GameResult, PlayerGameLine, TeamGameLine } from "@basketball-sim/shared";
+import { maxCredibleFta } from "./freeThrows.js";
 
 function assertPlayerLine(line: PlayerGameLine, label: string): void {
   if (line.minutes < 0) throw new Error(`${label}: negative minutes`);
@@ -7,6 +8,12 @@ function assertPlayerLine(line: PlayerGameLine, label: string): void {
   if (line.tpm > line.tpa) throw new Error(`${label}: tpm > tpa`);
   if (line.ftm > line.fta) throw new Error(`${label}: ftm > fta`);
   if (line.tpm > line.fgm) throw new Error(`${label}: tpm > fgm`);
+  const maxFta = maxCredibleFta(line.fga);
+  if (line.fta > maxFta) {
+    throw new Error(
+      `${label}: fta ${line.fta} exceeds credible max ${maxFta} for fga ${line.fga}`,
+    );
+  }
   const ptsFromShooting = (line.fgm - line.tpm) * 2 + line.tpm * 3 + line.ftm;
   if (line.pts !== ptsFromShooting) {
     throw new Error(`${label}: pts ${line.pts} != shooting breakdown ${ptsFromShooting}`);

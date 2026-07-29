@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Player, Team } from "@basketball-sim/shared";
 import {
   assertRealisticGameResult,
+  maxCredibleFta,
   MIN_AVAILABLE_PLAYERS,
   simulateGame,
 } from "../src/index.js";
@@ -60,6 +61,66 @@ const awayTeam: Team = {
 };
 
 describe("simulateGame", () => {
+  it("keeps free-throw volume credible relative to field-goal attempts", () => {
+    const outliers: Array<{
+      seed: number;
+      playerName: string;
+      fga: number;
+      fta: number;
+    }> = [];
+
+    for (let seed = 0; seed < 200; seed++) {
+      const result = simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: roster("t_home", "Harbor"),
+        awayPlayers: roster("t_away", "Metro"),
+        seed,
+      });
+
+      for (const side of [result.home, result.away]) {
+        for (const line of side.players) {
+          const maxFta = maxCredibleFta(line.fga);
+          if (line.fta > maxFta) {
+            outliers.push({
+              seed,
+              playerName: line.playerName,
+              fga: line.fga,
+              fta: line.fta,
+            });
+          }
+          expect(line.fta).toBeLessThanOrEqual(maxFta);
+        }
+      }
+      expect(() => assertRealisticGameResult(result)).not.toThrow();
+    }
+
+    expect(outliers).toEqual([]);
+  });
+
+  it("does not recreate the 30-FTA-on-few-FGA scoring-nudge line", () => {
+    // Seed 74 previously produced 56 FTA on 6 FGA via FT-only nudging.
+    const result = simulateGame({
+      leagueId: "lg1",
+      homeTeam,
+      awayTeam,
+      homePlayers: roster("t_home", "Harbor"),
+      awayPlayers: roster("t_away", "Metro"),
+      seed: 74,
+    });
+
+    for (const side of [result.home, result.away]) {
+      for (const line of side.players) {
+        expect(line.fta).toBeLessThanOrEqual(maxCredibleFta(line.fga));
+        expect(line.fta).toBeLessThan(20);
+      }
+      expect(side.pts).toBeGreaterThanOrEqual(95);
+      expect(side.pts).toBeLessThanOrEqual(126);
+    }
+    expect(() => assertRealisticGameResult(result)).not.toThrow();
+  });
+
   it("produces a realistic reconciled box score", () => {
     const result = simulateGame({
       leagueId: "lg1",
