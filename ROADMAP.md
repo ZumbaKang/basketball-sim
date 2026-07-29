@@ -174,9 +174,18 @@ implementing anything — its PRs are expected to touch only this file.
       single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
       no line exceeds a credible FTA-per-FGA ratio while team totals still
       reconcile.
-- [ ] `qa`: fail the build when a CSS custom property is referenced but never
+- [x] `qa`: fail the build when a CSS custom property is referenced but never
       declared for a theme — an undefined `--font-*` alias silently dropped every
       page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
+- [ ] `qa`: also flag dark/light theme-token set skew — properties declared under
+      dark but omitted from light (and vice versa) even when `:root` keeps them
+      available; verify with a fixture that only redefines half the light palette.
+- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+      same way as stylesheets; verify a fixture component referencing an
+      undeclared token fails.
+- [ ] `qa`: treat `@property --token` registrations as declarations so
+      Houdini-registered custom properties count; verify a fixture that only
+      registers via `@property` passes.
 - [ ] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
       failure cannot leave a `Game` row without matching `final` status or game
       news; add a fixture that forces a post-`Game` write error.
@@ -356,6 +365,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-29: Failed QA when CSS custom properties are referenced but undeclared for a theme
 - 2026-07-29: Capped free-throw volume to a credible FTA-per-FGA ratio (no more FT-only scoring nudges)
 - 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
 - 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
