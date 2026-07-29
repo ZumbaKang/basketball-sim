@@ -282,3 +282,58 @@ export function assertCssCustomPropertiesDeclared(
     `Undeclared CSS custom properties in ${sourceLabel}: ${details}`,
   );
 }
+
+export interface ThemeTokenSetSkew {
+  property: string;
+  /** Themes that declare the property under a theme selector. */
+  declaredIn: ThemeId[];
+  /** Themes that omit it while the other theme declares it. */
+  omittedFrom: ThemeId[];
+}
+
+/**
+ * Find properties declared under dark but omitted from light (and vice
+ * versa). `:root` availability does not hide the skew — a light block that
+ * only redefines half the dark palette still fails even when inherited
+ * `:root` values keep references resolvable.
+ */
+export function findThemeTokenSetSkew(css: string): ThemeTokenSetSkew[] {
+  const sets = collectThemeCustomPropertyDeclarations(css);
+  const union = new Set<string>([...sets.dark, ...sets.light]);
+  const skew: ThemeTokenSetSkew[] = [];
+
+  for (const property of [...union].sort((a, b) => a.localeCompare(b))) {
+    const inDark = sets.dark.has(property);
+    const inLight = sets.light.has(property);
+    if (inDark === inLight) continue;
+
+    skew.push({
+      property,
+      declaredIn: THEMES.filter((theme) =>
+        theme === "dark" ? inDark : inLight,
+      ),
+      omittedFrom: THEMES.filter((theme) =>
+        theme === "dark" ? !inDark : !inLight,
+      ),
+    });
+  }
+
+  return skew;
+}
+
+export function assertThemeTokenSetsAligned(
+  css: string,
+  sourceLabel = "stylesheet",
+): void {
+  const skew = findThemeTokenSetSkew(css);
+  if (skew.length === 0) return;
+
+  const details = skew
+    .map(
+      ({ property, declaredIn, omittedFrom }) =>
+        `${property} (declared under ${declaredIn.join(", ")}, omitted from ${omittedFrom.join(", ")})`,
+    )
+    .join("; ");
+
+  throw new Error(`Theme token set skew in ${sourceLabel}: ${details}`);
+}
