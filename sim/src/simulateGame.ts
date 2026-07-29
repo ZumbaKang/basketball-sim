@@ -55,27 +55,43 @@ const MINUTE_PRECISION = 10;
 /** NBA games require five players on the floor; short of that we refuse to sim. */
 export const MIN_AVAILABLE_PLAYERS = 5;
 
+function describeAvailablePlayerShortage(
+  side: "home" | "away",
+  team: Team,
+  inputPlayers: readonly Player[],
+  available: readonly Player[],
+): string | null {
+  if (available.length >= MIN_AVAILABLE_PLAYERS) return null;
+
+  const sideLabel = `${side} team ${team.name}`;
+  const need = `need at least ${MIN_AVAILABLE_PLAYERS}`;
+
+  if (inputPlayers.length === 0) {
+    return `${sideLabel} has an empty roster (${need} available players)`;
+  }
+
+  if (available.length === 0) {
+    return `${sideLabel} has 0 available players because all ${inputPlayers.length} are injured (${need})`;
+  }
+
+  return `${sideLabel} has ${available.length} available player${
+    available.length === 1 ? "" : "s"
+  } (${need})`;
+}
+
 function assertMinimumAvailablePlayers(
   homeTeam: Team,
-  homeAvailable: Player[],
+  homeInput: readonly Player[],
+  homeAvailable: readonly Player[],
   awayTeam: Team,
-  awayAvailable: Player[],
+  awayInput: readonly Player[],
+  awayAvailable: readonly Player[],
 ): void {
-  const shortages: string[] = [];
-  if (homeAvailable.length < MIN_AVAILABLE_PLAYERS) {
-    shortages.push(
-      `home team ${homeTeam.name} has ${homeAvailable.length} available player${
-        homeAvailable.length === 1 ? "" : "s"
-      } (need at least ${MIN_AVAILABLE_PLAYERS})`,
-    );
-  }
-  if (awayAvailable.length < MIN_AVAILABLE_PLAYERS) {
-    shortages.push(
-      `away team ${awayTeam.name} has ${awayAvailable.length} available player${
-        awayAvailable.length === 1 ? "" : "s"
-      } (need at least ${MIN_AVAILABLE_PLAYERS})`,
-    );
-  }
+  const shortages = [
+    describeAvailablePlayerShortage("home", homeTeam, homeInput, homeAvailable),
+    describeAvailablePlayerShortage("away", awayTeam, awayInput, awayAvailable),
+  ].filter((message): message is string => message !== null);
+
   if (shortages.length > 0) {
     throw new Error(`Cannot simulate game: ${shortages.join("; ")}.`);
   }
@@ -391,8 +407,10 @@ export function simulateGame(input: SimulateGameInput): GameResult {
   const awayPlayers = availablePlayers(input.awayPlayers);
   assertMinimumAvailablePlayers(
     input.homeTeam,
+    input.homePlayers,
     homePlayers,
     input.awayTeam,
+    input.awayPlayers,
     awayPlayers,
   );
 
