@@ -198,12 +198,15 @@ describe("day advance short-handed slate", () => {
       }),
     ).toBe(1);
 
-    const postponeNews = await prisma.newsItem.findMany({
-      where: { leagueId: league.id, kind: "injury", day: 4 },
-    });
+    // Sibling tip-offs can also emit random injury blurbs on the same day —
+    // assert on the postpone item specifically, not every kind:"injury" row.
+    const postponeNews = (
+      await prisma.newsItem.findMany({
+        where: { leagueId: league.id, kind: "injury", day: 4 },
+      })
+    ).filter((item) => /short-handed/i.test(item.headline));
     expect(postponeNews).toHaveLength(1);
     expect(postponeNews[0]!.headline).toContain("Harbor Hawks");
-    expect(postponeNews[0]!.headline).toMatch(/short-handed/i);
     expect(postponeNews[0]!.body).toContain(
       `home team Harbor Hawks has 4 healthy players (need at least ${MIN_AVAILABLE_PLAYERS})`,
     );
