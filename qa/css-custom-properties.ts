@@ -231,12 +231,15 @@ function availableForTheme(
 
 /**
  * Find custom properties referenced without a fallback that are missing from
- * one or more themes.
+ * one or more themes. `referencesCss` defaults to the declaration stylesheet;
+ * pass a separate source (e.g. joined TSX string literals) to check refs that
+ * live outside the theme CSS.
  */
 export function findUndeclaredCssCustomProperties(
-  css: string,
+  declarationsCss: string,
+  referencesCss: string = declarationsCss,
 ): UndeclaredCssCustomProperty[] {
-  const declarations = collectThemeCustomPropertyDeclarations(css);
+  const declarations = collectThemeCustomPropertyDeclarations(declarationsCss);
   const byTheme = {
     dark: availableForTheme(declarations, "dark"),
     light: availableForTheme(declarations, "light"),
@@ -244,7 +247,7 @@ export function findUndeclaredCssCustomProperties(
 
   const missing = new Map<string, Set<ThemeId>>();
 
-  for (const ref of collectCssVarReferences(css)) {
+  for (const ref of collectCssVarReferences(referencesCss)) {
     if (ref.hasFallback) continue;
 
     const absentThemes = THEMES.filter(
@@ -272,6 +275,176 @@ export function assertCssCustomPropertiesDeclared(
   sourceLabel = "stylesheet",
 ): void {
   const undeclared = findUndeclaredCssCustomProperties(css);
+  if (undeclared.length === 0) return;
+
+  const details = undeclared
+    .map(({ property, themes }) => `${property} (missing for ${themes.join(", ")})`)
+    .join("; ");
+
+  throw new Error(
+    `Undeclared CSS custom properties in ${sourceLabel}: ${details}`,
+  );
+}
+
+/**
+ * Extract JS/TSX string literal contents (`"..."`, `'...'`, `` `...` ``),
+ * skipping line/block/JSX comments. Template interpolations split the literal
+ * into separate segments so `var(--${x})` does not produce a false token.
+ */
+export function extractTsxStringLiterals(source: string): string[] {
+  const literals: string[] = [];
+  let i = 0;
+
+  function skipLineComment(): void {
+    i += 2;
+    while (i < source.length && source[i] !== "\n") i++;
+  }
+
+  function skipBlockComment(): void {
+    i += 2;
+    while (i < source.length - 1 && !(source[i] === "*" && source[i + 1] === "/")) {
+      i++;
+    }
+    i = Math.min(i + 2, source.length);
+  }
+
+  function skipJsxComment(): void {
+    i += 3;
+    while (
+      i < source.length - 2 &&
+      !(source[i] === "*" && source[i + 1] === "/" && source[i + 2] === "}")
+    ) {
+      i++;
+    }
+    i = Math.min(i + 3, source.length);
+  }
+
+  function readQuoted(quote: '"' | "'"): string {
+    i++;
+    let value = "";
+    while (i < source.length) {
+      const c = source[i];
+      if (c === "\\") {
+        value += c + (source[i + 1] ?? "");
+        i += 2;
+        continue;
+      }
+      if (c === quote) {
+        i++;
+        break;
+      }
+      value += c;
+      i++;
+    }
+    return value;
+  }
+
+  function readTemplate(): void {
+    i++; // skip opening `
+    let value = "";
+    while (i < source.length) {
+      const c = source[i];
+      if (c === "\\") {
+        value += c + (source[i + 1] ?? "");
+        i += 2;
+        continue;
+      }
+      if (c === "`") {
+        i++;
+        break;
+      }
+      if (c === "$" && source[i + 1] === "{") {
+        if (value.length > 0) literals.push(value);
+        value = "";
+        i += 2;
+        let depth = 1;
+        while (i < source.length && depth > 0) {
+          const inner = source[i];
+          const innerNext = source[i + 1];
+          if (inner === "/" && innerNext === "/") {
+            skipLineComment();
+            continue;
+          }
+          if (inner === "/" && innerNext === "*") {
+            skipBlockComment();
+            continue;
+          }
+          if (inner === '"' || inner === "'") {
+            literals.push(readQuoted(inner));
+            continue;
+          }
+          if (inner === "`") {
+            readTemplate();
+            continue;
+          }
+          if (inner === "{") depth++;
+          else if (inner === "}") depth--;
+          i++;
+        }
+        continue;
+      }
+      value += c;
+      i++;
+    }
+    if (value.length > 0) literals.push(value);
+  }
+
+  while (i < source.length) {
+    const ch = source[i];
+    const next = source[i + 1];
+
+    if (ch === "/" && next === "/") {
+      skipLineComment();
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      skipBlockComment();
+      continue;
+    }
+    if (ch === "{" && next === "/" && source[i + 2] === "*") {
+      skipJsxComment();
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      literals.push(readQuoted(ch));
+      continue;
+    }
+    if (ch === "`") {
+      readTemplate();
+      continue;
+    }
+    i++;
+  }
+
+  return literals;
+}
+
+/**
+ * Collect var(--token) references from TSX/JS string literals only.
+ */
+export function collectCssVarReferencesFromTsx(tsx: string): CssVarReference[] {
+  const joined = extractTsxStringLiterals(tsx).join("\n");
+  return collectCssVarReferences(joined);
+}
+
+/**
+ * Find undeclared theme tokens referenced from TSX string literals, using
+ * `themeCss` as the declaration source (typically frontend globals).
+ */
+export function findUndeclaredTsxCssCustomProperties(
+  tsx: string,
+  themeCss: string,
+): UndeclaredCssCustomProperty[] {
+  const joined = extractTsxStringLiterals(tsx).join("\n");
+  return findUndeclaredCssCustomProperties(themeCss, joined);
+}
+
+export function assertTsxCssCustomPropertiesDeclared(
+  tsx: string,
+  themeCss: string,
+  sourceLabel = "tsx",
+): void {
+  const undeclared = findUndeclaredTsxCssCustomProperties(tsx, themeCss);
   if (undeclared.length === 0) return;
 
   const details = undeclared

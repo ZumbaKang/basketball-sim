@@ -180,7 +180,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: also flag dark/light theme-token set skew — properties declared under
       dark but omitted from light (and vice versa) even when `:root` keeps them
       available; verify with a fixture that only redefines half the light palette.
-- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+- [x] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
       same way as stylesheets; verify a fixture component referencing an
       undeclared token fails.
 - [ ] `qa`: treat `@property --token` registrations as declarations so
@@ -195,6 +195,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: flag light→dark skew the same as dark→light when only the light
       block declares an extra token; verify a fixture that adds `--accent-ink`
       under light alone fails skew for dark.
+- [ ] `qa`: also scan frontend `*.ts` modules for undeclared `var(--*)` string
+      literals the same way as TSX; verify a fixture helper exporting a style
+      object with a dangling token fails.
+- [ ] `qa`: when checking TSX refs, load declarations from every
+      `frontend/**/*.css` file (not only `globals.css`) so colocated stylesheets
+      count; verify a fixture that declares `--panel` only in `panel.css` and
+      references it from TSX passes.
+- [ ] `qa`: report the first offending file path when a multi-file TSX scan finds
+      undeclared tokens; verify a two-file fixture fails naming only the bad file.
 - [ ] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
       failure cannot leave a `Game` row without matching `final` status or game
       news; add a fixture that forces a post-`Game` write error.
@@ -374,6 +383,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-30: Scanned frontend TSX string literals for undeclared `var(--*)` theme tokens
 - 2026-07-29: Flagged dark/light theme-token set skew even when `:root` keeps values available
 - 2026-07-29: Failed QA when CSS custom properties are referenced but undeclared for a theme
 - 2026-07-29: Capped free-throw volume to a credible FTA-per-FGA ratio (no more FT-only scoring nudges)
