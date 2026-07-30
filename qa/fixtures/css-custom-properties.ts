@@ -104,3 +104,36 @@ body {
   background: var(--accent);
 }
 `;
+
+/**
+ * Valid TSX component: inline styles only reference tokens declared in the
+ * themed stylesheet fixture (or use an explicit fallback).
+ */
+export const validThemedTsxComponent = `
+export function HomeScore({ homeWon }: { homeWon: boolean }) {
+  return (
+    <strong
+      style={{
+        color: homeWon ? "var(--accent)" : undefined,
+        fontFamily: "var(--font-body-loaded, Archivo)",
+      }}
+    >
+      TIPOFF
+    </strong>
+  );
+}
+`;
+
+/**
+ * Fixture component that references an undeclared --font-display token in a
+ * string literal (the silent serif-fallback failure mode, but from TSX).
+ */
+export const danglingFontAliasTsxComponent = `
+export function BrandTitle() {
+  return (
+    <h1 style={{ fontFamily: "var(--font-display)", color: "var(--text)" }}>
+      TIPOFF
+    </h1>
+  );
+}
+`;
