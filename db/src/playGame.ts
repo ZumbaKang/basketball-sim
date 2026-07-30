@@ -4,9 +4,15 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma.js";
 import { toPlayer, toTeam } from "./mappers.js";
 
-/** Optional hooks for tests — throw from afterGameCreate to force a mid-write rollback. */
+/**
+ * Optional hooks for tests — throw from either to force a mid-write rollback.
+ * `afterGameCreate` runs before the scheduled row flips; `afterScheduledGameUpdate`
+ * runs after status/scores/result id are written so later W/L, season-stat, and
+ * news writes can be proven to roll back with them.
+ */
 export type PersistResultOptions = {
   afterGameCreate?: (tx: Prisma.TransactionClient) => void | Promise<void>;
+  afterScheduledGameUpdate?: (tx: Prisma.TransactionClient) => void | Promise<void>;
 };
 
 function availablePlayers(players: Player[]): Player[] {
@@ -134,6 +140,10 @@ export async function persistResult(
         gameResultId: saved.id,
       },
     });
+
+    if (options?.afterScheduledGameUpdate) {
+      await options.afterScheduledGameUpdate(tx);
+    }
 
     await tx.team.update({
       where: { id: homeTeam.id },

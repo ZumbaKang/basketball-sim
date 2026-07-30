@@ -390,6 +390,144 @@ describe("persistResult transactional rollback", () => {
     ).toBe(0);
   });
 
+  it("rolls back W/L, season stats, and game news when a post-scheduledGame write fails", async () => {
+    const suffix = `${Date.now()}-${Math.random()}`;
+    const seasonYear = 2093;
+    const owner = await prisma.user.create({
+      data: {
+        email: `persist-sg-${suffix}@example.com`,
+        displayName: "Persist SG Owner",
+        passwordHash: "unused",
+      },
+    });
+    ownerIds.push(owner.id);
+
+    const league = await prisma.league.create({
+      data: {
+        name: "Persist SG League",
+        seasonYear,
+        ownerUserId: owner.id,
+        day: 5,
+      },
+    });
+    const [homeTeam, awayTeam] = await Promise.all([
+      prisma.team.create({
+        data: {
+          leagueId: league.id,
+          name: "Postflip Hawks",
+          abbreviation: "PFH",
+          conference: "East",
+          division: "Test",
+          wins: 4,
+          losses: 2,
+        },
+      }),
+      prisma.team.create({
+        data: {
+          leagueId: league.id,
+          name: "Postflip Foxes",
+          abbreviation: "PFF",
+          conference: "West",
+          division: "Test",
+          wins: 3,
+          losses: 3,
+        },
+      }),
+    ]);
+
+    const scheduled = await prisma.scheduledGame.create({
+      data: {
+        leagueId: league.id,
+        seasonYear,
+        day: 5,
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        status: "scheduled",
+      },
+    });
+
+    const home: Team = {
+      id: homeTeam.id,
+      leagueId: league.id,
+      name: homeTeam.name,
+      abbreviation: homeTeam.abbreviation,
+      conference: "East",
+      division: "Test",
+      wins: homeTeam.wins,
+      losses: homeTeam.losses,
+      gmDirection: "contend",
+    };
+    const away: Team = {
+      id: awayTeam.id,
+      leagueId: league.id,
+      name: awayTeam.name,
+      abbreviation: awayTeam.abbreviation,
+      conference: "West",
+      division: "Test",
+      wins: awayTeam.wins,
+      losses: awayTeam.losses,
+      gmDirection: "rebuild",
+    };
+
+    const gameId = `game-sg-fail-${suffix}`;
+    const result: GameResult = {
+      id: gameId,
+      leagueId: league.id,
+      home: emptyTeamLine(home, 105),
+      away: emptyTeamLine(away, 99),
+      playedAt: new Date().toISOString(),
+      scheduledGameId: scheduled.id,
+      isPlayoff: false,
+    };
+
+    await expect(
+      persistResult(league.id, seasonYear, result, scheduled.id, false, home, away, {
+        afterScheduledGameUpdate: async () => {
+          throw new Error("Forced post-scheduledGame write failure");
+        },
+      }),
+    ).rejects.toThrow("Forced post-scheduledGame write failure");
+
+    expect(
+      await prisma.game.count({
+        where: { id: gameId },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.game.count({
+        where: { leagueId: league.id, scheduledGameId: scheduled.id },
+      }),
+    ).toBe(0);
+
+    const after = await prisma.scheduledGame.findUniqueOrThrow({
+      where: { id: scheduled.id },
+    });
+    expect(after.status).toBe("scheduled");
+    expect(after.gameResultId).toBeNull();
+    expect(after.homeScore).toBeNull();
+    expect(after.awayScore).toBeNull();
+
+    const [homeAfter, awayAfter] = await Promise.all([
+      prisma.team.findUniqueOrThrow({ where: { id: homeTeam.id } }),
+      prisma.team.findUniqueOrThrow({ where: { id: awayTeam.id } }),
+    ]);
+    expect(homeAfter.wins).toBe(4);
+    expect(homeAfter.losses).toBe(2);
+    expect(awayAfter.wins).toBe(3);
+    expect(awayAfter.losses).toBe(3);
+
+    expect(
+      await prisma.newsItem.count({
+        where: { leagueId: league.id, kind: "game" },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.teamSeasonStat.count({
+        where: { teamId: { in: [homeTeam.id, awayTeam.id] }, seasonYear },
+      }),
+    ).toBe(0);
+  });
+
   it("marks the scheduled game final and writes game news on success", async () => {
     const suffix = `${Date.now()}-${Math.random()}`;
     const seasonYear = 2094;

@@ -194,7 +194,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: when `Game.create` collides on a reused result id, roll the
       transaction back without flipping the scheduled row; verify with a
       pre-inserted Game id fixture.
-- [ ] `db`: force a post-`scheduledGame` update failure inside `persistResult`
+- [x] `db`: force a post-`scheduledGame` update failure inside `persistResult`
       and assert team W/L, teamSeasonStat, and game news all roll back; extend
       the transactional fixture past the Game-create hook.
 - [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
@@ -208,6 +208,15 @@ implementing anything — its PRs are expected to touch only this file.
       `simulateScheduledGame` when a caller bypasses the early status return;
       verify a forced second simulate against a final row does not invent a new
       result id.
+- [ ] `db`: force a post-W/L update failure inside `persistResult` and assert the
+      scheduled row, Game, season stats, and game news all roll back; extend the
+      transactional fixture past the team W/L increments.
+- [ ] `db`: force a post-`teamSeasonStat` upsert failure inside `persistResult`
+      and assert Game, scheduled final flip, W/L, and game news all roll back;
+      verify with a hook after both season-stat upserts.
+- [ ] `db`: force a failure after game-news create inside `persistResult` and
+      assert the entire transaction including injury news rolls back; verify no
+      orphan news rows remain.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
@@ -412,6 +421,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
 - 2026-07-30: Surfaced roster-shortage preflight errors on the league play flow
