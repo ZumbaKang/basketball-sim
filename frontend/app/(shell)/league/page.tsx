@@ -195,11 +195,6 @@ export default function LeaguePage() {
       </div>
 
       {message && <p className="muted">{message}</p>}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
 
       <section className="panel">
         <div className="panel-head">
@@ -211,6 +206,11 @@ export default function LeaguePage() {
             </p>
           )}
         </div>
+        {error && (
+          <p className="error play-alert" role="alert">
+            {error}
+          </p>
+        )}
         <div className="cta-row dashboard-actions">
           <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void playNext()}>
             {busy ? "Working…" : "Play next game"}

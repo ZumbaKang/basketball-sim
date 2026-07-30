@@ -22,6 +22,30 @@ test("league dashboard exposes responsive action and roster scroll hooks", () =>
   assert.match(css, /\.table-scroll \.box-table (?:th|td):first-child,[^}]*position:\s*sticky/s);
 });
 
+test("league play flow surfaces roster-shortage preflight errors that wrap at 320px", () => {
+  const playNextBody = leaguePage.slice(
+    leaguePage.indexOf("async function playNext()"),
+    leaguePage.indexOf("if (choices)"),
+  );
+  assert.match(playNextBody, /fetch\("\/api\/games\/play-next"/);
+  assert.match(playNextBody, /throw new Error\(json\.error \?\? "Play failed"\)/);
+  assert.match(playNextBody, /setError\(e instanceof Error \? e\.message : "Play failed"\)/);
+
+  assert.match(
+    leaguePage,
+    /className="error play-alert"\s*role="alert"[\s\S]*?\{error\}[\s\S]*?className="cta-row dashboard-actions"/,
+  );
+
+  assert.match(
+    css,
+    /\.error\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*anywhere/s,
+  );
+  assert.match(css, /\.play-alert\s*\{[^}]*margin:\s*0 0 1rem/s);
+
+  const narrowRules = css.slice(css.indexOf("@media (max-width: 420px)"));
+  assert.match(narrowRules, /\.dashboard-actions\s*,\s*\.trade-actions\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+});
+
 test("mobile breakpoint stacks trade fields and keeps actions touch friendly", () => {
   assert.match(frontOfficePage, /className="form trade-form"/);
   assert.match(frontOfficePage, /className="cta-row trade-actions"/);

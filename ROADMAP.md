@@ -170,7 +170,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `sim`: distinguish empty input rosters from all-injured rosters in the
       preflight error; verify a zero-length input and a fully injured ten-man
       roster produce different messages naming the cause.
-- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
+- [x] `frontend`: surface the sim roster-shortage preflight message on the league
       play flow when a game cannot be simulated; verify the alert wraps at 320px.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
@@ -194,17 +194,24 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
       instead of only the minute leader; verify under-scored seeds still land in
       the 95–125 band without one player exceeding 40 FGA.
-- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
-      play flow when a game cannot be simulated; verify the alert wraps at 320px.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
-- [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
+- [x] `sim`: distinguish empty input rosters from all-injured rosters in the
       preflight error; verify a zero-length input and a fully injured ten-man
       roster produce different messages naming the cause.
 - [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
       the franchise and front-office pages once seeded contracts respect the cap;
       verify the readout wraps at 320px.
+- [ ] `frontend`: move keyboard focus to the play-alert when Play next fails so
+      screen-reader users hear the roster-shortage reason immediately; verify
+      focus lands on the alert after a failed request.
+- [ ] `frontend`: when Available drops below five on the league dashboard, show a
+      soft warning beside that stat before Play next is clicked; verify it appears
+      only under the threshold and wraps at 320px.
+- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
+      with `aria-describedby` so assistive tech announces the shortage reason with
+      the control; verify the association clears when the alert dismisses.
 - [ ] `frontend`: show each team's current coach, style, and latest staffing
       rationale on front-office pages; verify long names and rationale wrap at
       320px without horizontal overflow.
@@ -385,6 +392,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-30: Surfaced roster-shortage preflight errors on the league play flow
 - 2026-07-29: Distinguished empty vs all-injured sim preflight shortage messages
 - 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
 - 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
