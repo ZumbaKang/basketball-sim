@@ -269,6 +269,13 @@ h3 {
 .error {
   margin: 0;
   color: var(--danger);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.play-alert {
+  margin: 0 0 1rem;
 }
 
 /* ---------- Surfaces ---------- */
