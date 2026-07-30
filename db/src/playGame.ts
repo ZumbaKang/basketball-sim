@@ -83,6 +83,8 @@ function hashSeed(id: string): number {
  * Persist a simulated box score and mark the scheduled row final.
  * All writes run in one transaction so a mid-write failure cannot leave a
  * `Game` row without matching `final` status / game news.
+ * A second call against an already-final scheduled row is rejected before
+ * creating another `Game`.
  */
 export async function persistResult(
   leagueId: string,
@@ -97,6 +99,15 @@ export async function persistResult(
   const homeWon = result.home.pts > result.away.pts;
 
   await prisma.$transaction(async (tx) => {
+    const scheduled = await tx.scheduledGame.findUniqueOrThrow({
+      where: { id: scheduledGameId },
+    });
+    if (scheduled.status === "final") {
+      throw new Error(
+        `Cannot persist result: scheduled game ${scheduledGameId} is already final.`,
+      );
+    }
+
     const saved = await tx.game.create({
       data: {
         id: result.id,
