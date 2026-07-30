@@ -185,9 +185,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `qa`: also flag dark/light theme-token set skew — properties declared under
       dark but omitted from light (and vice versa) even when `:root` keeps them
       available; verify with a fixture that only redefines half the light palette.
-- [ ] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
+- [x] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
       failure cannot leave a `Game` row without matching `final` status or game
       news; add a fixture that forces a post-`Game` write error.
+- [ ] `db`: reject a second `persistResult` when the scheduled row is already
+      `final` before creating another `Game`; verify a double-call leaves one
+      Game row, one game news item, and unchanged team W/L.
+- [ ] `db`: when `Game.create` collides on a reused result id, roll the
+      transaction back without flipping the scheduled row; verify with a
+      pre-inserted Game id fixture.
+- [ ] `db`: force a post-`scheduledGame` update failure inside `persistResult`
+      and assert team W/L, teamSeasonStat, and game news all roll back; extend
+      the transactional fixture past the Game-create hook.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
@@ -392,6 +401,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
 - 2026-07-30: Surfaced roster-shortage preflight errors on the league play flow
 - 2026-07-29: Distinguished empty vs all-injured sim preflight shortage messages
 - 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
