@@ -188,7 +188,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
       failure cannot leave a `Game` row without matching `final` status or game
       news; add a fixture that forces a post-`Game` write error.
-- [ ] `db`: reject a second `persistResult` when the scheduled row is already
+- [x] `db`: reject a second `persistResult` when the scheduled row is already
       `final` before creating another `Game`; verify a double-call leaves one
       Game row, one game news item, and unchanged team W/L.
 - [ ] `db`: when `Game.create` collides on a reused result id, roll the
@@ -197,6 +197,17 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: force a post-`scheduledGame` update failure inside `persistResult`
       and assert team W/L, teamSeasonStat, and game news all roll back; extend
       the transactional fixture past the Game-create hook.
+- [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
+      requires `status = scheduled`, and treat zero updated rows as already-final
+      so concurrent double persists cannot both create Game rows; verify with a
+      fixture that pre-flips status between the read and update.
+- [ ] `db`: reject `persistResult` when `gameResultId` is already set even if
+      `status` is still `scheduled`; verify a mismatched row leaves W/L and news
+      unchanged and creates no second Game.
+- [ ] `db`: surface the already-final persist rejection through
+      `simulateScheduledGame` when a caller bypasses the early status return;
+      verify a forced second simulate against a final row does not invent a new
+      result id.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
@@ -401,6 +412,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
 - 2026-07-30: Surfaced roster-shortage preflight errors on the league play flow
 - 2026-07-29: Distinguished empty vs all-injured sim preflight shortage messages

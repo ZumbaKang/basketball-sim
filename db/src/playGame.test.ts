@@ -493,4 +493,153 @@ describe("persistResult transactional rollback", () => {
       }),
     ).toBe(1);
   });
+
+  it("rejects a second persistResult when the scheduled row is already final", async () => {
+    const suffix = `${Date.now()}-${Math.random()}`;
+    const seasonYear = 2093;
+    const owner = await prisma.user.create({
+      data: {
+        email: `persist-dup-${suffix}@example.com`,
+        displayName: "Persist Dup Owner",
+        passwordHash: "unused",
+      },
+    });
+    ownerIds.push(owner.id);
+
+    const league = await prisma.league.create({
+      data: {
+        name: "Persist Dup League",
+        seasonYear,
+        ownerUserId: owner.id,
+        day: 5,
+      },
+    });
+    const [homeTeam, awayTeam] = await Promise.all([
+      prisma.team.create({
+        data: {
+          leagueId: league.id,
+          name: "Once Hawks",
+          abbreviation: "ONC",
+          conference: "East",
+          division: "Test",
+          wins: 4,
+          losses: 2,
+        },
+      }),
+      prisma.team.create({
+        data: {
+          leagueId: league.id,
+          name: "Once Foxes",
+          abbreviation: "ONF",
+          conference: "West",
+          division: "Test",
+          wins: 3,
+          losses: 3,
+        },
+      }),
+    ]);
+
+    const scheduled = await prisma.scheduledGame.create({
+      data: {
+        leagueId: league.id,
+        seasonYear,
+        day: 5,
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        status: "scheduled",
+      },
+    });
+
+    const home: Team = {
+      id: homeTeam.id,
+      leagueId: league.id,
+      name: homeTeam.name,
+      abbreviation: homeTeam.abbreviation,
+      conference: "East",
+      division: "Test",
+      wins: homeTeam.wins,
+      losses: homeTeam.losses,
+      gmDirection: "contend",
+    };
+    const away: Team = {
+      id: awayTeam.id,
+      leagueId: league.id,
+      name: awayTeam.name,
+      abbreviation: awayTeam.abbreviation,
+      conference: "West",
+      division: "Test",
+      wins: awayTeam.wins,
+      losses: awayTeam.losses,
+      gmDirection: "rebuild",
+    };
+
+    const firstId = `game-dup-first-${suffix}`;
+    const firstResult: GameResult = {
+      id: firstId,
+      leagueId: league.id,
+      home: emptyTeamLine(home, 112),
+      away: emptyTeamLine(away, 101),
+      playedAt: new Date().toISOString(),
+      scheduledGameId: scheduled.id,
+      isPlayoff: false,
+    };
+
+    await persistResult(league.id, seasonYear, firstResult, scheduled.id, false, home, away);
+
+    const [homeAfterFirst, awayAfterFirst] = await Promise.all([
+      prisma.team.findUniqueOrThrow({ where: { id: homeTeam.id } }),
+      prisma.team.findUniqueOrThrow({ where: { id: awayTeam.id } }),
+    ]);
+    expect(homeAfterFirst.wins).toBe(5);
+    expect(homeAfterFirst.losses).toBe(2);
+    expect(awayAfterFirst.wins).toBe(3);
+    expect(awayAfterFirst.losses).toBe(4);
+
+    const secondId = `game-dup-second-${suffix}`;
+    const secondResult: GameResult = {
+      id: secondId,
+      leagueId: league.id,
+      home: emptyTeamLine(home, 90),
+      away: emptyTeamLine(away, 95),
+      playedAt: new Date().toISOString(),
+      scheduledGameId: scheduled.id,
+      isPlayoff: false,
+    };
+
+    await expect(
+      persistResult(league.id, seasonYear, secondResult, scheduled.id, false, home, away),
+    ).rejects.toThrow(
+      `Cannot persist result: scheduled game ${scheduled.id} is already final.`,
+    );
+
+    expect(await prisma.game.count({ where: { id: firstId } })).toBe(1);
+    expect(await prisma.game.count({ where: { id: secondId } })).toBe(0);
+    expect(
+      await prisma.game.count({
+        where: { leagueId: league.id, scheduledGameId: scheduled.id },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.newsItem.count({
+        where: { leagueId: league.id, kind: "game" },
+      }),
+    ).toBe(1);
+
+    const [homeAfterSecond, awayAfterSecond] = await Promise.all([
+      prisma.team.findUniqueOrThrow({ where: { id: homeTeam.id } }),
+      prisma.team.findUniqueOrThrow({ where: { id: awayTeam.id } }),
+    ]);
+    expect(homeAfterSecond.wins).toBe(5);
+    expect(homeAfterSecond.losses).toBe(2);
+    expect(awayAfterSecond.wins).toBe(3);
+    expect(awayAfterSecond.losses).toBe(4);
+
+    const after = await prisma.scheduledGame.findUniqueOrThrow({
+      where: { id: scheduled.id },
+    });
+    expect(after.status).toBe("final");
+    expect(after.gameResultId).toBe(firstId);
+    expect(after.homeScore).toBe(112);
+    expect(after.awayScore).toBe(101);
+  });
 });
