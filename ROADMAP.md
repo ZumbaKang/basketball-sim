@@ -175,28 +175,45 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
+- [x] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
+      single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
+      no line exceeds a credible FTA-per-FGA ratio while team totals still
+      reconcile.
+- [x] `qa`: fail the build when a CSS custom property is referenced but never
+      declared for a theme — an undefined `--font-*` alias silently dropped every
+      page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
+- [x] `qa`: also flag dark/light theme-token set skew — properties declared under
+      dark but omitted from light (and vice versa) even when `:root` keeps them
+      available; verify with a fixture that only redefines half the light palette.
 - [ ] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
       failure cannot leave a `Game` row without matching `final` status or game
       news; add a fixture that forces a post-`Game` write error.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
+- [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
+      instead of only the minute leader; verify under-scored seeds still land in
+      the 95–125 band without one player exceeding 40 FGA.
+- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
+      play flow when a game cannot be simulated; verify the alert wraps at 320px.
+- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
+      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
+      staffing intents; verify replacements cannot be hired by two teams.
+- [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
+      preflight error; verify a zero-length input and a fully injured ten-man
+      roster produce different messages naming the cause.
 - [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
       the franchise and front-office pages once seeded contracts respect the cap;
       verify the readout wraps at 320px.
-- [ ] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
-      single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
-      no line exceeds a credible FTA-per-FGA ratio while team totals still
-      reconcile.
+- [ ] `frontend`: show each team's current coach, style, and latest staffing
+      rationale on front-office pages; verify long names and rationale wrap at
+      320px without horizontal overflow.
 - [ ] `db`: reject proposals that list the same `playerId` more than once across
       `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
       contracts unchanged.
-- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
-      games, redistributing the difference across healthy reserves; verify the
-      returning player ramps up without changing 240-minute team totals.
-- [ ] `qa`: fail the build when a CSS custom property is referenced but never
-      declared for a theme — an undefined `--font-*` alias silently dropped every
-      page to a serif fallback; add a fixture stylesheet with a dangling `var()`.
+- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+      same way as stylesheets; verify a fixture component referencing an
+      undeclared token fails.
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
 - [ ] `sim`: when 1–4 players are available, include the injured remainder count
@@ -255,18 +272,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
       trade news row is written and sibling pick moves roll back; add a fixture
       that retargets a player between validation and apply.
-- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
-      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
-      staffing intents; verify replacements cannot be hired by two teams.
-- [ ] `frontend`: show each team's current coach, style, and latest staffing
-      rationale on front-office pages; verify long names and rationale wrap at
-      320px without horizontal overflow.
 - [ ] `db`: expose per-player season totals and career game log through an
       owned query/endpoint; the player page can only show the last ten league
       games until this lands.
 - [ ] `frontend`: extend the player page with season averages and a full career
       game log once the `db` endpoint above exists; verify the added columns stay
       scrollable at 320px.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 - [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
       stars still receive the closing-lineup usage shift while both teams stay
       at 240 minutes; add seeded home and away regression cases.
@@ -276,6 +290,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
       attempt transfers; verify every player shooting equation and all team
       shooting and point totals still reconcile.
+- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
+      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
+      box-score fixture.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -301,25 +318,21 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
-- [ ] `qa`: add a root package fixture with no `scripts.test` and assert
-      `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
-- [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
-      `npm test -w alpha; npm test -w beta` still counts both; verify with a
-      chained fixture.
-- [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
-      coverage still matches by path only; verify a `"name": ""` fixture fails
-      when its path is missing from the command.
-- [ ] `qa`: cover a mixed root-test command that chains both `npm test -w` and
-      `npm run test -w`; verify both selector forms count toward coverage.
-- [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
-      no `run`) the same as spaced `--workspace`; verify a fixture using the
-      equals form still counts as covered.
-- [ ] `qa`: fail mixed named/nameless coverage when only the named package is
-      selected and the nameless path is omitted; verify CI-build and root-test
-      assertions both throw for the missing path.
-- [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
-      nameless workspace is covered by path in the same CI/root command; verify
-      both assertions pass.
+- [ ] `qa`: treat `@property --token` registrations as declarations so
+      Houdini-registered custom properties count; verify a fixture that only
+      registers via `@property` passes.
+- [ ] `qa`: combine undeclared-var and theme-skew checks behind one
+      `assertCssThemeContracts` entrypoint; verify a half-light fixture fails
+      mentioning skew and a dangling-font fixture still fails undeclared.
+- [ ] `qa`: attribute declarations inside `@layer` theme blocks the same as
+      unlayered ones; verify a fixture that declares tokens only inside
+      `@layer theme` still passes undeclared and skew checks.
+- [ ] `qa`: flag light→dark skew the same as dark→light when only the light
+      block declares an extra token; verify a fixture that adds `--accent-ink`
+      under light alone fails skew for dark.
+- [ ] `qa`: assert every CI workspace build runs after Prisma generation as
+      well as before tests; add an out-of-order workflow fixture that fails the
+      QA check.
 - [ ] `qa`: when a workspace is built both before and after `- name: Run tests`,
       keep the earliest build position so a pre-test build still passes; verify
       with a duplicate-build fixture that currently would fail on the last match.
@@ -327,14 +340,22 @@ implementing anything — its PRs are expected to touch only this file.
       buildable workspace is reported as late; verify with a no-test-step fixture.
 - [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
       precede-tests error lists both paths; verify with a dual late-build fixture.
-- [ ] `qa`: accept single-quoted and double-quoted workspace selectors that
-      contain spaces in both parsers; add a fixture path with a space and assert
-      coverage still matches.
-- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
-      a fixture that invokes one workspace by both path and package name.
-- [ ] `qa`: assert every CI workspace build runs after Prisma generation as
-      well as before tests; add an out-of-order workflow fixture that fails the
-      QA check.
+- [ ] `qa`: add a root package fixture with no `scripts.test` and assert
+      `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
+- [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
+      `npm test -w alpha; npm test -w beta` still counts both; verify with a
+      chained fixture.
+- [ ] `qa`: cover a mixed root-test command that chains both `npm test -w` and
+      `npm run test -w`; verify both selector forms count toward coverage.
+- [ ] `qa`: fail mixed named/nameless coverage when only the named package is
+      selected and the nameless path is omitted; verify CI-build and root-test
+      assertions both throw for the missing path.
+- [ ] `qa`: accept `--workspace=<name>` covering a named package while a sibling
+      nameless workspace is covered by path in the same CI/root command; verify
+      both assertions pass.
+- [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
+      no `run`) the same as spaced `--workspace`; verify a fixture using the
+      equals form still counts as covered.
 
 ## Later
 
@@ -352,6 +373,14 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: accept lifecycle shorthands for `start`/`stop`/`restart` the same
       way as `test`; verify an `npm start -w` fixture counts when checking a
       start script and still rejects `npm build -w`.
+- [ ] `qa`: treat an empty-string package `name` the same as an omitted name so
+      coverage still matches by path only; verify a `"name": ""` fixture fails
+      when its path is missing from the command.
+- [ ] `qa`: accept single-quoted and double-quoted workspace selectors that
+      contain spaces in both parsers; add a fixture path with a space and assert
+      coverage still matches.
+- [ ] `qa`: reject duplicate workspace selectors in the root test command; add
+      a fixture that invokes one workspace by both path and package name.
 
 ## Shipped
 

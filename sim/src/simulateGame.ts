@@ -1,5 +1,9 @@
 import type { GameResult, Player, PlayerGameLine, Team, TeamGameLine } from "@basketball-sim/shared";
 import { applyClutchTime, isClutchGame } from "./clutch.js";
+import {
+  maxCredibleFreeThrowAttempts,
+  maxCredibleFta,
+} from "./freeThrows.js";
 import { applyGarbageTime, isGarbageTimeGame } from "./garbageTime.js";
 import { assertRealisticGameResult } from "./realism.js";
 
@@ -296,7 +300,14 @@ function simulateTeamLine(
     // Ensure 2PT makes are consistent: fgm >= tpm
     const adjustedFgm = Math.max(fgm, tpm);
 
-    const fta = Math.max(0, Math.round(fga * (0.18 + player.ratings.offense / 600) + rng()));
+    const rawFta = Math.max(
+      0,
+      Math.round(fga * (0.18 + player.ratings.offense / 600) + rng()),
+    );
+    const fta = Math.min(
+      rawFta,
+      maxCredibleFreeThrowAttempts(fga, minutes, player.ratings.offense),
+    );
     const ftPct = clamp(
       0.65 + player.ratings.shooting / 350 + (rng() - 0.5) * 0.05 - fatiguePenalty,
       0.55,
@@ -439,32 +450,34 @@ export function simulateGame(input: SimulateGameInput): GameResult {
     if (line.players.length === 0) return line;
     if (line.pts >= targetMin && line.pts <= targetMax) return line;
     const target = Math.round(targetMin + rng() * (targetMax - targetMin));
-    const diff = target - line.pts;
+    let remaining = target - line.pts;
     const star = line.players[0]!;
-    const addFtm = Math.max(0, diff);
-    star.ftm += addFtm;
-    star.fta = Math.max(star.fta, star.ftm);
-    star.pts += addFtm;
 
-    const sum = (key: keyof PlayerGameLine) =>
-      line.players.reduce((acc, p) => acc + (typeof p[key] === "number" ? (p[key] as number) : 0), 0);
+    // Prefer made twos for bulk scoring; free throws only within the FGA cap.
+    while (remaining > 0) {
+      const ftaRoom = maxCredibleFta(star.fga) - star.fta;
+      if (remaining === 1 && ftaRoom > 0) {
+        star.ftm += 1;
+        star.fta += 1;
+        star.pts += 1;
+        remaining -= 1;
+        continue;
+      }
+      if (remaining >= 2) {
+        star.fgm += 1;
+        star.fga += 1;
+        star.pts += 2;
+        remaining -= 2;
+        continue;
+      }
+      // Need one point but no FT room — add a two (may overshoot target by 1).
+      star.fgm += 1;
+      star.fga += 1;
+      star.pts += 2;
+      remaining -= 2;
+    }
 
-    return {
-      ...line,
-      pts: sum("pts"),
-      reb: sum("reb"),
-      ast: sum("ast"),
-      stl: sum("stl"),
-      blk: sum("blk"),
-      tov: sum("tov"),
-      fgm: sum("fgm"),
-      fga: sum("fga"),
-      tpm: sum("tpm"),
-      tpa: sum("tpa"),
-      ftm: sum("ftm"),
-      fta: sum("fta"),
-      players: line.players,
-    };
+    return rescoreTeamLine(line);
   };
 
   home = nudge(home, 95, 125);
@@ -479,6 +492,9 @@ export function simulateGame(input: SimulateGameInput): GameResult {
     away = applyClutchTime(away, awayPlayers);
   }
 
+  home = enforceCredibleFreeThrows(home);
+  away = enforceCredibleFreeThrows(away);
+
   const result: GameResult = {
     id: idFromSeed(seed),
     leagueId: input.leagueId,
@@ -489,6 +505,71 @@ export function simulateGame(input: SimulateGameInput): GameResult {
 
   assertRealisticGameResult(result);
   return result;
+}
+
+function rescoreTeamLine(line: TeamGameLine): TeamGameLine {
+  const sum = (key: keyof PlayerGameLine) =>
+    line.players.reduce(
+      (acc, p) => acc + (typeof p[key] === "number" ? (p[key] as number) : 0),
+      0,
+    );
+
+  return {
+    ...line,
+    pts: sum("pts"),
+    reb: sum("reb"),
+    ast: sum("ast"),
+    stl: sum("stl"),
+    blk: sum("blk"),
+    tov: sum("tov"),
+    fgm: sum("fgm"),
+    fga: sum("fga"),
+    tpm: sum("tpm"),
+    tpa: sum("tpa"),
+    ftm: sum("ftm"),
+    fta: sum("fta"),
+    players: line.players,
+  };
+}
+
+/**
+ * After minute/usage shifts, re-clamp FTA to the FGA ratio and convert any
+ * trimmed free-throw points into made twos so team totals still reconcile.
+ */
+function enforceCredibleFreeThrows(line: TeamGameLine): TeamGameLine {
+  for (const player of line.players) {
+    const maxFta = maxCredibleFta(player.fga);
+    if (player.fta <= maxFta) {
+      player.fta = Math.max(player.fta, player.ftm);
+      continue;
+    }
+
+    const newFtm = Math.min(player.ftm, maxFta);
+    let replace = player.ftm - newFtm;
+    player.ftm = newFtm;
+    player.fta = maxFta;
+    player.pts -= replace;
+
+    while (replace >= 2) {
+      player.fgm += 1;
+      player.fga += 1;
+      player.pts += 2;
+      replace -= 2;
+    }
+    if (replace === 1) {
+      if (player.fta < maxCredibleFta(player.fga)) {
+        player.ftm += 1;
+        player.fta += 1;
+        player.pts += 1;
+      } else {
+        player.fgm += 1;
+        player.fga += 1;
+        player.pts += 2;
+      }
+    }
+  }
+
+  return rescoreTeamLine(line);
 }
 
 export { assertRealisticGameResult } from "./realism.js";
