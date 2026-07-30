@@ -191,7 +191,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: reject a second `persistResult` when the scheduled row is already
       `final` before creating another `Game`; verify a double-call leaves one
       Game row, one game news item, and unchanged team W/L.
-- [ ] `db`: when `Game.create` collides on a reused result id, roll the
+- [x] `db`: when `Game.create` collides on a reused result id, roll the
       transaction back without flipping the scheduled row; verify with a
       pre-inserted Game id fixture.
 - [ ] `db`: force a post-`scheduledGame` update failure inside `persistResult`
@@ -238,6 +238,14 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: reject proposals that list the same `playerId` more than once across
       `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
       contracts unchanged.
+- [ ] `db`: include the colliding Game's existing `scheduledGameId` in the
+      reused-result-id error so operators can find the conflicting row; verify
+      the message names the pre-inserted scheduled game.
+- [ ] `db`: reject blank or whitespace-only `result.id` before `Game.create`;
+      verify the scheduled row stays `scheduled` and no Game row is written.
+- [ ] `db`: when a reused result id belongs to another league, leave that foreign
+      Game's `resultJson` and W/L untouched; verify with a cross-league
+      pre-inserted id fixture.
 - [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
       same way as stylesheets; verify a fixture component referencing an
       undeclared token fails.
@@ -412,6 +420,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-30: Rolled back persistResult when Game.create reused an existing result id
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
 - 2026-07-30: Surfaced roster-shortage preflight errors on the league play flow
