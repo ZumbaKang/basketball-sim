@@ -207,37 +207,37 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: wrap `persistResult` in a single Prisma transaction so a mid-write
       failure cannot leave a `Game` row without matching `final` status or game
       news; add a fixture that forces a post-`Game` write error.
-- [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
-      preflight error; verify a zero-length input and a fully injured ten-man
-      roster produce different messages naming the cause.
-- [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
-      instead of only the minute leader; verify under-scored seeds still land in
-      the 95–125 band without one player exceeding 40 FGA.
-- [ ] `sim`: when garbage time transfers FGA, also shift a matching share of FTA
-      (still under the credibility cap) so donors never need post-hoc FT→FG
-      conversion; verify with seeded 15- and 25-point blowouts.
-- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
-      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
-      box-score fixture.
-- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
-      play flow when a game cannot be simulated; verify the alert wraps at 320px.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
-- [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
-      the franchise and front-office pages once seeded contracts respect the cap;
-      verify the readout wraps at 320px.
+- [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
+      instead of only the minute leader; verify under-scored seeds still land in
+      the 95–125 band without one player exceeding 40 FGA.
+- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
+      play flow when a game cannot be simulated; verify the alert wraps at 320px.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
+- [ ] `sim`: distinguish empty input rosters from all-injured rosters in the
+      preflight error; verify a zero-length input and a fully injured ten-man
+      roster produce different messages naming the cause.
+- [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
+      the franchise and front-office pages once seeded contracts respect the cap;
+      verify the readout wraps at 320px.
 - [ ] `frontend`: show each team's current coach, style, and latest staffing
       rationale on front-office pages; verify long names and rationale wrap at
       320px without horizontal overflow.
 - [ ] `db`: reject proposals that list the same `playerId` more than once across
       `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
       contracts unchanged.
+- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+      same way as stylesheets; verify a fixture component referencing an
+      undeclared token fails.
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
+- [ ] `sim`: when garbage time transfers FGA, also shift a matching share of FTA
+      (still under the credibility cap) so donors never need post-hoc FT→FG
+      conversion; verify with seeded 15- and 25-point blowouts.
 
 ## Next
 
@@ -303,6 +303,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
       attempt transfers; verify every player shooting equation and all team
       shooting and point totals still reconcile.
+- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
+      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
+      box-score fixture.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -328,6 +331,18 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `qa`: treat `@property --token` registrations as declarations so
+      Houdini-registered custom properties count; verify a fixture that only
+      registers via `@property` passes.
+- [ ] `qa`: combine undeclared-var and theme-skew checks behind one
+      `assertCssThemeContracts` entrypoint; verify a half-light fixture fails
+      mentioning skew and a dangling-font fixture still fails undeclared.
+- [ ] `qa`: attribute declarations inside `@layer` theme blocks the same as
+      unlayered ones; verify a fixture that declares tokens only inside
+      `@layer theme` still passes undeclared and skew checks.
+- [ ] `qa`: flag light→dark skew the same as dark→light when only the light
+      block declares an extra token; verify a fixture that adds `--accent-ink`
+      under light alone fails skew for dark.
 - [ ] `qa`: assert every CI workspace build runs after Prisma generation as
       well as before tests; add an out-of-order workflow fixture that fails the
       QA check.
