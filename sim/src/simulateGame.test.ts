@@ -278,7 +278,7 @@ describe("simulateGame", () => {
     },
   );
 
-  it.each([0, 1, 2, 3, 4])(
+  it.each([1, 2, 3, 4])(
     "rejects a home roster with only %i available players before box-score generation",
     (availableCount) => {
       const shortenRoster = (players: Player[], count: number) =>
@@ -304,7 +304,7 @@ describe("simulateGame", () => {
     },
   );
 
-  it.each([0, 1, 2, 3, 4])(
+  it.each([1, 2, 3, 4])(
     "rejects an away roster with only %i available players before box-score generation",
     (availableCount) => {
       const shortenRoster = (players: Player[], count: number) =>
@@ -330,6 +330,78 @@ describe("simulateGame", () => {
     },
   );
 
+  it("rejects an empty home input roster with a message naming the empty roster", () => {
+    expect(() =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: [],
+        awayPlayers: roster("t_away", "Metro"),
+        seed: 4400,
+      }),
+    ).toThrow(
+      `Cannot simulate game: home team Harbor Hawks has an empty roster (need at least ${MIN_AVAILABLE_PLAYERS} available players).`,
+    );
+  });
+
+  it("rejects a fully injured ten-man home roster with a message naming injuries", () => {
+    const injuredRoster = roster("t_home", "Harbor").map((player) => ({
+      ...player,
+      injuredDays: 3,
+    }));
+
+    expect(injuredRoster).toHaveLength(10);
+    expect(() =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: injuredRoster,
+        awayPlayers: roster("t_away", "Metro"),
+        seed: 4401,
+      }),
+    ).toThrow(
+      `Cannot simulate game: home team Harbor Hawks has 0 available players because all 10 are injured (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+    );
+  });
+
+  it("rejects an empty away input roster with a message naming the empty roster", () => {
+    expect(() =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: roster("t_home", "Harbor"),
+        awayPlayers: [],
+        seed: 4402,
+      }),
+    ).toThrow(
+      `Cannot simulate game: away team Metro Foxes has an empty roster (need at least ${MIN_AVAILABLE_PLAYERS} available players).`,
+    );
+  });
+
+  it("rejects a fully injured ten-man away roster with a message naming injuries", () => {
+    const injuredRoster = roster("t_away", "Metro").map((player) => ({
+      ...player,
+      injuredDays: 2,
+    }));
+
+    expect(injuredRoster).toHaveLength(10);
+    expect(() =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: roster("t_home", "Harbor"),
+        awayPlayers: injuredRoster,
+        seed: 4403,
+      }),
+    ).toThrow(
+      `Cannot simulate game: away team Metro Foxes has 0 available players because all 10 are injured (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+    );
+  });
+
   it("rejects both sides when each has fewer than five available players", () => {
     const shortenRoster = (players: Player[], count: number) =>
       players.map((player, index) => ({
@@ -347,7 +419,27 @@ describe("simulateGame", () => {
         seed: 4300,
       }),
     ).toThrow(
-      `Cannot simulate game: home team Harbor Hawks has 2 available players (need at least ${MIN_AVAILABLE_PLAYERS}); away team Metro Foxes has 0 available players (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+      `Cannot simulate game: home team Harbor Hawks has 2 available players (need at least ${MIN_AVAILABLE_PLAYERS}); away team Metro Foxes has 0 available players because all 10 are injured (need at least ${MIN_AVAILABLE_PLAYERS}).`,
+    );
+  });
+
+  it("distinguishes an empty home roster from a fully injured away roster in one preflight error", () => {
+    const injuredAway = roster("t_away", "Metro").map((player) => ({
+      ...player,
+      injuredDays: 4,
+    }));
+
+    expect(() =>
+      simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: [],
+        awayPlayers: injuredAway,
+        seed: 4404,
+      }),
+    ).toThrow(
+      `Cannot simulate game: home team Harbor Hawks has an empty roster (need at least ${MIN_AVAILABLE_PLAYERS} available players); away team Metro Foxes has 0 available players because all 10 are injured (need at least ${MIN_AVAILABLE_PLAYERS}).`,
     );
   });
 

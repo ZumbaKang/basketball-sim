@@ -167,6 +167,11 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: when a scheduled game has fewer than five healthy players, fail before
       persist instead of substituting injured players into `simulateGame`; verify
       no `final` row or game news is written.
+- [x] `sim`: distinguish empty input rosters from all-injured rosters in the
+      preflight error; verify a zero-length input and a fully injured ten-man
+      roster produce different messages naming the cause.
+- [ ] `frontend`: surface the sim roster-shortage preflight message on the league
+      play flow when a game cannot be simulated; verify the alert wraps at 320px.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
@@ -211,9 +216,15 @@ implementing anything — its PRs are expected to touch only this file.
       undeclared token fails.
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
-- [ ] `sim`: when garbage time transfers FGA, also shift a matching share of FTA
-      (still under the credibility cap) so donors never need post-hoc FT→FG
-      conversion; verify with seeded 15- and 25-point blowouts.
+- [ ] `sim`: when 1–4 players are available, include the injured remainder count
+      in the preflight message (e.g. `3 available, 7 injured`); verify against a
+      ten-man roster with mixed health.
+- [ ] `sim`: reject input rosters that list the same `playerId` more than once on
+      a side before box-score generation; verify a duplicated id fails with a
+      descriptive preflight error naming the side.
+- [ ] `db`: mirror empty-roster vs all-injured wording in scheduled-game preflight
+      by inspecting the unfiltered team roster before the healthy filter; verify
+      both causes produce distinct `Cannot simulate scheduled game` errors.
 
 ## Next
 
@@ -374,9 +385,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
-- 2026-07-29: Flagged dark/light theme-token set skew even when `:root` keeps values available
-- 2026-07-29: Failed QA when CSS custom properties are referenced but undeclared for a theme
-- 2026-07-29: Capped free-throw volume to a credible FTA-per-FGA ratio (no more FT-only scoring nudges)
+- 2026-07-29: Distinguished empty vs all-injured sim preflight shortage messages
 - 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
 - 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
 - 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
