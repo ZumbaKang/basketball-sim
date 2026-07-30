@@ -1,6 +1,6 @@
 import type { GameResult, Player, Team } from "@basketball-sim/shared";
 import { MIN_AVAILABLE_PLAYERS, simulateGame } from "@basketball-sim/sim";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma.js";
 import { toPlayer, toTeam } from "./mappers.js";
 
@@ -85,6 +85,8 @@ function hashSeed(id: string): number {
  * `Game` row without matching `final` status / game news.
  * A second call against an already-final scheduled row is rejected before
  * creating another `Game`.
+ * A reused `result.id` that collides with an existing `Game` row aborts the
+ * transaction without flipping the scheduled row.
  */
 export async function persistResult(
   leagueId: string,
@@ -108,18 +110,31 @@ export async function persistResult(
       );
     }
 
-    const saved = await tx.game.create({
-      data: {
-        id: result.id,
-        leagueId,
-        homeTeamId: homeTeam.id,
-        awayTeamId: awayTeam.id,
-        playedAt: new Date(result.playedAt),
-        resultJson: JSON.stringify(result),
-        isPlayoff,
-        scheduledGameId,
-      },
-    });
+    let saved;
+    try {
+      saved = await tx.game.create({
+        data: {
+          id: result.id,
+          leagueId,
+          homeTeamId: homeTeam.id,
+          awayTeamId: awayTeam.id,
+          playedAt: new Date(result.playedAt),
+          resultJson: JSON.stringify(result),
+          isPlayoff,
+          scheduledGameId,
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+      ) {
+        throw new Error(
+          `Cannot persist result: game id ${result.id} already exists.`,
+        );
+      }
+      throw err;
+    }
 
     if (options?.afterGameCreate) {
       await options.afterGameCreate(tx);
