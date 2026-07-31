@@ -172,9 +172,6 @@ implementing anything — its PRs are expected to touch only this file.
       roster produce different messages naming the cause.
 - [x] `frontend`: surface the sim roster-shortage preflight message on the league
       play flow when a game cannot be simulated; verify the alert wraps at 320px.
-- [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
-      `scheduled`, write a non-game news item naming the short team, and keep
-      simulating sibling games that day; verify advance does not abort mid-slate.
 - [x] `sim`: cap free-throw volume against shot attempts and fouls drawn — a
       single reserve posted 30-30 FT on 3-5 FG in a regular-season game; verify
       no line exceeds a credible FTA-per-FGA ratio while team totals still
@@ -191,70 +188,67 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: reject a second `persistResult` when the scheduled row is already
       `final` before creating another `Game`; verify a double-call leaves one
       Game row, one game news item, and unchanged team W/L.
-- [ ] `db`: when `Game.create` collides on a reused result id, roll the
-      transaction back without flipping the scheduled row; verify with a
-      pre-inserted Game id fixture.
 - [x] `db`: force a post-`scheduledGame` update failure inside `persistResult`
       and assert team W/L, teamSeasonStat, and game news all roll back; extend
       the transactional fixture past the Game-create hook.
-- [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
-      requires `status = scheduled`, and treat zero updated rows as already-final
-      so concurrent double persists cannot both create Game rows; verify with a
-      fixture that pre-flips status between the read and update.
-- [ ] `db`: reject `persistResult` when `gameResultId` is already set even if
-      `status` is still `scheduled`; verify a mismatched row leaves W/L and news
-      unchanged and creates no second Game.
-- [ ] `db`: surface the already-final persist rejection through
-      `simulateScheduledGame` when a caller bypasses the early status return;
-      verify a forced second simulate against a final row does not invent a new
-      result id.
-- [ ] `db`: force a post-W/L update failure inside `persistResult` and assert the
-      scheduled row, Game, season stats, and game news all roll back; extend the
-      transactional fixture past the team W/L increments.
-- [ ] `db`: force a post-`teamSeasonStat` upsert failure inside `persistResult`
-      and assert Game, scheduled final flip, W/L, and game news all roll back;
-      verify with a hook after both season-stat upserts.
-- [ ] `db`: force a failure after game-news create inside `persistResult` and
-      assert the entire transaction including injury news rolls back; verify no
-      orphan news rows remain.
+- [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
+      `scheduled`, write a non-game news item naming the short team, and keep
+      simulating sibling games that day; verify advance does not abort mid-slate.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
 - [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
       instead of only the minute leader; verify under-scored seeds still land in
       the 95–125 band without one player exceeding 40 FGA.
-- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
-      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
-      staffing intents; verify replacements cannot be hired by two teams.
-- [x] `sim`: distinguish empty input rosters from all-injured rosters in the
-      preflight error; verify a zero-length input and a fully injured ten-man
-      roster produce different messages naming the cause.
-- [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
-      the franchise and front-office pages once seeded contracts respect the cap;
-      verify the readout wraps at 320px.
+- [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
+      requires `status = scheduled`, and treat zero updated rows as already-final
+      so concurrent double persists cannot both create Game rows; verify with a
+      fixture that pre-flips status between the read and update.
 - [ ] `frontend`: move keyboard focus to the play-alert when Play next fails so
       screen-reader users hear the roster-shortage reason immediately; verify
       focus lands on the alert after a failed request.
+- [ ] `db`: reject `persistResult` when `gameResultId` is already set even if
+      `status` is still `scheduled`; verify a mismatched row leaves W/L and news
+      unchanged and creates no second Game.
+- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
+      more cautious with teams that "won" a prior trade.
+- [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
+      teams at 20/40/60-game checkpoints, and atomically apply emitted coach
+      staffing intents; verify replacements cannot be hired by two teams.
 - [ ] `frontend`: when Available drops below five on the league dashboard, show a
       soft warning beside that stat before Play next is clicked; verify it appears
       only under the threshold and wraps at 320px.
-- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
-      with `aria-describedby` so assistive tech announces the shortage reason with
-      the control; verify the association clears when the alert dismisses.
-- [ ] `frontend`: show each team's current coach, style, and latest staffing
-      rationale on front-office pages; verify long names and rationale wrap at
-      320px without horizontal overflow.
-- [ ] `db`: reject proposals that list the same `playerId` more than once across
-      `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
-      contracts unchanged.
-- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
-      same way as stylesheets; verify a fixture component referencing an
-      undeclared token fails.
-- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
-      more cautious with teams that "won" a prior trade.
+- [ ] `db`: when `Game.create` collides on a reused result id, roll the
+      transaction back without flipping the scheduled row; verify with a
+      pre-inserted Game id fixture.
 - [ ] `sim`: when 1–4 players are available, include the injured remainder count
       in the preflight message (e.g. `3 available, 7 injured`); verify against a
       ten-man roster with mixed health.
+- [ ] `db`: reject proposals that list the same `playerId` more than once across
+      `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
+      contracts unchanged.
+- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
+      with `aria-describedby` so assistive tech announces the shortage reason with
+      the control; verify the association clears when the alert dismisses.
+- [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
+      injected into a mixed package; verify the FA row and any null-team contract
+      stay put while owned picks remain with their teams.
+- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+      same way as stylesheets; verify a fixture component referencing an
+      undeclared token fails.
+- [ ] `db`: surface the already-final persist rejection through
+      `simulateScheduledGame` when a caller bypasses the early status return;
+      verify a forced second simulate against a final row does not invent a new
+      result id.
+- [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
+      the franchise and front-office pages once seeded contracts respect the cap;
+      verify the readout wraps at 320px.
+- [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
+      trade news row is written and sibling pick moves roll back; add a fixture
+      that retargets a player between validation and apply.
+- [ ] `frontend`: show each team's current coach, style, and latest staffing
+      rationale on front-office pages; verify long names and rationale wrap at
+      320px without horizontal overflow.
 - [ ] `sim`: reject input rosters that list the same `playerId` more than once on
       a side before box-score generation; verify a duplicated id fails with a
       descriptive preflight error naming the side.
@@ -302,12 +296,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: announce trade-finder asset changes through the selected-assets
       summary and move focus to it; verify keyboard and screen-reader users hear
       both updated player and partner names.
-- [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
-      injected into a mixed package; verify the FA row and any null-team contract
-      stay put while owned picks remain with their teams.
-- [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
-      trade news row is written and sibling pick moves roll back; add a fixture
-      that retargets a player between validation and apply.
+- [ ] `db`: force a post-W/L update failure inside `persistResult` and assert the
+      scheduled row, Game, season stats, and game news all roll back; extend the
+      transactional fixture past the team W/L increments.
+- [ ] `db`: force a post-`teamSeasonStat` upsert failure inside `persistResult`
+      and assert Game, scheduled final flip, W/L, and game news all roll back;
+      verify with a hook after both season-stat upserts.
+- [ ] `db`: force a failure after game-news create inside `persistResult` and
+      assert the entire transaction including injury news rolls back; verify no
+      orphan news rows remain.
 - [ ] `db`: expose per-player season totals and career game log through an
       owned query/endpoint; the player page can only show the last ten league
       games until this lands.
@@ -326,9 +323,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
       attempt transfers; verify every player shooting equation and all team
       shooting and point totals still reconcile.
-- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
-      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
-      box-score fixture.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -376,6 +370,23 @@ implementing anything — its PRs are expected to touch only this file.
       buildable workspace is reported as late; verify with a no-test-step fixture.
 - [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
       precede-tests error lists both paths; verify with a dual late-build fixture.
+- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
+      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
+      box-score fixture.
+
+## Later
+
+- [x] `frontend`: dark/light theme toggle and accessibility pass (contrast,
+      focus states, keyboard nav for trade builder).
+- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
+      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
+      a `shared/` contract update first before any domain touches it.
+- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
+      end-to-end and asserts standings/awards/draft invariants hold.
+      _Blocked: playoff bracket promotion can index incomplete Western
+      first-round winners when the Eastern first round finishes first, crashing
+      before awards and the offseason draft; persistence must fix this first._
 - [ ] `qa`: add a root package fixture with no `scripts.test` and assert
       `assertTestWorkspaceCoverage` throws "Root package is missing a test script".
 - [ ] `qa`: stop unquoted workspace selectors at `;` the same as `&`/`|`/`#` so
@@ -392,20 +403,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `qa`: treat `npm test --workspace=<selector>` shorthand (equals form,
       no `run`) the same as spaced `--workspace`; verify a fixture using the
       equals form still counts as covered.
-
-## Later
-
-- [x] `frontend`: dark/light theme toggle and accessibility pass (contrast,
-      focus states, keyboard nav for trade builder).
-- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
-      playoff games vs. regular season, matching real NBA tendencies).
-- [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
-      a `shared/` contract update first before any domain touches it.
-- [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
-      end-to-end and asserts standings/awards/draft invariants hold.
-      _Blocked: playoff bracket promotion can index incomplete Western
-      first-round winners when the Eastern first round finishes first, crashing
-      before awards and the offseason draft; persistence must fix this first._
 - [ ] `qa`: accept lifecycle shorthands for `start`/`stop`/`restart` the same
       way as `test`; verify an `npm start -w` fixture counts when checking a
       start script and still rejects `npm build -w`.
