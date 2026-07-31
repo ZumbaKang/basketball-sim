@@ -780,4 +780,145 @@ describe("persistResult transactional rollback", () => {
     expect(after.homeScore).toBe(112);
     expect(after.awayScore).toBe(101);
   });
+
+  it("rejects persist when status flips to final between read and conditional update", async () => {
+    const suffix = `${Date.now()}-${Math.random()}`;
+    const seasonYear = 2092;
+    const owner = await prisma.user.create({
+      data: {
+        email: `persist-race-${suffix}@example.com`,
+        displayName: "Persist Race Owner",
+        passwordHash: "unused",
+      },
+    });
+    ownerIds.push(owner.id);
+
+    const league = await prisma.league.create({
+      data: {
+        name: "Persist Race League",
+        seasonYear,
+        ownerUserId: owner.id,
+        day: 6,
+      },
+    });
+    const [homeTeam, awayTeam] = await Promise.all([
+      prisma.team.create({
+        data: {
+          leagueId: league.id,
+          name: "Race Hawks",
+          abbreviation: "RCH",
+          conference: "East",
+          division: "Test",
+          wins: 6,
+          losses: 3,
+        },
+      }),
+      prisma.team.create({
+        data: {
+          leagueId: league.id,
+          name: "Race Foxes",
+          abbreviation: "RCF",
+          conference: "West",
+          division: "Test",
+          wins: 5,
+          losses: 4,
+        },
+      }),
+    ]);
+
+    const scheduled = await prisma.scheduledGame.create({
+      data: {
+        leagueId: league.id,
+        seasonYear,
+        day: 6,
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        status: "scheduled",
+      },
+    });
+
+    const home: Team = {
+      id: homeTeam.id,
+      leagueId: league.id,
+      name: homeTeam.name,
+      abbreviation: homeTeam.abbreviation,
+      conference: "East",
+      division: "Test",
+      wins: homeTeam.wins,
+      losses: homeTeam.losses,
+      gmDirection: "contend",
+    };
+    const away: Team = {
+      id: awayTeam.id,
+      leagueId: league.id,
+      name: awayTeam.name,
+      abbreviation: awayTeam.abbreviation,
+      conference: "West",
+      division: "Test",
+      wins: awayTeam.wins,
+      losses: awayTeam.losses,
+      gmDirection: "rebuild",
+    };
+
+    const loserId = `game-race-loser-${suffix}`;
+    const result: GameResult = {
+      id: loserId,
+      leagueId: league.id,
+      home: emptyTeamLine(home, 108),
+      away: emptyTeamLine(away, 100),
+      playedAt: new Date().toISOString(),
+      scheduledGameId: scheduled.id,
+      isPlayoff: false,
+    };
+
+    await expect(
+      persistResult(league.id, seasonYear, result, scheduled.id, false, home, away, {
+        afterGameCreate: async (tx) => {
+          // Simulate a concurrent writer that claimed the row after our read.
+          await tx.scheduledGame.update({
+            where: { id: scheduled.id },
+            data: { status: "final" },
+          });
+        },
+      }),
+    ).rejects.toThrow(
+      `Cannot persist result: scheduled game ${scheduled.id} is already final.`,
+    );
+
+    expect(await prisma.game.count({ where: { id: loserId } })).toBe(0);
+    expect(
+      await prisma.game.count({
+        where: { leagueId: league.id, scheduledGameId: scheduled.id },
+      }),
+    ).toBe(0);
+
+    // Pre-flip and loser Game both rolled back with the aborted transaction.
+    const after = await prisma.scheduledGame.findUniqueOrThrow({
+      where: { id: scheduled.id },
+    });
+    expect(after.status).toBe("scheduled");
+    expect(after.gameResultId).toBeNull();
+    expect(after.homeScore).toBeNull();
+    expect(after.awayScore).toBeNull();
+
+    const [homeAfter, awayAfter] = await Promise.all([
+      prisma.team.findUniqueOrThrow({ where: { id: homeTeam.id } }),
+      prisma.team.findUniqueOrThrow({ where: { id: awayTeam.id } }),
+    ]);
+    expect(homeAfter.wins).toBe(6);
+    expect(homeAfter.losses).toBe(3);
+    expect(awayAfter.wins).toBe(5);
+    expect(awayAfter.losses).toBe(4);
+
+    expect(
+      await prisma.newsItem.count({
+        where: { leagueId: league.id, kind: "game" },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.teamSeasonStat.count({
+        where: { teamId: { in: [homeTeam.id, awayTeam.id] }, seasonYear },
+      }),
+    ).toBe(0);
+  });
 });
