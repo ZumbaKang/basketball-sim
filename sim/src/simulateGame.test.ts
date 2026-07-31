@@ -36,6 +36,33 @@ function roster(teamId: string, prefix: string): Player[] {
   }));
 }
 
+function rosterAtOverall(teamId: string, prefix: string, baseOverall: number): Player[] {
+  const positions = ["PG", "SG", "SF", "PF", "C", "PG", "SG", "SF", "PF", "C"] as const;
+  return positions.map((position, i) => ({
+    id: `${teamId}_p${i}`,
+    teamId,
+    name: `${prefix} Player ${i + 1}`,
+    position,
+    age: 24 + (i % 6),
+    potential: 80,
+    ratings: ratings(baseOverall + (i % 5)),
+    rotationOrder: i,
+    targetMinutes: i < 5 ? 32 - i : 14,
+    injuredDays: 0,
+    isFreeAgent: false,
+  }));
+}
+
+/** Low-overall roster that under-scores before the scoring-band nudge. */
+function weakRoster(teamId: string, prefix: string): Player[] {
+  return rosterAtOverall(teamId, prefix, 50);
+}
+
+/** High-overall roster used as a tough defensive matchup. */
+function strongRoster(teamId: string, prefix: string): Player[] {
+  return rosterAtOverall(teamId, prefix, 90);
+}
+
 const homeTeam: Team = {
   id: "t_home",
   leagueId: "lg1",
@@ -121,6 +148,38 @@ describe("simulateGame", () => {
     expect(() => assertRealisticGameResult(result)).not.toThrow();
   });
 
+  it.each([234, 486, 1437])(
+    "splits under-scored seed %i scoring nudge across the top two without exceeding 40 FGA",
+    (seed) => {
+      // Weak offense vs strong defense previously dumped the entire deficit
+      // onto the minute leader (40+ FGA / 80+ PTS) while the #2 stayed near 5 FGA.
+      const result = simulateGame({
+        leagueId: "lg1",
+        homeTeam,
+        awayTeam,
+        homePlayers: weakRoster("t_home", "Harbor"),
+        awayPlayers: strongRoster("t_away", "Metro"),
+        seed,
+      });
+
+      const home = result.home;
+      expect(home.pts).toBeGreaterThanOrEqual(95);
+      expect(home.pts).toBeLessThanOrEqual(125);
+
+      for (const line of home.players) {
+        expect(line.fga).toBeLessThanOrEqual(40);
+      }
+
+      const [leader, second] = home.players;
+      expect(leader).toBeDefined();
+      expect(second).toBeDefined();
+      // Both primary rotation players absorb nudge volume — not a one-man bailout.
+      expect(leader!.fga).toBeLessThanOrEqual(40);
+      expect(second!.fga).toBeGreaterThan(10);
+      expect(Math.abs(leader!.fga - second!.fga)).toBeLessThanOrEqual(12);
+      expect(() => assertRealisticGameResult(result)).not.toThrow();
+    },
+  );
   it("produces a realistic reconciled box score", () => {
     const result = simulateGame({
       leagueId: "lg1",
