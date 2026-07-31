@@ -197,9 +197,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
-- [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
+- [x] `sim`: distribute scoring-nudge makes across the top two rotation players
       instead of only the minute leader; verify under-scored seeds still land in
       the 95–125 band without one player exceeding 40 FGA.
+- [ ] `sim`: when both top-two scorers sit at the 40 FGA nudge ceiling with points
+      still missing, include the third-minute leader before leaving the team under
+      95; verify with a fixture that pre-loads both leaders near the cap.
+- [ ] `sim`: weight scoring-nudge turn order by remaining FGA room under 40 so a
+      near-cap minute leader yields earlier turns to the second; verify both stay
+      ≤40 with unequal starting FGA.
+- [ ] `sim`: cover scoring-nudge distribution on five-player injury rotations so
+      both available minute leaders share the deficit; verify with a short-handed
+      weak-offense seed.
 - [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
@@ -418,6 +427,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-31: Split scoring-nudge makes across the top two minute leaders (≤40 FGA)
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
