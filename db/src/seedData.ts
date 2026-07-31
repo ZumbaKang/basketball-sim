@@ -106,6 +106,13 @@ export function ratingsFromOverall(overall: number) {
   };
 }
 
+/** Map overall rating to a seeded contract salary under the league salary cap. */
+export function salaryFromOverall(overall: number): number {
+  const clamped = Math.max(0, Math.min(99, overall));
+  const raw = 1_000_000 + Math.pow(Math.max(0, clamped - 55), 2.8) * 2000;
+  return Math.round(raw / 1000) * 1000;
+}
+
 export function makeRoster(teamIndex: number, strength: number) {
   return POSITIONS.map((position, i) => {
     const overall = Math.max(55, Math.min(92, strength - i * 2 + ((teamIndex + i) % 3) - 1));
@@ -115,7 +122,7 @@ export function makeRoster(teamIndex: number, strength: number) {
     const r = ratingsFromOverall(overall);
     const rotationOrder = i;
     const targetMinutes = i < 5 ? 32 - i : Math.max(8, 22 - (i - 5) * 2);
-    const salary = Math.round((overall * overall * 18000) / 1000) * 1000;
+    const salary = salaryFromOverall(overall);
     const yearsRemaining = 1 + ((teamIndex + i) % 4);
     return {
       name,

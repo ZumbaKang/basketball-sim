@@ -33,6 +33,15 @@ describe("franchise persistence", () => {
     expect(snapshot.teams).toHaveLength(30);
     expect(snapshot.players.length).toBeGreaterThanOrEqual(400);
 
+    for (const team of snapshot.teams) {
+      const payroll = snapshot.contracts
+        .filter((c) => c.teamId === team.id)
+        .reduce((sum, c) => sum + c.salary, 0);
+      expect(payroll, `${team.name} payroll ${payroll}`).toBeLessThanOrEqual(
+        snapshot.league.salaryCap,
+      );
+    }
+
     const teamId = snapshot.teams[0]!.id;
     const assigned = await assignFranchise(user.id, teamId);
     expect(assigned.userTeamId).toBe(teamId);
