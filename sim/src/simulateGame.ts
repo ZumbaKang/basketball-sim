@@ -56,6 +56,8 @@ function availablePlayers(players: Player[]): Player[] {
 const REGULATION_TEAM_MINUTES = 240;
 const MAX_PLAYER_MINUTES = 48;
 const MINUTE_PRECISION = 10;
+/** Soft ceiling for scoring-nudge FGA on any one rotation player. */
+const MAX_SCORING_NUDGE_PLAYER_FGA = 40;
 /** NBA games require five players on the floor; short of that we refuse to sim. */
 export const MIN_AVAILABLE_PLAYERS = 5;
 
@@ -451,29 +453,47 @@ export function simulateGame(input: SimulateGameInput): GameResult {
     if (line.pts >= targetMin && line.pts <= targetMax) return line;
     const target = Math.round(targetMin + rng() * (targetMax - targetMin));
     let remaining = target - line.pts;
-    const star = line.players[0]!;
+    // Split makes across the top two minute leaders so one player does not
+    // absorb an entire under-scored team's deficit (and blow past 40 FGA).
+    const scorers = line.players.slice(0, Math.min(2, line.players.length));
+    let turn = 0;
 
     // Prefer made twos for bulk scoring; free throws only within the FGA cap.
     while (remaining > 0) {
-      const ftaRoom = maxCredibleFta(star.fga) - star.fta;
+      let picked: PlayerGameLine | null = null;
+      for (let offset = 0; offset < scorers.length; offset++) {
+        const candidate = scorers[(turn + offset) % scorers.length]!;
+        const ftaRoom = maxCredibleFta(candidate.fga) - candidate.fta;
+        const needsSinglePoint = remaining === 1 && ftaRoom > 0;
+        const canTakeTwo = candidate.fga < MAX_SCORING_NUDGE_PLAYER_FGA;
+        if (needsSinglePoint || canTakeTwo) {
+          picked = candidate;
+          turn = (turn + offset + 1) % scorers.length;
+          break;
+        }
+      }
+      if (!picked) {
+        // Both scorers are at the FGA ceiling with no FT room — stop rather
+        // than push one past 40 attempts.
+        break;
+      }
+
+      const ftaRoom = maxCredibleFta(picked.fga) - picked.fta;
       if (remaining === 1 && ftaRoom > 0) {
-        star.ftm += 1;
-        star.fta += 1;
-        star.pts += 1;
+        picked.ftm += 1;
+        picked.fta += 1;
+        picked.pts += 1;
         remaining -= 1;
         continue;
       }
-      if (remaining >= 2) {
-        star.fgm += 1;
-        star.fga += 1;
-        star.pts += 2;
-        remaining -= 2;
-        continue;
+      if (picked.fga >= MAX_SCORING_NUDGE_PLAYER_FGA) {
+        // Eligible only via FT above; no room left for a made two.
+        break;
       }
-      // Need one point but no FT room — add a two (may overshoot target by 1).
-      star.fgm += 1;
-      star.fga += 1;
-      star.pts += 2;
+      // Made two (also used when remaining is 1 with no FT room — may overshoot by 1).
+      picked.fgm += 1;
+      picked.fga += 1;
+      picked.pts += 2;
       remaining -= 2;
     }
 
