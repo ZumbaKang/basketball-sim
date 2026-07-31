@@ -194,7 +194,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
-- [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
+- [x] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
 - [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
@@ -243,6 +243,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
       the franchise and front-office pages once seeded contracts respect the cap;
       verify the readout wraps at 320px.
+- [ ] `db`: keep seeded free-agent asking prices on the same under-cap salary
+      curve as roster contracts; verify FA offers near the soft-cap ceiling still
+      reject when a near-cap team has insufficient room.
+- [ ] `db`: scale mid-season rookie and two-way fill-in contracts onto the same
+      `salaryFromOverall` curve used at league seed; verify a drafted rookie and a
+      minimum-salary call-up both land under $10M.
+- [ ] `gm`: weight trade evaluation by receiving-team cap room once seeded
+      payrolls are under the cap; verify a near-cap contender rejects a salary-spike
+      package that a tanking team accepts.
 - [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
       trade news row is written and sibling pick moves roll back; add a fixture
       that retargets a player between validation and apply.
@@ -418,6 +427,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-31: Brought seeded roster contracts under the $140M salary cap
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
