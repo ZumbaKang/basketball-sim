@@ -90,7 +90,9 @@ function hashSeed(id: string): number {
  * All writes run in one transaction so a mid-write failure cannot leave a
  * `Game` row without matching `final` status / game news.
  * A second call against an already-final scheduled row is rejected before
- * creating another `Game`.
+ * creating another `Game`. The scheduled flip uses a conditional `updateMany`
+ * (`status = scheduled`) so a concurrent persist that wins the race also
+ * surfaces as already-final and rolls back the loser's `Game` create.
  */
 export async function persistResult(
   leagueId: string,
@@ -131,8 +133,8 @@ export async function persistResult(
       await options.afterGameCreate(tx);
     }
 
-    await tx.scheduledGame.update({
-      where: { id: scheduledGameId },
+    const claimed = await tx.scheduledGame.updateMany({
+      where: { id: scheduledGameId, status: "scheduled" },
       data: {
         status: "final",
         homeScore: result.home.pts,
@@ -140,6 +142,11 @@ export async function persistResult(
         gameResultId: saved.id,
       },
     });
+    if (claimed.count === 0) {
+      throw new Error(
+        `Cannot persist result: scheduled game ${scheduledGameId} is already final.`,
+      );
+    }
 
     if (options?.afterScheduledGameUpdate) {
       await options.afterScheduledGameUpdate(tx);

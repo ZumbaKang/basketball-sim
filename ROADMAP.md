@@ -197,7 +197,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: force a post-`scheduledGame` update failure inside `persistResult`
       and assert team W/L, teamSeasonStat, and game news all roll back; extend
       the transactional fixture past the Game-create hook.
-- [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
+- [x] `db`: mark the scheduled row final with a conditional `updateMany` that
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
       fixture that pre-flips status between the read and update.
@@ -211,6 +211,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: force a post-W/L update failure inside `persistResult` and assert the
       scheduled row, Game, season stats, and game news all roll back; extend the
       transactional fixture past the team W/L increments.
+- [ ] `db`: claim the scheduled row with conditional `updateMany` before
+      `Game.create` so a concurrent loser never inserts a Game row even briefly;
+      verify with the pre-flip fixture that no loser Game id appears mid-transaction.
+- [ ] `db`: when the conditional scheduled claim fails, delete any in-transaction
+      Game create before throwing if claim-after-create remains; verify the loser
+      id is absent even if the transaction client is inspected before rollback.
+- [ ] `db`: include the existing `gameResultId` in the already-final error when
+      the conditional claim loses a race; verify the message names the winning
+      result id from the pre-flip fixture.
 - [ ] `db`: force a post-`teamSeasonStat` upsert failure inside `persistResult`
       and assert Game, scheduled final flip, W/L, and game news all roll back;
       verify with a hook after both season-stat upserts.
@@ -421,6 +430,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-31: Conditional updateMany claim so concurrent persistResult losers roll back
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
