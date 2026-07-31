@@ -33,7 +33,7 @@ test("league play flow surfaces roster-shortage preflight errors that wrap at 32
 
   assert.match(
     leaguePage,
-    /className="error play-alert"\s*role="alert"[\s\S]*?\{error\}[\s\S]*?className="cta-row dashboard-actions"/,
+    /className="error play-alert"[\s\S]*?role="alert"[\s\S]*?\{error\}[\s\S]*?className="cta-row dashboard-actions"/,
   );
 
   assert.match(
@@ -44,6 +44,28 @@ test("league play flow surfaces roster-shortage preflight errors that wrap at 32
 
   const narrowRules = css.slice(css.indexOf("@media (max-width: 420px)"));
   assert.match(narrowRules, /\.dashboard-actions\s*,\s*\.trade-actions\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+});
+
+test("Play next failures move keyboard focus to the play-alert", () => {
+  assert.match(leaguePage, /const playAlertRef = useRef<HTMLParagraphElement>\(null\)/);
+  assert.match(leaguePage, /const focusPlayAlertRef = useRef\(false\)/);
+  assert.match(leaguePage, /playAlertRef\.current\?\.focus\(\)/);
+  assert.match(leaguePage, /tabIndex=\{-1\}/);
+  assert.match(leaguePage, /ref=\{playAlertRef\}/);
+
+  const playNextBody = leaguePage.slice(
+    leaguePage.indexOf("async function playNext()"),
+    leaguePage.indexOf("if (choices)"),
+  );
+  assert.match(playNextBody, /focusPlayAlertRef\.current = true/);
+  assert.match(playNextBody, /setError\(e instanceof Error \? e\.message : "Play failed"\)/);
+
+  // Advance failures share the alert but must not steal focus from Play next's path alone.
+  const advanceBody = leaguePage.slice(
+    leaguePage.indexOf("async function advance("),
+    leaguePage.indexOf("async function playNext()"),
+  );
+  assert.doesNotMatch(advanceBody, /focusPlayAlertRef\.current = true/);
 });
 
 test("mobile breakpoint stacks trade fields and keeps actions touch friendly", () => {

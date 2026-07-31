@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FranchiseHome, Team } from "@basketball-sim/shared";
 import { ScrollableTable } from "@/components/ScrollableTable";
@@ -16,6 +16,8 @@ export default function LeaguePage() {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const playAlertRef = useRef<HTMLParagraphElement>(null);
+  const focusPlayAlertRef = useRef(false);
 
   async function reload() {
     const res = await fetch("/api/league");
@@ -36,6 +38,12 @@ export default function LeaguePage() {
   useEffect(() => {
     void reload();
   }, [router]);
+
+  useEffect(() => {
+    if (!error || !focusPlayAlertRef.current) return;
+    focusPlayAlertRef.current = false;
+    playAlertRef.current?.focus();
+  }, [error]);
 
   async function pickTeam(teamId: string) {
     setBusy(true);
@@ -96,6 +104,9 @@ export default function LeaguePage() {
       if (!res.ok) throw new Error(json.error ?? "Play failed");
       router.push(`/games/${json.game.id}`);
     } catch (e) {
+      // Move focus to the alert after it mounts so screen readers hear the
+      // roster-shortage (or other) reason instead of staying on the button.
+      focusPlayAlertRef.current = true;
       setError(e instanceof Error ? e.message : "Play failed");
     } finally {
       setBusy(false);
@@ -207,7 +218,12 @@ export default function LeaguePage() {
           )}
         </div>
         {error && (
-          <p className="error play-alert" role="alert">
+          <p
+            className="error play-alert"
+            role="alert"
+            tabIndex={-1}
+            ref={playAlertRef}
+          >
             {error}
           </p>
         )}

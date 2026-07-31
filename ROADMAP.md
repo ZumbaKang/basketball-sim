@@ -204,7 +204,7 @@ implementing anything — its PRs are expected to touch only this file.
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
       fixture that pre-flips status between the read and update.
-- [ ] `frontend`: move keyboard focus to the play-alert when Play next fails so
+- [x] `frontend`: move keyboard focus to the play-alert when Play next fails so
       screen-reader users hear the roster-shortage reason immediately; verify
       focus lands on the alert after a failed request.
 - [ ] `db`: reject `persistResult` when `gameResultId` is already set even if
@@ -255,6 +255,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: mirror empty-roster vs all-injured wording in scheduled-game preflight
       by inspecting the unfiltered team roster before the healthy filter; verify
       both causes produce distinct `Cannot simulate scheduled game` errors.
+- [ ] `frontend`: move keyboard focus to the play-alert for Sim day / Sim week /
+      Sim to my game failures the same way as Play next; verify each advance
+      catch path sets the focus flag and the alert receives focus.
+- [ ] `frontend`: restore focus to the Play next button when a later action clears
+      the play-alert; verify the button is focused after a successful reload that
+      dismisses the shortage message.
+- [ ] `frontend`: give the play-alert an accessible name that prefixes the
+      shortage reason (e.g. "Could not tip off"); verify the focused alert
+      announces both the name and body to a screen reader.
 
 ## Next
 
@@ -418,6 +427,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
 - 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
