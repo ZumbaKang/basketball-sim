@@ -263,6 +263,7 @@ export function evaluateTrade(input: {
       accepted: false,
       reason: "Draft pick details or protection terms are invalid.",
       proposal: input.proposal,
+      margin: 0,
     };
   }
 
@@ -276,6 +277,7 @@ export function evaluateTrade(input: {
       accepted: false,
       reason: "No evaluable assets in the proposal.",
       proposal: input.proposal,
+      margin: 0,
     };
   }
 
@@ -340,6 +342,7 @@ export function evaluateTrade(input: {
       accepted: true,
       reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.${contractContext}${grudgeContext}`,
       proposal: input.proposal,
+      margin,
     };
   }
 
@@ -351,6 +354,7 @@ export function evaluateTrade(input: {
     accepted: false,
     reason: `Rejected: as a ${input.direction} team, the return on ${namesIn} (${inValue.toFixed(1)}) does not beat ${namesOut} (${outValue.toFixed(1)}).${contractContext}${grudgeContext}`,
     proposal: input.proposal,
+    margin,
   };
 }
 
