@@ -218,9 +218,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
       prior outcome; verify a three-season-old -20 loss applies less caution
       than a current-season -20.
-- [ ] `gm`: compound multiple lopsided losses against the same partner up to
+- [x] `gm`: compound multiple lopsided losses against the same partner up to
       the existing grudge cap; verify two -10 losses demand more caution than
       one -10.
+- [ ] `gm`: when two or more lopsided losses compound into the penalty, mention
+      the loss count in the caution reason (e.g. "after 2 prior lopsided trades");
+      verify a two-loss rejection reason includes the count.
+- [ ] `gm`: apply optional `seasonsAgo` age decay to each compounded loss before
+      summing (not only the worst); verify two aged -10s demand less caution than
+      two current-season -10s while still exceeding one current -10.
+- [ ] `db`: pass every stored prior outcome against a partner into
+      `priorOutcomesWithPartner` (not only the latest) so GM compounding can fire;
+      verify two persisted -10 margins both reach evaluateTrade.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
@@ -436,6 +445,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-01: GM trade eval compounds multiple lopsided losses up to the grudge cap
 - 2026-08-01: GM trade eval raises the bar after prior lopsided losses to a partner
 - 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
