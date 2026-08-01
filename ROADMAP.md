@@ -191,6 +191,9 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `db`: force a post-`scheduledGame` update failure inside `persistResult`
       and assert team W/L, teamSeasonStat, and game news all roll back; extend
       the transactional fixture past the Game-create hook.
+- [x] `frontend`: move keyboard focus to the play-alert when Play next fails so
+      screen-reader users hear the roster-shortage reason immediately; verify
+      focus lands on the alert after a failed request.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
@@ -200,55 +203,48 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
       instead of only the minute leader; verify under-scored seeds still land in
       the 95–125 band without one player exceeding 40 FGA.
+- [ ] `frontend`: when Available drops below five on the league dashboard, show a
+      soft warning beside that stat before Play next is clicked; verify it appears
+      only under the threshold and wraps at 320px.
 - [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
       fixture that pre-flips status between the read and update.
-- [x] `frontend`: move keyboard focus to the play-alert when Play next fails so
-      screen-reader users hear the roster-shortage reason immediately; verify
-      focus lands on the alert after a failed request.
-- [ ] `db`: reject `persistResult` when `gameResultId` is already set even if
-      `status` is still `scheduled`; verify a mismatched row leaves W/L and news
-      unchanged and creates no second Game.
 - [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
-- [ ] `frontend`: when Available drops below five on the league dashboard, show a
-      soft warning beside that stat before Play next is clicked; verify it appears
-      only under the threshold and wraps at 320px.
-- [ ] `db`: when `Game.create` collides on a reused result id, roll the
-      transaction back without flipping the scheduled row; verify with a
-      pre-inserted Game id fixture.
-- [ ] `sim`: when 1–4 players are available, include the injured remainder count
-      in the preflight message (e.g. `3 available, 7 injured`); verify against a
-      ten-man roster with mixed health.
+- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
+      games, redistributing the difference across healthy reserves; verify the
+      returning player ramps up without changing 240-minute team totals.
 - [ ] `db`: reject proposals that list the same `playerId` more than once across
       `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
       contracts unchanged.
-- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
-      with `aria-describedby` so assistive tech announces the shortage reason with
-      the control; verify the association clears when the alert dismisses.
-- [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
-      injected into a mixed package; verify the FA row and any null-team contract
-      stay put while owned picks remain with their teams.
-- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
-      same way as stylesheets; verify a fixture component referencing an
-      undeclared token fails.
-- [ ] `db`: surface the already-final persist rejection through
-      `simulateScheduledGame` when a caller bypasses the early status return;
-      verify a forced second simulate against a final row does not invent a new
-      result id.
 - [ ] `frontend`: surface cap space and luxury-tax distance next to payroll on
       the franchise and front-office pages once seeded contracts respect the cap;
       verify the readout wraps at 320px.
-- [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
-      trade news row is written and sibling pick moves roll back; add a fixture
-      that retargets a player between validation and apply.
+- [ ] `sim`: when 1–4 players are available, include the injured remainder count
+      in the preflight message (e.g. `3 available, 7 injured`); verify against a
+      ten-man roster with mixed health.
+- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+      same way as stylesheets; verify a fixture component referencing an
+      undeclared token fails.
+- [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
+      injected into a mixed package; verify the FA row and any null-team contract
+      stay put while owned picks remain with their teams.
+- [ ] `frontend`: let the trade finder return mixed player/pick packages and
+      hydrate both asset kinds in the builder; verify a pick-heavy finder result
+      focuses the summary and stays usable at 320px.
 - [ ] `frontend`: show each team's current coach, style, and latest staffing
       rationale on front-office pages; verify long names and rationale wrap at
       320px without horizontal overflow.
+- [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
+      trade news row is written and sibling pick moves roll back; add a fixture
+      that retargets a player between validation and apply.
+- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
+      with `aria-describedby` so assistive tech announces the shortage reason with
+      the control; verify the association clears when the alert dismisses.
 - [ ] `sim`: reject input rosters that list the same `playerId` more than once on
       a side before box-score generation; verify a duplicated id fails with a
       descriptive preflight error naming the side.
@@ -258,12 +254,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `frontend`: move keyboard focus to the play-alert for Sim day / Sim week /
       Sim to my game failures the same way as Play next; verify each advance
       catch path sets the focus flag and the alert receives focus.
-- [ ] `frontend`: restore focus to the Play next button when a later action clears
-      the play-alert; verify the button is focused after a successful reload that
-      dismisses the shortage message.
-- [ ] `frontend`: give the play-alert an accessible name that prefixes the
-      shortage reason (e.g. "Could not tip off"); verify the focused alert
-      announces both the name and body to a screen reader.
 
 ## Next
 
@@ -314,15 +304,22 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: force a failure after game-news create inside `persistResult` and
       assert the entire transaction including injury news rolls back; verify no
       orphan news rows remain.
+- [ ] `db`: reject `persistResult` when `gameResultId` is already set even if
+      `status` is still `scheduled`; verify a mismatched row leaves W/L and news
+      unchanged and creates no second Game.
+- [ ] `db`: when `Game.create` collides on a reused result id, roll the
+      transaction back without flipping the scheduled row; verify with a
+      pre-inserted Game id fixture.
+- [ ] `db`: surface the already-final persist rejection through
+      `simulateScheduledGame` when a caller bypasses the early status return;
+      verify a forced second simulate against a final row does not invent a new
+      result id.
 - [ ] `db`: expose per-player season totals and career game log through an
       owned query/endpoint; the player page can only show the last ten league
       games until this lands.
 - [ ] `frontend`: extend the player page with season averages and a full career
       game log once the `db` endpoint above exists; verify the added columns stay
       scrollable at 320px.
-- [ ] `sim`: add a return-to-play minutes cap after absences of four or more
-      games, redistributing the difference across healthy reserves; verify the
-      returning player ramps up without changing 240-minute team totals.
 - [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
       stars still receive the closing-lineup usage shift while both teams stay
       at 240 minutes; add seeded home and away regression cases.
@@ -343,9 +340,6 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: record protected-pick draft-order resolutions as transaction news
       items; verify retained and conveyed outcomes identify the slot and recipient
       exactly once.
-- [ ] `frontend`: let the trade finder return mixed player/pick packages and
-      hydrate both asset kinds in the builder; verify a pick-heavy finder result
-      focuses the summary and stays usable at 320px.
 - [ ] `frontend`: show each team's owned future picks on the front-office page
       as a read-only chip list beside the builder; verify long labels wrap at
       320px without horizontal overflow.
@@ -357,6 +351,12 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `frontend`: restore focus to the Play next button when a later action clears
+      the play-alert; verify the button is focused after a successful reload that
+      dismisses the shortage message.
+- [ ] `frontend`: give the play-alert an accessible name that prefixes the
+      shortage reason (e.g. "Could not tip off"); verify the focused alert
+      announces both the name and body to a screen reader.
 - [ ] `qa`: treat `@property --token` registrations as declarations so
       Houdini-registered custom properties count; verify a fixture that only
       registers via `@property` passes.
