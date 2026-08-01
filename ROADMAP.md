@@ -210,8 +210,17 @@ implementing anything — its PRs are expected to touch only this file.
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
       fixture that pre-flips status between the read and update.
-- [ ] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
+- [x] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
+- [ ] `db`: pass prior trade margins into `evaluateTrade` / `tradeFinder` as
+      `priorOutcomesWithPartner` for the AI counterparty; verify a seeded
+      lopsided loss causes a near-even rematch to be rejected.
+- [ ] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
+      prior outcome; verify a three-season-old -20 loss applies less caution
+      than a current-season -20.
+- [ ] `gm`: compound multiple lopsided losses against the same partner up to
+      the existing grudge cap; verify two -10 losses demand more caution than
+      one -10.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
@@ -427,6 +436,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-01: GM trade eval raises the bar after prior lopsided losses to a partner
 - 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game

@@ -2,9 +2,15 @@ export {
   draftPickValue,
   evaluateTrade,
   findTradePackages,
+  grudgeThresholdPenalty,
+  LOPSIDED_TRADE_MARGIN,
   preferFreeAgent,
 } from "./logic.js";
-export type { EvaluableDraftPick, EvaluablePlayer } from "./logic.js";
+export type {
+  EvaluableDraftPick,
+  EvaluablePlayer,
+  PriorTradeOutcome,
+} from "./logic.js";
 export {
   evaluateCoachStaffing,
   expectedWinPct,

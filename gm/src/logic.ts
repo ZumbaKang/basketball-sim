@@ -13,12 +13,36 @@ export type EvaluableDraftPick = Pick<
   "id" | "seasonYear" | "round" | "pick"
 >;
 
+/** Past deal with a trade partner, scored from the evaluating team's perspective. */
+export type PriorTradeOutcome = {
+  /** Net value received minus value sent. Negative means we lost the deal. */
+  ourMargin: number;
+};
+
 type ResolvedDraftPick = {
   pick: EvaluableDraftPick;
   protection: DraftPickProtection;
 };
 
 const UNPROTECTED_PICK: DraftPickProtection = { kind: "unprotected" };
+
+/** Prior margins at or below this count as a lopsided loss that breeds a grudge. */
+export const LOPSIDED_TRADE_MARGIN = -8;
+
+/**
+ * Extra acceptance threshold demanded after lopsided losses to a partner.
+ * Scales with the worst prior margin and caps so grudges stay surmountable.
+ */
+export function grudgeThresholdPenalty(
+  priorOutcomes: PriorTradeOutcome[] | undefined,
+): number {
+  if (!priorOutcomes?.length) return 0;
+  const worstMargin = Math.min(
+    ...priorOutcomes.map((outcome) => outcome.ourMargin),
+  );
+  if (!(worstMargin <= LOPSIDED_TRADE_MARGIN)) return 0;
+  return Math.min(8, Math.abs(worstMargin) * 0.35);
+}
 
 function isValidProtection(
   protection: DraftPickProtection | undefined,
@@ -216,6 +240,8 @@ export function evaluateTrade(input: {
   ourDraftPicks?: EvaluableDraftPick[];
   theirDraftPicks?: EvaluableDraftPick[];
   currentSeasonYear?: number;
+  /** Prior deals with the proposing partner, scored from our perspective. */
+  priorOutcomesWithPartner?: PriorTradeOutcome[];
 }): TradeDecision {
   const giveIds = new Set(input.proposal.toAssets.map((a) => a.playerId).filter(Boolean));
   const getIds = new Set(input.proposal.fromAssets.map((a) => a.playerId).filter(Boolean));
@@ -290,15 +316,20 @@ export function evaluateTrade(input: {
     );
   const margin = inValue - outValue;
   const contractContext = contractReason(incoming, outgoing, input.direction);
+  const grudgePenalty = grudgeThresholdPenalty(input.priorOutcomesWithPartner);
+  const grudgeContext =
+    grudgePenalty > 0
+      ? " Still cautious after a prior lopsided trade with this partner."
+      : "";
 
   const threshold =
-    input.direction === "tank" || input.direction === "rebuild"
+    (input.direction === "tank" || input.direction === "rebuild"
       ? -2
       : input.direction === "cheap"
         ? 1
         : input.direction === "contend"
           ? 0
-          : -0.5;
+          : -0.5) + grudgePenalty;
 
   if (margin >= threshold) {
     const namesIn =
@@ -307,7 +338,7 @@ export function evaluateTrade(input: {
       assetNames(outgoing, outgoingPicks.resolved) || "outgoing assets";
     return {
       accepted: true,
-      reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.${contractContext}`,
+      reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.${contractContext}${grudgeContext}`,
       proposal: input.proposal,
     };
   }
@@ -318,7 +349,7 @@ export function evaluateTrade(input: {
     assetNames(outgoing, outgoingPicks.resolved) || "outgoing assets";
   return {
     accepted: false,
-    reason: `Rejected: as a ${input.direction} team, the return on ${namesIn} (${inValue.toFixed(1)}) does not beat ${namesOut} (${outValue.toFixed(1)}).${contractContext}`,
+    reason: `Rejected: as a ${input.direction} team, the return on ${namesIn} (${inValue.toFixed(1)}) does not beat ${namesOut} (${outValue.toFixed(1)}).${contractContext}${grudgeContext}`,
     proposal: input.proposal,
   };
 }
