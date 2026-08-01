@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   draftPickValue,
   evaluateTrade,
+  grudgeAgeDecay,
   grudgeThresholdPenalty,
   LOPSIDED_TRADE_MARGIN,
 } from "./logic.js";
@@ -329,6 +330,41 @@ describe("grudgeThresholdPenalty", () => {
     ).toBeCloseTo(7);
     expect(grudgeThresholdPenalty([{ ourMargin: -40 }])).toBe(8);
   });
+
+  it("decays older losses so a three-season-old -20 is milder than current", () => {
+    const current = grudgeThresholdPenalty([{ ourMargin: -20 }]);
+    const aged = grudgeThresholdPenalty([
+      { ourMargin: -20, seasonsAgo: 3 },
+    ]);
+    expect(current).toBeCloseTo(7);
+    expect(aged).toBeCloseTo(1.75);
+    expect(aged).toBeLessThan(current);
+  });
+
+  it("treats omitted and zero seasonsAgo as full current-season weight", () => {
+    expect(grudgeThresholdPenalty([{ ourMargin: -20 }])).toBeCloseTo(7);
+    expect(
+      grudgeThresholdPenalty([{ ourMargin: -20, seasonsAgo: 0 }]),
+    ).toBeCloseTo(7);
+  });
+
+  it("clamps negative and non-finite seasonsAgo to current-season weight", () => {
+    expect(grudgeAgeDecay(-1)).toBe(1);
+    expect(grudgeAgeDecay(Number.NaN)).toBe(1);
+    expect(
+      grudgeThresholdPenalty([{ ourMargin: -20, seasonsAgo: -1 }]),
+    ).toBeCloseTo(7);
+  });
+
+  it("picks the strongest age-decayed loss, not the raw worst margin", () => {
+    // Fresh mild lopsided loss (-8 → 2.8) beats a stale -20 (→ 1.75).
+    expect(
+      grudgeThresholdPenalty([
+        { ourMargin: -20, seasonsAgo: 3 },
+        { ourMargin: -8, seasonsAgo: 0 },
+      ]),
+    ).toBeCloseTo(2.8);
+  });
 });
 
 describe("evaluateTrade grudges", () => {
@@ -393,6 +429,17 @@ describe("evaluateTrade grudges", () => {
       priorOutcomesWithPartner: [{ ourMargin: -20 }],
     });
     expect(decision.accepted).toBe(false);
+    expect(decision.reason).toContain("lopsided trade with this partner");
+  });
+
+  it("accepts a near-even deal after a three-season-old lopsided loss", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+      priorOutcomesWithPartner: [{ ourMargin: -20, seasonsAgo: 3 }],
+    });
+    expect(decision.accepted).toBe(true);
     expect(decision.reason).toContain("lopsided trade with this partner");
   });
 

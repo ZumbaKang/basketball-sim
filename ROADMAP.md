@@ -215,12 +215,21 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `db`: pass prior trade margins into `evaluateTrade` / `tradeFinder` as
       `priorOutcomesWithPartner` for the AI counterparty; verify a seeded
       lopsided loss causes a near-even rematch to be rejected.
-- [ ] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
+- [x] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
       prior outcome; verify a three-season-old -20 loss applies less caution
       than a current-season -20.
 - [ ] `gm`: compound multiple lopsided losses against the same partner up to
       the existing grudge cap; verify two -10 losses demand more caution than
       one -10.
+- [ ] `gm`: drop aged grudges entirely once `grudgeAgeDecay` falls below 0.1
+      (roughly nine seasons); verify a nine-season-old -20 no longer appends
+      caution text on an accepted near-even deal.
+- [ ] `gm`: mention seasons-ago in the caution reason when the strongest loss is
+      aged; verify a three-season-old -20 notes the age while a current-season
+      loss keeps the generic partner wording.
+- [ ] `db`: when loading `priorOutcomesWithPartner`, map stored season years
+      into `seasonsAgo` relative to the current league season; verify a
+      three-season-old stored loss decays the same as a GM unit fixture.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
@@ -436,6 +445,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-01: GM grudge caution decays with optional seasonsAgo on prior outcomes
 - 2026-08-01: GM trade eval raises the bar after prior lopsided losses to a partner
 - 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update

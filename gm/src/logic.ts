@@ -17,6 +17,11 @@ export type EvaluableDraftPick = Pick<
 export type PriorTradeOutcome = {
   /** Net value received minus value sent. Negative means we lost the deal. */
   ourMargin: number;
+  /**
+   * How many full seasons have passed since the deal.
+   * Omitted or 0 means current season; older losses weigh less.
+   */
+  seasonsAgo?: number;
 };
 
 type ResolvedDraftPick = {
@@ -29,19 +34,39 @@ const UNPROTECTED_PICK: DraftPickProtection = { kind: "unprotected" };
 /** Prior margins at or below this count as a lopsided loss that breeds a grudge. */
 export const LOPSIDED_TRADE_MARGIN = -8;
 
+/** Raw (undecayed) caution from a single lopsided margin before the grudge cap. */
+function rawGrudgePenalty(ourMargin: number): number {
+  return Math.abs(ourMargin) * 0.35;
+}
+
+/**
+ * Multiplier that softens old grudges. Current season is full weight;
+ * each prior season divides weight by one more (age 3 → 1/4).
+ */
+export function grudgeAgeDecay(seasonsAgo: number | undefined): number {
+  const age = Number.isFinite(seasonsAgo)
+    ? Math.max(0, Math.floor(seasonsAgo as number))
+    : 0;
+  return 1 / (1 + age);
+}
+
 /**
  * Extra acceptance threshold demanded after lopsided losses to a partner.
- * Scales with the worst prior margin and caps so grudges stay surmountable.
+ * Scales with the strongest age-decayed prior margin and caps so grudges
+ * stay surmountable.
  */
 export function grudgeThresholdPenalty(
   priorOutcomes: PriorTradeOutcome[] | undefined,
 ): number {
   if (!priorOutcomes?.length) return 0;
-  const worstMargin = Math.min(
-    ...priorOutcomes.map((outcome) => outcome.ourMargin),
-  );
-  if (!(worstMargin <= LOPSIDED_TRADE_MARGIN)) return 0;
-  return Math.min(8, Math.abs(worstMargin) * 0.35);
+  let strongest = 0;
+  for (const outcome of priorOutcomes) {
+    if (!(outcome.ourMargin <= LOPSIDED_TRADE_MARGIN)) continue;
+    const decayed =
+      rawGrudgePenalty(outcome.ourMargin) * grudgeAgeDecay(outcome.seasonsAgo);
+    if (decayed > strongest) strongest = decayed;
+  }
+  return Math.min(8, strongest);
 }
 
 function isValidProtection(
