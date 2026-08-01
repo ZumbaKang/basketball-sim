@@ -29,6 +29,16 @@ const UNPROTECTED_PICK: DraftPickProtection = { kind: "unprotected" };
 /** Prior margins at or below this count as a lopsided loss that breeds a grudge. */
 export const LOPSIDED_TRADE_MARGIN = -8;
 
+/** Count prior outcomes that qualify as lopsided losses. */
+export function lopsidedLossCount(
+  priorOutcomes: PriorTradeOutcome[] | undefined,
+): number {
+  if (!priorOutcomes?.length) return 0;
+  return priorOutcomes.filter(
+    (outcome) => outcome.ourMargin <= LOPSIDED_TRADE_MARGIN,
+  ).length;
+}
+
 /**
  * Extra acceptance threshold demanded after lopsided losses to a partner.
  * Compounds every margin at or below {@link LOPSIDED_TRADE_MARGIN}, then caps
@@ -47,6 +57,21 @@ export function grudgeThresholdPenalty(
     0,
   );
   return Math.min(8, raw);
+}
+
+/**
+ * Caution fragment appended to trade reasons when a grudge applies.
+ * Mentions the loss count once two or more lopsided losses compound.
+ */
+export function grudgeCautionContext(
+  priorOutcomes: PriorTradeOutcome[] | undefined,
+): string {
+  const count = lopsidedLossCount(priorOutcomes);
+  if (count === 0) return "";
+  if (count === 1) {
+    return " Still cautious after a prior lopsided trade with this partner.";
+  }
+  return ` Still cautious after ${count} prior lopsided trades with this partner.`;
 }
 
 function isValidProtection(
@@ -324,7 +349,7 @@ export function evaluateTrade(input: {
   const grudgePenalty = grudgeThresholdPenalty(input.priorOutcomesWithPartner);
   const grudgeContext =
     grudgePenalty > 0
-      ? " Still cautious after a prior lopsided trade with this partner."
+      ? grudgeCautionContext(input.priorOutcomesWithPartner)
       : "";
 
   const threshold =

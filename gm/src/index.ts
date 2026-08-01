@@ -2,7 +2,9 @@ export {
   draftPickValue,
   evaluateTrade,
   findTradePackages,
+  grudgeCautionContext,
   grudgeThresholdPenalty,
+  lopsidedLossCount,
   LOPSIDED_TRADE_MARGIN,
   preferFreeAgent,
 } from "./logic.js";
