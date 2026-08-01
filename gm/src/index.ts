@@ -2,6 +2,7 @@ export {
   draftPickValue,
   evaluateTrade,
   findTradePackages,
+  grudgeAgeDecay,
   grudgeThresholdPenalty,
   LOPSIDED_TRADE_MARGIN,
   preferFreeAgent,
