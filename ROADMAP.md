@@ -212,7 +212,7 @@ implementing anything — its PRs are expected to touch only this file.
       fixture that pre-flips status between the read and update.
 - [x] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
       more cautious with teams that "won" a prior trade.
-- [ ] `db`: pass prior trade margins into `evaluateTrade` / `tradeFinder` as
+- [x] `db`: pass prior trade margins into `evaluateTrade` / `tradeFinder` as
       `priorOutcomesWithPartner` for the AI counterparty; verify a seeded
       lopsided loss causes a near-even rematch to be rejected.
 - [ ] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
@@ -221,6 +221,15 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `gm`: compound multiple lopsided losses against the same partner up to
       the existing grudge cap; verify two -10 losses demand more caution than
       one -10.
+- [ ] `db`: also persist the proposing team's reciprocal margin (`-margin`) on
+      accept so either side can load history; verify a rematch from the former
+      winner does not inherit the loser's grudge.
+- [ ] `db`: when loading `TradeOutcome` rows, compute `seasonsAgo` from
+      `league.seasonYear` once gm decay accepts it; verify a three-season-old
+      -20 is softer than a same-season -20 at the `proposeTrade` boundary.
+- [ ] `db`: include grudge-rejected packages in `tradeFinder` instead of
+      dropping them so callers can show why a rival is missing; verify a seeded
+      -20 rival appears once with the lopsided reason.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
@@ -436,6 +445,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-01: Wired stored trade margins into proposeTrade/tradeFinder AI grudges
 - 2026-08-01: GM trade eval raises the bar after prior lopsided losses to a partner
 - 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update

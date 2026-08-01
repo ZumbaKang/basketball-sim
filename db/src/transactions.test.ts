@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "./prisma.js";
-import { proposeTrade } from "./transactions.js";
+import { proposeTrade, tradeFinder } from "./transactions.js";
 
 describe("draft picks in persisted trades", () => {
   let userId: string;
@@ -541,5 +541,233 @@ describe("player ownership guards in persisted trades", () => {
     expect(targetContract.teamId).toBe(userTeamId);
     expect(userPick.ownerTeamId).toBe(targetTeamId);
     expect(targetPick.ownerTeamId).toBe(userTeamId);
+  });
+});
+
+describe("prior trade margins for AI counterparties", () => {
+  let userId: string;
+  let leagueId: string;
+  let userTeamId: string;
+  let rivalTeamId: string;
+  let otherTeamId: string;
+  let userBaselineId: string;
+  let userUpgradeId: string;
+  let rivalBaselineId: string;
+  let rivalUpgradeId: string;
+  let otherPlayerId: string;
+
+  async function createRatedPlayer(
+    teamId: string,
+    name: string,
+    overall: number,
+  ) {
+    const player = await prisma.player.create({
+      data: {
+        teamId,
+        name,
+        position: "G",
+        age: 27,
+        potential: overall,
+        overall,
+        offense: overall,
+        defense: overall - 2,
+        shooting: overall,
+        rebounding: overall - 5,
+        playmaking: overall - 4,
+        stamina: overall,
+      },
+    });
+    await prisma.contract.create({
+      data: {
+        playerId: player.id,
+        teamId,
+        salary: 8_000_000,
+        yearsRemaining: 2,
+      },
+    });
+    return player.id;
+  }
+
+  beforeAll(async () => {
+    await prisma.$connect();
+
+    const suffix = `${Date.now()}-${Math.random()}`;
+    const owner = await prisma.user.create({
+      data: {
+        email: `trade-grudge-${suffix}@example.com`,
+        displayName: "Trade Grudge Owner",
+        passwordHash: "unused",
+      },
+    });
+    userId = owner.id;
+
+    const league = await prisma.league.create({
+      data: {
+        name: "Trade Grudge League",
+        seasonYear: 2097,
+        day: 40,
+        ownerUserId: owner.id,
+      },
+    });
+    leagueId = league.id;
+
+    const [userTeam, rivalTeam, otherTeam] = await Promise.all([
+      prisma.team.create({
+        data: {
+          leagueId,
+          name: "User Contenders",
+          abbreviation: "USR",
+          conference: "East",
+          division: "Test",
+          gmDirection: "contend",
+        },
+      }),
+      prisma.team.create({
+        data: {
+          leagueId,
+          name: "Rival Contenders",
+          abbreviation: "RVL",
+          conference: "West",
+          division: "Test",
+          gmDirection: "contend",
+        },
+      }),
+      prisma.team.create({
+        data: {
+          leagueId,
+          name: "Other Contenders",
+          abbreviation: "OTH",
+          conference: "West",
+          division: "Test",
+          gmDirection: "contend",
+        },
+      }),
+    ]);
+    userTeamId = userTeam.id;
+    rivalTeamId = rivalTeam.id;
+    otherTeamId = otherTeam.id;
+
+    await prisma.league.update({
+      where: { id: leagueId },
+      data: { userTeamId },
+    });
+
+    [
+      userBaselineId,
+      userUpgradeId,
+      rivalBaselineId,
+      rivalUpgradeId,
+      otherPlayerId,
+    ] = await Promise.all([
+      createRatedPlayer(userTeamId, "User Baseline", 80),
+      createRatedPlayer(userTeamId, "User Slight Upgrade", 81),
+      createRatedPlayer(rivalTeamId, "Rival Baseline", 80),
+      createRatedPlayer(rivalTeamId, "Rival Slight Upgrade", 81),
+      createRatedPlayer(otherTeamId, "Other Wing", 80),
+    ]);
+
+    await prisma.tradeOutcome.create({
+      data: {
+        leagueId,
+        teamId: rivalTeamId,
+        partnerTeamId: userTeamId,
+        ourMargin: -20,
+        seasonYear: league.seasonYear,
+        day: 10,
+      },
+    });
+  });
+
+  afterAll(async () => {
+    if (userId) {
+      await prisma.user.delete({ where: { id: userId } });
+    }
+    await prisma.$disconnect();
+  });
+
+  it("rejects a near-even rematch after a seeded lopsided loss to the user", async () => {
+    const withoutGrudge = await proposeTrade(userId, {
+      leagueId,
+      fromTeamId: userTeamId,
+      toTeamId: otherTeamId,
+      fromAssets: [{ playerId: userUpgradeId }],
+      toAssets: [{ playerId: otherPlayerId }],
+    });
+    expect(withoutGrudge.accepted).toBe(true);
+    expect(withoutGrudge.reason).not.toContain("lopsided");
+
+    // Undo the no-grudge swap so rosters stay usable for the rematch case.
+    await prisma.$transaction([
+      prisma.player.update({
+        where: { id: userUpgradeId },
+        data: { teamId: userTeamId },
+      }),
+      prisma.player.update({
+        where: { id: otherPlayerId },
+        data: { teamId: otherTeamId },
+      }),
+      prisma.contract.updateMany({
+        where: { playerId: userUpgradeId },
+        data: { teamId: userTeamId },
+      }),
+      prisma.contract.updateMany({
+        where: { playerId: otherPlayerId },
+        data: { teamId: otherTeamId },
+      }),
+      prisma.tradeOutcome.deleteMany({
+        where: { leagueId, teamId: otherTeamId, partnerTeamId: userTeamId },
+      }),
+      prisma.newsItem.deleteMany({
+        where: { leagueId, kind: "trade", headline: { contains: "Other Contenders" } },
+      }),
+    ]);
+
+    const rematch = await proposeTrade(userId, {
+      leagueId,
+      fromTeamId: userTeamId,
+      toTeamId: rivalTeamId,
+      fromAssets: [{ playerId: userUpgradeId }],
+      toAssets: [{ playerId: rivalBaselineId }],
+    });
+
+    expect(rematch.accepted).toBe(false);
+    expect(rematch.reason).toContain("lopsided trade with this partner");
+    await expect(
+      prisma.player.findUniqueOrThrow({ where: { id: userUpgradeId } }),
+    ).resolves.toMatchObject({ teamId: userTeamId });
+    await expect(
+      prisma.player.findUniqueOrThrow({ where: { id: rivalBaselineId } }),
+    ).resolves.toMatchObject({ teamId: rivalTeamId });
+  });
+
+  it("omits grudge-blocked packages from tradeFinder results", async () => {
+    const packages = await tradeFinder(userId, leagueId, userBaselineId);
+    expect(packages.every((pkg) => pkg.teamId !== rivalTeamId)).toBe(true);
+  });
+
+  it("persists the evaluating team's margin when a trade is accepted", async () => {
+    const decision = await proposeTrade(userId, {
+      leagueId,
+      fromTeamId: userTeamId,
+      toTeamId: otherTeamId,
+      fromAssets: [{ playerId: userBaselineId }],
+      toAssets: [{ playerId: otherPlayerId }],
+    });
+
+    expect(decision.accepted).toBe(true);
+    expect(typeof decision.margin).toBe("number");
+
+    const stored = await prisma.tradeOutcome.findFirst({
+      where: {
+        leagueId,
+        teamId: otherTeamId,
+        partnerTeamId: userTeamId,
+      },
+    });
+    expect(stored).toMatchObject({
+      ourMargin: decision.margin,
+      seasonYear: 2097,
+      day: 40,
+    });
   });
 });

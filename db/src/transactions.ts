@@ -11,6 +11,7 @@ import {
   preferFreeAgent,
   type EvaluableDraftPick,
   type EvaluablePlayer,
+  type PriorTradeOutcome,
 } from "@basketball-sim/gm";
 import { prisma } from "./prisma.js";
 import { toPlayer } from "./mappers.js";
@@ -25,6 +26,19 @@ async function loadEvaluable(teamId: string): Promise<EvaluablePlayer[]> {
     salary: p.contracts[0]?.salary ?? 1_000_000,
     yearsRemaining: p.contracts[0]?.yearsRemaining ?? 1,
   }));
+}
+
+async function loadPriorOutcomesWithPartner(
+  leagueId: string,
+  teamId: string,
+  partnerTeamId: string,
+): Promise<PriorTradeOutcome[]> {
+  const rows = await prisma.tradeOutcome.findMany({
+    where: { leagueId, teamId, partnerTeamId },
+    select: { ourMargin: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return rows.map((row) => ({ ourMargin: row.ourMargin }));
 }
 
 async function loadTradableDraftPicks(
@@ -185,12 +199,13 @@ export async function proposeTrade(userId: string, proposal: TradeProposal): Pro
   const invalidPickDecision = invalidDraftPickDecision(proposal);
   if (invalidPickDecision) return invalidPickDecision;
 
-  const [ourPlayers, theirPlayers, ourDraftPicks, theirDraftPicks] =
+  const [ourPlayers, theirPlayers, ourDraftPicks, theirDraftPicks, priorOutcomesWithPartner] =
     await Promise.all([
       loadEvaluable(proposal.fromTeamId),
       loadEvaluable(proposal.toTeamId),
       loadTradableDraftPicks(league.id, proposal.fromTeamId),
       loadTradableDraftPicks(league.id, proposal.toTeamId),
+      loadPriorOutcomesWithPartner(league.id, proposal.toTeamId, proposal.fromTeamId),
     ]);
 
   const invalidPlayerDecision = invalidPlayerAssetDecision(
@@ -209,11 +224,24 @@ export async function proposeTrade(userId: string, proposal: TradeProposal): Pro
     ourDraftPicks: theirDraftPicks,
     theirDraftPicks: ourDraftPicks,
     currentSeasonYear: league.seasonYear,
+    priorOutcomesWithPartner,
   });
 
   if (decision.accepted) {
     await prisma.$transaction(async (tx) => {
       await applyTrade(tx, proposal, league.id);
+      if (typeof decision.margin === "number") {
+        await tx.tradeOutcome.create({
+          data: {
+            leagueId: league.id,
+            teamId: proposal.toTeamId,
+            partnerTeamId: proposal.fromTeamId,
+            ourMargin: decision.margin,
+            seasonYear: league.seasonYear,
+            day: league.day,
+          },
+        });
+      }
       await tx.newsItem.create({
         data: {
           leagueId: league.id,
@@ -286,6 +314,11 @@ export async function tradeFinder(userId: string, leagueId: string, playerId: st
 
   for (const team of teams.slice(0, 12)) {
     const their = await loadEvaluable(team.id);
+    const priorOutcomesWithPartner = await loadPriorOutcomesWithPartner(
+      league.id,
+      team.id,
+      league.userTeamId,
+    );
     const drafts = findTradePackages({
       targetPlayer: target,
       ourPlayers: their,
@@ -304,6 +337,7 @@ export async function tradeFinder(userId: string, leagueId: string, playerId: st
         direction: team.gmDirection as "contend" | "window" | "rebuild" | "tank" | "cheap",
         ourPlayers: their,
         theirPlayers: [target],
+        priorOutcomesWithPartner,
       });
       packages.push({ teamId: team.id, teamName: team.name, proposal, decision });
     }
