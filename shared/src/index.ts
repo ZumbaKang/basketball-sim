@@ -285,6 +285,8 @@ export type TradeDecision = {
   accepted: boolean;
   reason: string;
   proposal: TradeProposal;
+  /** Net value for the evaluating team (incoming − outgoing) when assets were valued. */
+  margin?: number;
 };
 
 export type FreeAgentOffer = {
