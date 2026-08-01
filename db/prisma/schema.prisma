@@ -40,11 +40,12 @@ model League {
   teams       Team[]
   games       Game[]
   schedule    ScheduledGame[]
-  news        NewsItem[]
-  draftPicks  DraftPick[]
-  champions   SeasonChampion[]
-  awards      Award[]
-  freeAgents  Player[] @relation("FreeAgents")
+  news          NewsItem[]
+  draftPicks    DraftPick[]
+  champions     SeasonChampion[]
+  awards        Award[]
+  freeAgents    Player[] @relation("FreeAgents")
+  tradeOutcomes TradeOutcome[]
 }
 
 model Team {
@@ -182,6 +183,21 @@ model NewsItem {
   createdAt  DateTime @default(now())
 
   @@index([leagueId, seasonYear, kind])
+}
+
+/** Past trade result from one team's perspective, used for AI grudge thresholds. */
+model TradeOutcome {
+  id            String   @id @default(cuid())
+  leagueId      String
+  league        League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  teamId        String
+  partnerTeamId String
+  ourMargin     Float
+  seasonYear    Int
+  day           Int
+  createdAt     DateTime @default(now())
+
+  @@index([leagueId, teamId, partnerTeamId])
 }
 
 model DraftPick {
