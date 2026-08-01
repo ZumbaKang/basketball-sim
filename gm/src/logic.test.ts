@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { draftPickValue, evaluateTrade } from "./logic.js";
+import {
+  draftPickValue,
+  evaluateTrade,
+  grudgeThresholdPenalty,
+  LOPSIDED_TRADE_MARGIN,
+} from "./logic.js";
 import type { EvaluableDraftPick, EvaluablePlayer } from "./logic.js";
 
 function p(partial: Partial<EvaluablePlayer> & { id: string; name: string }): EvaluablePlayer {
@@ -304,5 +309,147 @@ describe("evaluateTrade", () => {
     });
 
     expect(decision.accepted).toBe(true);
+  });
+});
+
+describe("grudgeThresholdPenalty", () => {
+  it("ignores empty or mild prior margins", () => {
+    expect(grudgeThresholdPenalty(undefined)).toBe(0);
+    expect(grudgeThresholdPenalty([])).toBe(0);
+    expect(grudgeThresholdPenalty([{ ourMargin: -4 }])).toBe(0);
+    expect(
+      grudgeThresholdPenalty([{ ourMargin: LOPSIDED_TRADE_MARGIN + 0.1 }]),
+    ).toBe(0);
+  });
+
+  it("scales with the worst lopsided loss and caps at 8", () => {
+    expect(grudgeThresholdPenalty([{ ourMargin: -8 }])).toBeCloseTo(2.8);
+    expect(
+      grudgeThresholdPenalty([{ ourMargin: -2 }, { ourMargin: -20 }]),
+    ).toBeCloseTo(7);
+    expect(grudgeThresholdPenalty([{ ourMargin: -40 }])).toBe(8);
+  });
+});
+
+describe("evaluateTrade grudges", () => {
+  const nearEvenProposal = {
+    leagueId: "l",
+    fromTeamId: "partner",
+    toTeamId: "us",
+    fromAssets: [{ playerId: "slight-upgrade" }],
+    toAssets: [{ playerId: "baseline" }],
+  };
+
+  const nearEvenRosters = {
+    ourPlayers: [
+      p({
+        id: "baseline",
+        name: "Baseline",
+        potential: 80,
+        ratings: {
+          overall: 80,
+          offense: 80,
+          defense: 78,
+          shooting: 80,
+          rebounding: 75,
+          playmaking: 76,
+          stamina: 80,
+        },
+      }),
+    ],
+    theirPlayers: [
+      p({
+        id: "slight-upgrade",
+        name: "Slight Upgrade",
+        potential: 81,
+        ratings: {
+          overall: 81,
+          offense: 81,
+          defense: 79,
+          shooting: 81,
+          rebounding: 76,
+          playmaking: 77,
+          stamina: 81,
+        },
+      }),
+    ],
+  };
+
+  it("accepts a near-even contend deal with no prior history", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+    });
+    expect(decision.accepted).toBe(true);
+    expect(decision.reason).not.toContain("lopsided");
+  });
+
+  it("rejects the same near-even deal after a prior lopsided loss to that partner", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+      priorOutcomesWithPartner: [{ ourMargin: -20 }],
+    });
+    expect(decision.accepted).toBe(false);
+    expect(decision.reason).toContain("lopsided trade with this partner");
+  });
+
+  it("does not hold a grudge after fair or winning prior deals", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+      priorOutcomesWithPartner: [{ ourMargin: -3 }, { ourMargin: 5 }],
+    });
+    expect(decision.accepted).toBe(true);
+    expect(decision.reason).not.toContain("lopsided");
+  });
+
+  it("still accepts a clear upgrade despite a grudge and notes the caution", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: {
+        leagueId: "l",
+        fromTeamId: "partner",
+        toTeamId: "us",
+        fromAssets: [{ playerId: "star" }],
+        toAssets: [{ playerId: "role" }],
+      },
+      ourPlayers: [
+        p({
+          id: "role",
+          name: "Role",
+          ratings: {
+            overall: 72,
+            offense: 72,
+            defense: 70,
+            shooting: 72,
+            rebounding: 70,
+            playmaking: 70,
+            stamina: 72,
+          },
+        }),
+      ],
+      theirPlayers: [
+        p({
+          id: "star",
+          name: "Star",
+          ratings: {
+            overall: 88,
+            offense: 88,
+            defense: 85,
+            shooting: 88,
+            rebounding: 80,
+            playmaking: 84,
+            stamina: 86,
+          },
+        }),
+      ],
+      priorOutcomesWithPartner: [{ ourMargin: -16 }],
+    });
+    expect(decision.accepted).toBe(true);
+    expect(decision.reason).toContain("lopsided trade with this partner");
   });
 });
