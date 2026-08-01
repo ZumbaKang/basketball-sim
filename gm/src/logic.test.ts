@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   draftPickValue,
   evaluateTrade,
+  grudgeCautionContext,
   grudgeThresholdPenalty,
+  lopsidedLossCount,
   LOPSIDED_TRADE_MARGIN,
 } from "./logic.js";
 import type { EvaluableDraftPick, EvaluablePlayer } from "./logic.js";
@@ -342,6 +344,36 @@ describe("grudgeThresholdPenalty", () => {
   });
 });
 
+describe("grudgeCautionContext", () => {
+  it("stays empty without a lopsided loss", () => {
+    expect(grudgeCautionContext(undefined)).toBe("");
+    expect(grudgeCautionContext([])).toBe("");
+    expect(grudgeCautionContext([{ ourMargin: -3 }])).toBe("");
+  });
+
+  it("uses singular wording for one loss and counts two or more", () => {
+    expect(lopsidedLossCount([{ ourMargin: -20 }])).toBe(1);
+    expect(grudgeCautionContext([{ ourMargin: -20 }])).toBe(
+      " Still cautious after a prior lopsided trade with this partner.",
+    );
+    expect(
+      lopsidedLossCount([{ ourMargin: -10 }, { ourMargin: -10 }]),
+    ).toBe(2);
+    expect(
+      grudgeCautionContext([{ ourMargin: -10 }, { ourMargin: -10 }]),
+    ).toBe(
+      " Still cautious after 2 prior lopsided trades with this partner.",
+    );
+    expect(
+      grudgeCautionContext([
+        { ourMargin: -10 },
+        { ourMargin: -10 },
+        { ourMargin: -12 },
+      ]),
+    ).toContain("after 3 prior lopsided trades");
+  });
+});
+
 describe("evaluateTrade grudges", () => {
   const nearEvenProposal = {
     leagueId: "l",
@@ -426,8 +458,31 @@ describe("evaluateTrade grudges", () => {
     // One -10 (penalty 3.5) still clears the near-even contend threshold;
     // two compounded -10s (penalty 7) reject the same package.
     expect(singleLoss.accepted).toBe(true);
+    expect(singleLoss.reason).toContain(
+      "after a prior lopsided trade with this partner",
+    );
+    expect(singleLoss.reason).not.toContain("after 2 prior");
     expect(twoLosses.accepted).toBe(false);
-    expect(twoLosses.reason).toContain("lopsided trade with this partner");
+    expect(twoLosses.reason).toContain(
+      "after 2 prior lopsided trades with this partner",
+    );
+  });
+
+  it("mentions the loss count in a two-loss rejection reason", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+      priorOutcomesWithPartner: [{ ourMargin: -10 }, { ourMargin: -10 }],
+    });
+    expect(decision.accepted).toBe(false);
+    expect(decision.reason).toContain("after 2 prior lopsided trades");
+    expect(lopsidedLossCount([{ ourMargin: -10 }, { ourMargin: -10 }])).toBe(
+      2,
+    );
+    expect(
+      grudgeCautionContext([{ ourMargin: -10 }, { ourMargin: -10 }]),
+    ).toContain("after 2 prior lopsided trades");
   });
 
   it("does not hold a grudge after fair or winning prior deals", () => {
