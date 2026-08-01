@@ -68,6 +68,34 @@ test("Play next failures move keyboard focus to the play-alert", () => {
   assert.doesNotMatch(advanceBody, /focusPlayAlertRef\.current = true/);
 });
 
+test("Available soft warning appears only below five healthy and wraps at 320px", () => {
+  assert.match(leaguePage, /const MIN_HEALTHY_FOR_TIPOFF = 5/);
+  assert.match(
+    leaguePage,
+    /\{healthy < MIN_HEALTHY_FOR_TIPOFF && \(\s*<p className="stat-soft-warn">\s*Need \{MIN_HEALTHY_FOR_TIPOFF\} healthy to tip off/s,
+  );
+  assert.match(leaguePage, /className="stat available-stat"/);
+  assert.match(leaguePage, /className="available-stat-body"/);
+
+  // Soft warning is gated only on healthy count — independent of Play next / error.
+  const availableBlock = leaguePage.slice(
+    leaguePage.indexOf('className="stat available-stat"'),
+    leaguePage.indexOf("</div>", leaguePage.indexOf("stat-soft-warn")) + "</div>".length,
+  );
+  assert.doesNotMatch(availableBlock, /\{error/);
+  assert.match(availableBlock, /healthy < MIN_HEALTHY_FOR_TIPOFF/);
+
+  assert.match(
+    css,
+    /\.stat-soft-warn\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*anywhere/s,
+  );
+  assert.match(css, /\.stat-soft-warn\s*\{[^}]*color:\s*var\(--warn\)/s);
+  assert.match(
+    css,
+    /\.available-stat-body\s*\{[^}]*flex-wrap:\s*wrap[^}]*min-width:\s*0/s,
+  );
+});
+
 test("mobile breakpoint stacks trade fields and keeps actions touch friendly", () => {
   assert.match(frontOfficePage, /className="form trade-form"/);
   assert.match(frontOfficePage, /className="cta-row trade-actions"/);
