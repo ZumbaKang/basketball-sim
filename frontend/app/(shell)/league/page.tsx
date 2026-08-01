@@ -9,6 +9,9 @@ import { millions, record } from "@/lib/format";
 
 type Choice = Pick<Team, "id" | "name" | "abbreviation" | "conference" | "division" | "gmDirection">;
 
+/** Matches sim/db tip-off preflight — surface a soft warning before Play next. */
+const MIN_HEALTHY_FOR_TIPOFF = 5;
+
 export default function LeaguePage() {
   const router = useRouter();
   const [home, setHome] = useState<FranchiseHome | null>(null);
@@ -196,12 +199,19 @@ export default function LeaguePage() {
           <p className="stat-label">Payroll</p>
           <p className="stat-value">{millions(home.payroll)}</p>
         </div>
-        <div className="stat">
+        <div className="stat available-stat">
           <p className="stat-label">Available</p>
-          <p className="stat-value">
-            {healthy}
-            <span style={{ fontSize: "0.8rem", color: "var(--text-faint)" }}>/{home.roster.length}</span>
-          </p>
+          <div className="available-stat-body">
+            <p className="stat-value">
+              {healthy}
+              <span style={{ fontSize: "0.8rem", color: "var(--text-faint)" }}>/{home.roster.length}</span>
+            </p>
+            {healthy < MIN_HEALTHY_FOR_TIPOFF && (
+              <p className="stat-soft-warn">
+                Need {MIN_HEALTHY_FOR_TIPOFF} healthy to tip off
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

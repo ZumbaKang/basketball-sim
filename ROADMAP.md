@@ -203,9 +203,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
       instead of only the minute leader; verify under-scored seeds still land in
       the 95–125 band without one player exceeding 40 FGA.
-- [ ] `frontend`: when Available drops below five on the league dashboard, show a
+- [x] `frontend`: when Available drops below five on the league dashboard, show a
       soft warning beside that stat before Play next is clicked; verify it appears
       only under the threshold and wraps at 320px.
+- [ ] `frontend`: tint the Available count with `--warn` when healthy drops below
+      five so the shortage reads before the soft-warning copy; verify both dark and
+      light themes keep contrast on the warn token.
+- [ ] `frontend`: announce the Available soft warning with `aria-live="polite"` when
+      it appears after a reload; verify assistive tech hears the tip-off threshold
+      without waiting for Play next.
+- [ ] `frontend`: hide the Available soft warning while a play-alert is already
+      showing a roster-shortage reason so only one shortage message is visible;
+      verify the soft warn returns when the alert clears and healthy stays under five.
 - [ ] `db`: mark the scheduled row final with a conditional `updateMany` that
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
@@ -427,6 +436,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-01: Soft Available warning on the league dashboard when healthy drops below five
 - 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
 - 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
 - 2026-07-30: Rejected a second persistResult against an already-final scheduled game
