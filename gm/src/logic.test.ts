@@ -322,11 +322,22 @@ describe("grudgeThresholdPenalty", () => {
     ).toBe(0);
   });
 
-  it("scales with the worst lopsided loss and caps at 8", () => {
+  it("compounds lopsided losses and caps at 8", () => {
     expect(grudgeThresholdPenalty([{ ourMargin: -8 }])).toBeCloseTo(2.8);
+    expect(grudgeThresholdPenalty([{ ourMargin: -10 }])).toBeCloseTo(3.5);
+    expect(
+      grudgeThresholdPenalty([{ ourMargin: -10 }, { ourMargin: -10 }]),
+    ).toBeCloseTo(7);
     expect(
       grudgeThresholdPenalty([{ ourMargin: -2 }, { ourMargin: -20 }]),
     ).toBeCloseTo(7);
+    expect(
+      grudgeThresholdPenalty([
+        { ourMargin: -10 },
+        { ourMargin: -10 },
+        { ourMargin: -10 },
+      ]),
+    ).toBe(8);
     expect(grudgeThresholdPenalty([{ ourMargin: -40 }])).toBe(8);
   });
 });
@@ -394,6 +405,29 @@ describe("evaluateTrade grudges", () => {
     });
     expect(decision.accepted).toBe(false);
     expect(decision.reason).toContain("lopsided trade with this partner");
+  });
+
+  it("demands more caution after two -10 losses than after one -10", () => {
+    const singleLoss = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+      priorOutcomesWithPartner: [{ ourMargin: -10 }],
+    });
+    const twoLosses = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ...nearEvenRosters,
+      priorOutcomesWithPartner: [{ ourMargin: -10 }, { ourMargin: -10 }],
+    });
+    expect(grudgeThresholdPenalty([{ ourMargin: -10 }])).toBeLessThan(
+      grudgeThresholdPenalty([{ ourMargin: -10 }, { ourMargin: -10 }]),
+    );
+    // One -10 (penalty 3.5) still clears the near-even contend threshold;
+    // two compounded -10s (penalty 7) reject the same package.
+    expect(singleLoss.accepted).toBe(true);
+    expect(twoLosses.accepted).toBe(false);
+    expect(twoLosses.reason).toContain("lopsided trade with this partner");
   });
 
   it("does not hold a grudge after fair or winning prior deals", () => {

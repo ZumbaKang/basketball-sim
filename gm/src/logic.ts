@@ -31,17 +31,22 @@ export const LOPSIDED_TRADE_MARGIN = -8;
 
 /**
  * Extra acceptance threshold demanded after lopsided losses to a partner.
- * Scales with the worst prior margin and caps so grudges stay surmountable.
+ * Compounds every margin at or below {@link LOPSIDED_TRADE_MARGIN}, then caps
+ * so grudges stay surmountable.
  */
 export function grudgeThresholdPenalty(
   priorOutcomes: PriorTradeOutcome[] | undefined,
 ): number {
   if (!priorOutcomes?.length) return 0;
-  const worstMargin = Math.min(
-    ...priorOutcomes.map((outcome) => outcome.ourMargin),
+  const lopsided = priorOutcomes.filter(
+    (outcome) => outcome.ourMargin <= LOPSIDED_TRADE_MARGIN,
   );
-  if (!(worstMargin <= LOPSIDED_TRADE_MARGIN)) return 0;
-  return Math.min(8, Math.abs(worstMargin) * 0.35);
+  if (!lopsided.length) return 0;
+  const raw = lopsided.reduce(
+    (sum, outcome) => sum + Math.abs(outcome.ourMargin) * 0.35,
+    0,
+  );
+  return Math.min(8, raw);
 }
 
 function isValidProtection(
