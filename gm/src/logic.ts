@@ -75,6 +75,18 @@ export function grudgeCautionContext(
   return ` Still cautious after ${count} prior lopsided trades with this partner.`;
 }
 
+/**
+ * Append contract then grudge fragments so multi-loss caution always follows
+ * any contract-context clause on accept and reject reasons.
+ */
+export function appendTradeDecisionContexts(
+  base: string,
+  contractContext: string,
+  grudgeContext: string,
+): string {
+  return `${base}${contractContext}${grudgeContext}`;
+}
+
 function isValidProtection(
   protection: DraftPickProtection | undefined,
 ): boolean {
@@ -368,7 +380,11 @@ export function evaluateTrade(input: {
       assetNames(outgoing, outgoingPicks.resolved) || "outgoing assets";
     return {
       accepted: true,
-      reason: `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.${contractContext}${grudgeContext}`,
+      reason: appendTradeDecisionContexts(
+        `Accepted: fits a ${input.direction} approach — value on ${namesIn} outweighs ${namesOut}.`,
+        contractContext,
+        grudgeContext,
+      ),
       proposal: input.proposal,
     };
   }
@@ -379,7 +395,11 @@ export function evaluateTrade(input: {
     assetNames(outgoing, outgoingPicks.resolved) || "outgoing assets";
   return {
     accepted: false,
-    reason: `Rejected: as a ${input.direction} team, the return on ${namesIn} (${inValue.toFixed(1)}) does not beat ${namesOut} (${outValue.toFixed(1)}).${contractContext}${grudgeContext}`,
+    reason: appendTradeDecisionContexts(
+      `Rejected: as a ${input.direction} team, the return on ${namesIn} (${inValue.toFixed(1)}) does not beat ${namesOut} (${outValue.toFixed(1)}).`,
+      contractContext,
+      grudgeContext,
+    ),
     proposal: input.proposal,
   };
 }

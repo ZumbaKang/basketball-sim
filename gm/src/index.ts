@@ -1,4 +1,5 @@
 export {
+  appendTradeDecisionContexts,
   draftPickValue,
   evaluateTrade,
   findTradePackages,

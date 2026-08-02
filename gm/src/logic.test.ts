@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  appendTradeDecisionContexts,
   draftPickValue,
   evaluateTrade,
   grudgeCautionContext,
@@ -556,5 +557,52 @@ describe("evaluateTrade grudges", () => {
     expect(decision.reason).toMatch(/^Accepted:/);
     expect(decision.reason).toContain("after 2 prior lopsided trades");
     expect(decision.reason).toContain("with this partner");
+  });
+
+  it("keeps the multi-loss count after a contract-context clause on accepts", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: starForRole.proposal,
+      ourPlayers: starForRole.ourPlayers,
+      theirPlayers: [
+        p({
+          id: "star",
+          name: "Star",
+          // Market for OVR 88 is ~$35M; $45M / 3 years is a long-term overpay.
+          salary: 45_000_000,
+          yearsRemaining: 3,
+          ratings: {
+            overall: 88,
+            offense: 88,
+            defense: 85,
+            shooting: 88,
+            rebounding: 80,
+            playmaking: 84,
+            stamina: 86,
+          },
+        }),
+      ],
+      priorOutcomesWithPartner: [{ ourMargin: -10 }, { ourMargin: -10 }],
+    });
+    expect(decision.accepted).toBe(true);
+    expect(decision.reason).toMatch(/^Accepted:/);
+    expect(decision.reason).toContain("The return adds long-term bad salary.");
+    const contractIdx = decision.reason.indexOf(
+      "The return adds long-term bad salary.",
+    );
+    const grudgeIdx = decision.reason.indexOf("after 2 prior lopsided trades");
+    expect(grudgeIdx).toBeGreaterThan(contractIdx);
+    expect(decision.reason.slice(grudgeIdx)).toContain(
+      "after 2 prior lopsided trades with this partner",
+    );
+    expect(
+      appendTradeDecisionContexts(
+        "Accepted: base.",
+        " The return adds long-term bad salary.",
+        " Still cautious after 2 prior lopsided trades with this partner.",
+      ),
+    ).toBe(
+      "Accepted: base. The return adds long-term bad salary. Still cautious after 2 prior lopsided trades with this partner.",
+    );
   });
 });
