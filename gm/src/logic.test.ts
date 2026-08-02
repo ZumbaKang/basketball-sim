@@ -605,4 +605,52 @@ describe("evaluateTrade grudges", () => {
       "Accepted: base. The return adds long-term bad salary. Still cautious after 2 prior lopsided trades with this partner.",
     );
   });
+
+  it("keeps the multi-loss count after a contract-context clause on rejects", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: nearEvenProposal,
+      ourPlayers: nearEvenRosters.ourPlayers,
+      theirPlayers: [
+        p({
+          id: "slight-upgrade",
+          name: "Slight Upgrade",
+          potential: 81,
+          // Market for OVR 81 is ~$26M; $35M / 3 years is a long-term overpay.
+          salary: 35_000_000,
+          yearsRemaining: 3,
+          ratings: {
+            overall: 81,
+            offense: 81,
+            defense: 79,
+            shooting: 81,
+            rebounding: 76,
+            playmaking: 77,
+            stamina: 81,
+          },
+        }),
+      ],
+      priorOutcomesWithPartner: [{ ourMargin: -10 }, { ourMargin: -10 }],
+    });
+    expect(decision.accepted).toBe(false);
+    expect(decision.reason).toMatch(/^Rejected:/);
+    expect(decision.reason).toContain("The return adds long-term bad salary.");
+    const contractIdx = decision.reason.indexOf(
+      "The return adds long-term bad salary.",
+    );
+    const grudgeIdx = decision.reason.indexOf("after 2 prior lopsided trades");
+    expect(grudgeIdx).toBeGreaterThan(contractIdx);
+    expect(decision.reason.slice(grudgeIdx)).toContain(
+      "after 2 prior lopsided trades with this partner",
+    );
+    expect(
+      appendTradeDecisionContexts(
+        "Rejected: base.",
+        " The return adds long-term bad salary.",
+        " Still cautious after 2 prior lopsided trades with this partner.",
+      ),
+    ).toBe(
+      "Rejected: base. The return adds long-term bad salary. Still cautious after 2 prior lopsided trades with this partner.",
+    );
+  });
 });
