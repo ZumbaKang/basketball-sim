@@ -1,0 +1,3 @@
+# Concurrent iterate PRs each prepend a shipped bullet; union keeps both
+# sides' unique lines instead of emitting conflict markers.
+roadmap/shipped.md merge=union
