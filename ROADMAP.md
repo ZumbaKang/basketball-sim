@@ -227,9 +227,14 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `gm`: apply optional `seasonsAgo` age decay to each compounded loss before
       summing (not only the worst); verify two aged -10s demand less caution than
       two current-season -10s while still exceeding one current -10.
-- [ ] `gm`: when an accepted upgrade still carries a multi-loss grudge, keep the
+- [x] `gm`: when an accepted upgrade still carries a multi-loss grudge, keep the
       count in the accept reason; verify two -10 priors on a clear star-for-role
       deal include "after 2 prior lopsided trades".
+- [ ] `gm`: keep the multi-loss count after a contract-context clause on accepts;
+      verify star-for-role with two -10s plus an incoming overpay still ends with
+      "after 2 prior lopsided trades" following the contract note.
+- [ ] `gm`: include "after 3 prior lopsided trades" when a capped three-loss grudge
+      still accepts a star-for-role upgrade; verify three -8 margins on contend.
 - [ ] `frontend`: show the counterparty grudge caution sentence on rejected
       proposals in the trade builder; verify long reasons wrap at 320px without
       overflow.
@@ -454,6 +459,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-02: Accepted upgrades that clear a multi-loss grudge keep the loss count in-reason
 - 2026-08-01: GM grudge caution reasons mention the compounded lopsided-loss count
 - 2026-08-01: GM trade eval compounds multiple lopsided losses up to the grudge cap
 - 2026-08-01: GM trade eval raises the bar after prior lopsided losses to a partner

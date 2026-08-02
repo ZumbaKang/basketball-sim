@@ -60,8 +60,9 @@ export function grudgeThresholdPenalty(
 }
 
 /**
- * Caution fragment appended to trade reasons when a grudge applies.
- * Mentions the loss count once two or more lopsided losses compound.
+ * Caution fragment appended to accept and reject reasons when a grudge applies.
+ * Mentions the loss count once two or more lopsided losses compound — including
+ * on clear upgrades that still clear the raised threshold.
  */
 export function grudgeCautionContext(
   priorOutcomes: PriorTradeOutcome[] | undefined,
@@ -347,10 +348,9 @@ export function evaluateTrade(input: {
   const margin = inValue - outValue;
   const contractContext = contractReason(incoming, outgoing, input.direction);
   const grudgePenalty = grudgeThresholdPenalty(input.priorOutcomesWithPartner);
-  const grudgeContext =
-    grudgePenalty > 0
-      ? grudgeCautionContext(input.priorOutcomesWithPartner)
-      : "";
+  // Always derive caution from outcomes (not from penalty > 0) so accepted
+  // upgrades that clear a multi-loss grudge still keep the loss count in-reason.
+  const grudgeContext = grudgeCautionContext(input.priorOutcomesWithPartner);
 
   const threshold =
     (input.direction === "tank" || input.direction === "rebuild"
