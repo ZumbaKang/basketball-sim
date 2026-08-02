@@ -655,4 +655,54 @@ describe("evaluateTrade grudges", () => {
       "Accepted: base. Expiring money improves future cap flexibility. Still cautious after 2 prior lopsided trades with this partner.",
     );
   });
+
+  it("keeps the multi-loss count after a clears-bad-salary contract clause on accepts", () => {
+    const decision = evaluateTrade({
+      direction: "contend",
+      proposal: starForRole.proposal,
+      // Market for OVR 72 is ~$15M; $25M / 3 years is a clear long-term overpay
+      // we dump for a fair-contract star → "clears long-term bad salary".
+      ourPlayers: [
+        p({
+          id: "role",
+          name: "Role",
+          salary: 25_000_000,
+          yearsRemaining: 3,
+          ratings: {
+            overall: 72,
+            offense: 72,
+            defense: 70,
+            shooting: 72,
+            rebounding: 70,
+            playmaking: 70,
+            stamina: 72,
+          },
+        }),
+      ],
+      theirPlayers: starForRole.theirPlayers,
+      priorOutcomesWithPartner: [{ ourMargin: -10 }, { ourMargin: -10 }],
+    });
+    expect(decision.accepted).toBe(true);
+    expect(decision.reason).toMatch(/^Accepted:/);
+    expect(decision.reason).toContain(
+      "The deal clears long-term bad salary.",
+    );
+    const contractIdx = decision.reason.indexOf(
+      "The deal clears long-term bad salary.",
+    );
+    const grudgeIdx = decision.reason.indexOf("after 2 prior lopsided trades");
+    expect(grudgeIdx).toBeGreaterThan(contractIdx);
+    expect(decision.reason.slice(grudgeIdx)).toContain(
+      "after 2 prior lopsided trades with this partner",
+    );
+    expect(
+      appendTradeDecisionContexts(
+        "Accepted: base.",
+        " The deal clears long-term bad salary.",
+        " Still cautious after 2 prior lopsided trades with this partner.",
+      ),
+    ).toBe(
+      "Accepted: base. The deal clears long-term bad salary. Still cautious after 2 prior lopsided trades with this partner.",
+    );
+  });
 });

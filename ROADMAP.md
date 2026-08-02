@@ -239,11 +239,20 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `gm`: keep the multi-loss count after an expiring-money contract clause on
       accepts; verify star-for-role with two -10s plus an incoming $30M/1yr overpay
       ends with "after 2 prior lopsided trades" following the expiring-money note.
-- [ ] `gm`: keep the multi-loss count after a clears-bad-salary contract clause on
+- [x] `gm`: keep the multi-loss count after a clears-bad-salary contract clause on
       accepts; verify sending a long-term overpay with two -10s still ends with
       "after 2 prior lopsided trades" following the clears-salary note.
 - [ ] `gm`: include "after 3 prior lopsided trades" when a capped three-loss grudge
       still accepts a star-for-role upgrade; verify three -8 margins on contend.
+- [ ] `gm`: keep the multi-loss count after a clears-bad-salary contract clause on
+      rejects; verify a near-even contend dump of a long-term overpay with two -10s
+      still places "after 2 prior lopsided trades" after the clears-salary note.
+- [ ] `gm`: keep the multi-loss count after a clears-bad-salary note when the
+      outgoing overpay is exactly at the $5M bad-contract floor; verify accept
+      still ends with the count.
+- [ ] `gm`: when both sides exchange long-term overpays, leave the contract note
+      empty and still append the multi-loss grudge count alone; verify two -10s on
+      a star-for-role with mutual overpays.
 - [ ] `gm`: keep the multi-loss count after an expiring-money contract clause on
       rejects; verify a near-even contend deal with two -10s plus an incoming
       $40M/1yr overpay still places "after 2 prior lopsided trades" after the
@@ -480,6 +489,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-02: Accepted upgrades keep multi-loss grudge count after clears-bad-salary clauses
 - 2026-08-02: Accepted upgrades keep multi-loss grudge count after expiring-money clauses
 - 2026-08-02: Accepted upgrades keep multi-loss grudge count after contract-context clauses
 - 2026-08-02: Accepted upgrades that clear a multi-loss grudge keep the loss count in-reason
