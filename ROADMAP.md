@@ -194,12 +194,26 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: move keyboard focus to the play-alert when Play next fails so
       screen-reader users hear the roster-shortage reason immediately; verify
       focus lands on the alert after a failed request.
+- [x] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
+      more cautious with teams that "won" a prior trade.
+- [x] `gm`: compound multiple lopsided losses against the same partner up to
+      the existing grudge cap; verify two -10 losses demand more caution than
+      one -10.
+- [x] `gm`: when two or more lopsided losses compound into the penalty, mention
+      the loss count in the caution reason (e.g. "after 2 prior lopsided trades");
+      verify a two-loss rejection reason includes the count.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
 - [ ] `db`: bring seeded contracts under the salary cap — a 15-man roster
       totalled $869.4M against a $140M cap, so payroll and cap-space readouts are
       currently meaningless; verify every seeded team opens within cap.
+- [ ] `db`: pass prior trade margins into `evaluateTrade` / `tradeFinder` as
+      `priorOutcomesWithPartner` for the AI counterparty; verify a seeded
+      lopsided loss causes a near-even rematch to be rejected.
+- [ ] `db`: pass every stored prior outcome against a partner into
+      `priorOutcomesWithPartner` (not only the latest) so GM compounding can fire;
+      verify two persisted -10 margins both reach evaluateTrade.
 - [ ] `sim`: distribute scoring-nudge makes across the top two rotation players
       instead of only the minute leader; verify under-scored seeds still land in
       the 95–125 band without one player exceeding 40 FGA.
@@ -210,41 +224,18 @@ implementing anything — its PRs are expected to touch only this file.
       requires `status = scheduled`, and treat zero updated rows as already-final
       so concurrent double persists cannot both create Game rows; verify with a
       fixture that pre-flips status between the read and update.
-- [x] `gm`: rivalries/grudges — GMs remember past lopsided trades and are
-      more cautious with teams that "won" a prior trade.
-- [ ] `db`: pass prior trade margins into `evaluateTrade` / `tradeFinder` as
-      `priorOutcomesWithPartner` for the AI counterparty; verify a seeded
-      lopsided loss causes a near-even rematch to be rejected.
-- [ ] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
-      prior outcome; verify a three-season-old -20 loss applies less caution
-      than a current-season -20.
-- [x] `gm`: compound multiple lopsided losses against the same partner up to
-      the existing grudge cap; verify two -10 losses demand more caution than
-      one -10.
-- [x] `gm`: when two or more lopsided losses compound into the penalty, mention
-      the loss count in the caution reason (e.g. "after 2 prior lopsided trades");
-      verify a two-loss rejection reason includes the count.
-- [ ] `gm`: apply optional `seasonsAgo` age decay to each compounded loss before
-      summing (not only the worst); verify two aged -10s demand less caution than
-      two current-season -10s while still exceeding one current -10.
-- [ ] `gm`: when an accepted upgrade still carries a multi-loss grudge, keep the
-      count in the accept reason; verify two -10 priors on a clear star-for-role
-      deal include "after 2 prior lopsided trades".
-- [ ] `frontend`: show the counterparty grudge caution sentence on rejected
-      proposals in the trade builder; verify long reasons wrap at 320px without
-      overflow.
-- [ ] `gm`: include the worst single prior margin in multi-loss caution text
-      (e.g. "after 2 prior lopsided trades, worst -20"); verify a -10/-20 pair
-      names -20.
-- [ ] `db`: pass every stored prior outcome against a partner into
-      `priorOutcomesWithPartner` (not only the latest) so GM compounding can fire;
-      verify two persisted -10 margins both reach evaluateTrade.
 - [ ] `db`: persist current coaches and an available-candidate pool, evaluate AI
       teams at 20/40/60-game checkpoints, and atomically apply emitted coach
       staffing intents; verify replacements cannot be hired by two teams.
 - [ ] `sim`: add a return-to-play minutes cap after absences of four or more
       games, redistributing the difference across healthy reserves; verify the
       returning player ramps up without changing 240-minute team totals.
+- [ ] `frontend`: show the counterparty grudge caution sentence on rejected
+      proposals in the trade builder; verify long reasons wrap at 320px without
+      overflow.
+- [ ] `gm`: decay `grudgeThresholdPenalty` by optional `seasonsAgo` on each
+      prior outcome; verify a three-season-old -20 loss applies less caution
+      than a current-season -20.
 - [ ] `db`: reject proposals that list the same `playerId` more than once across
       `fromAssets`/`toAssets`; verify duplicated ids leave both rosters and
       contracts unchanged.
@@ -254,33 +245,27 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `sim`: when 1–4 players are available, include the injured remainder count
       in the preflight message (e.g. `3 available, 7 injured`); verify against a
       ten-man roster with mixed health.
-- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
-      same way as stylesheets; verify a fixture component referencing an
-      undeclared token fails.
+- [ ] `db`: expose per-player season totals and career game log through an
+      owned query/endpoint; the player page can only show the last ten league
+      games until this lands.
+- [ ] `frontend`: show each team's current coach, style, and latest staffing
+      rationale on front-office pages; verify long names and rationale wrap at
+      320px without horizontal overflow.
 - [ ] `db`: treat free agents (`teamId = null`) as invalid trade assets even when
       injected into a mixed package; verify the FA row and any null-team contract
       stay put while owned picks remain with their teams.
 - [ ] `frontend`: let the trade finder return mixed player/pick packages and
       hydrate both asset kinds in the builder; verify a pick-heavy finder result
       focuses the summary and stays usable at 320px.
-- [ ] `frontend`: show each team's current coach, style, and latest staffing
-      rationale on front-office pages; verify long names and rationale wrap at
-      320px without horizontal overflow.
+- [ ] `gm`: apply optional `seasonsAgo` age decay to each compounded loss before
+      summing (not only the worst); verify two aged -10s demand less caution than
+      two current-season -10s while still exceeding one current -10.
 - [ ] `db`: when apply-time player ownership fails mid-transaction, assert no
       trade news row is written and sibling pick moves roll back; add a fixture
       that retargets a player between validation and apply.
-- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
-      with `aria-describedby` so assistive tech announces the shortage reason with
-      the control; verify the association clears when the alert dismisses.
-- [ ] `sim`: reject input rosters that list the same `playerId` more than once on
-      a side before box-score generation; verify a duplicated id fails with a
-      descriptive preflight error naming the side.
-- [ ] `db`: mirror empty-roster vs all-injured wording in scheduled-game preflight
-      by inspecting the unfiltered team roster before the healthy filter; verify
-      both causes produce distinct `Cannot simulate scheduled game` errors.
-- [ ] `frontend`: move keyboard focus to the play-alert for Sim day / Sim week /
-      Sim to my game failures the same way as Play next; verify each advance
-      catch path sets the focus flag and the alert receives focus.
+- [ ] `qa`: scan frontend TSX string literals for `var(--*)` without fallbacks the
+      same way as stylesheets; verify a fixture component referencing an
+      undeclared token fails.
 
 ## Next
 
@@ -322,6 +307,32 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `frontend`: announce trade-finder asset changes through the selected-assets
       summary and move focus to it; verify keyboard and screen-reader users hear
       both updated player and partner names.
+- [ ] `frontend`: extend the player page with season averages and a full career
+      game log once the `db` endpoint above exists; verify the added columns stay
+      scrollable at 320px.
+- [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
+      stars still receive the closing-lineup usage shift while both teams stay
+      at 240 minutes; add seeded home and away regression cases.
+- [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
+      rotations preserve fatigue priority; verify fatigued low-stamina players
+      do not gain more minutes than comparable rested teammates.
+- [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
+      attempt transfers; verify every player shooting equation and all team
+      shooting and point totals still reconcile.
+- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
+      playoff games vs. regular season, matching real NBA tendencies).
+- [ ] `gm`: when an accepted upgrade still carries a multi-loss grudge, keep the
+      count in the accept reason; verify two -10 priors on a clear star-for-role
+      deal include "after 2 prior lopsided trades".
+- [ ] `gm`: include the worst single prior margin in multi-loss caution text
+      (e.g. "after 2 prior lopsided trades, worst -20"); verify a -10/-20 pair
+      names -20.
+- [ ] `frontend`: while a play-alert is visible, point the Play next button at it
+      with `aria-describedby` so assistive tech announces the shortage reason with
+      the control; verify the association clears when the alert dismisses.
+- [ ] `frontend`: move keyboard focus to the play-alert for Sim day / Sim week /
+      Sim to my game failures the same way as Play next; verify each advance
+      catch path sets the focus flag and the alert receives focus.
 - [ ] `db`: force a post-W/L update failure inside `persistResult` and assert the
       scheduled row, Game, season stats, and game news all roll back; extend the
       transactional fixture past the team W/L increments.
@@ -341,21 +352,6 @@ implementing anything — its PRs are expected to touch only this file.
       `simulateScheduledGame` when a caller bypasses the early status return;
       verify a forced second simulate against a final row does not invent a new
       result id.
-- [ ] `db`: expose per-player season totals and career game log through an
-      owned query/endpoint; the player page can only show the last ten league
-      games until this lands.
-- [ ] `frontend`: extend the player page with season averages and a full career
-      game log once the `db` endpoint above exists; verify the added columns stay
-      scrollable at 320px.
-- [ ] `sim`: cover combined clutch-time and back-to-back rotations so fatigued
-      stars still receive the closing-lineup usage shift while both teams stay
-      at 240 minutes; add seeded home and away regression cases.
-- [ ] `sim`: make emergency-minute redistribution for five-to-seven-player
-      rotations preserve fatigue priority; verify fatigued low-stamina players
-      do not gain more minutes than comparable rested teammates.
-- [ ] `sim`: add direct made-two and made-three fallback coverage for field-goal
-      attempt transfers; verify every player shooting equation and all team
-      shooting and point totals still reconcile.
 - [ ] `db`: make next-game selection deterministic when malformed schedules
       contain two user games on the same day; add a duplicate-matchup regression
       fixture that asserts a stable tie-break.
@@ -378,6 +374,12 @@ implementing anything — its PRs are expected to touch only this file.
       playoff, and day-range filters.
 - [ ] `db`: add an order-covering `NewsItem` index for transaction cursor pages;
       prove with `EXPLAIN QUERY PLAN` that bounded reads avoid a temporary sort.
+- [ ] `sim`: reject input rosters that list the same `playerId` more than once on
+      a side before box-score generation; verify a duplicated id fails with a
+      descriptive preflight error naming the side.
+- [ ] `db`: mirror empty-roster vs all-injured wording in scheduled-game preflight
+      by inspecting the unfiltered team roster before the healthy filter; verify
+      both causes produce distinct `Cannot simulate scheduled game` errors.
 - [ ] `frontend`: restore focus to the Play next button when a later action clears
       the play-alert; verify the button is focused after a successful reload that
       dismisses the shortage message.
@@ -406,18 +408,16 @@ implementing anything — its PRs are expected to touch only this file.
       buildable workspace is reported as late; verify with a no-test-step fixture.
 - [ ] `qa`: when two workspaces are built after `- name: Run tests`, assert the
       precede-tests error lists both paths; verify with a dual late-build fixture.
-- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
-      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
-      box-score fixture.
 
 ## Later
 
 - [x] `frontend`: dark/light theme toggle and accessibility pass (contrast,
       focus states, keyboard nav for trade builder).
-- [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
-      playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs
       a `shared/` contract update first before any domain touches it.
+- [ ] `sim`: after a shared `PlayerGameLine.foulsDrawn` field lands, assert
+      FTA ≤ 2×foulsDrawn + 1 in realism checks; verify against the deterministic
+      box-score fixture.
 - [ ] `qa`: add a franchise-mode soak test that plays a full season + offseason
       end-to-end and asserts standings/awards/draft invariants hold.
       _Blocked: playoff bracket promotion can index incomplete Western
