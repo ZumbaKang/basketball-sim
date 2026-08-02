@@ -236,7 +236,7 @@ implementing anything — its PRs are expected to touch only this file.
 - [ ] `gm`: keep the multi-loss count after a contract-context clause on rejects;
       verify a near-even contend deal with two -10s plus an incoming overpay still
       places "after 2 prior lopsided trades" after the bad-salary note.
-- [ ] `gm`: keep the multi-loss count after an expiring-money contract clause on
+- [x] `gm`: keep the multi-loss count after an expiring-money contract clause on
       accepts; verify star-for-role with two -10s plus an incoming $30M/1yr overpay
       ends with "after 2 prior lopsided trades" following the expiring-money note.
 - [ ] `gm`: keep the multi-loss count after a clears-bad-salary contract clause on
@@ -244,6 +244,18 @@ implementing anything — its PRs are expected to touch only this file.
       "after 2 prior lopsided trades" following the clears-salary note.
 - [ ] `gm`: include "after 3 prior lopsided trades" when a capped three-loss grudge
       still accepts a star-for-role upgrade; verify three -8 margins on contend.
+- [ ] `gm`: keep the multi-loss count after an expiring-money contract clause on
+      rejects; verify a near-even contend deal with two -10s plus an incoming
+      $40M/1yr overpay still places "after 2 prior lopsided trades" after the
+      expiring-money note.
+- [ ] `gm`: keep the multi-loss count after a "turns long-term bad salary into
+      expiring money" clause on accepts; verify sending a long-term overpay and
+      receiving a $40M/1yr overpay with two -10s ends with "after 2 prior
+      lopsided trades" following that note.
+- [ ] `gm`: keep the multi-loss count after an expiring-money clause on a cheap
+      direction accept; verify a clear upgrade with two -10s plus an incoming
+      $40M/1yr overpay still places "after 2 prior lopsided trades" after the
+      expiring-money note.
 - [ ] `frontend`: show the counterparty grudge caution sentence on rejected
       proposals in the trade builder; verify long reasons wrap at 320px without
       overflow.
@@ -468,6 +480,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-02: Accepted upgrades keep multi-loss grudge count after expiring-money clauses
 - 2026-08-02: Accepted upgrades keep multi-loss grudge count after contract-context clauses
 - 2026-08-02: Accepted upgrades that clear a multi-loss grudge keep the loss count in-reason
 - 2026-08-01: GM grudge caution reasons mention the compounded lopsided-loss count
