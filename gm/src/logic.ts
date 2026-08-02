@@ -77,7 +77,8 @@ export function grudgeCautionContext(
 
 /**
  * Append contract then grudge fragments so multi-loss caution always follows
- * any contract-context clause on accept and reject reasons.
+ * any contract-context clause on both accept and reject reasons (never the
+ * reverse order, and never dropping the count when a salary note is present).
  */
 export function appendTradeDecisionContexts(
   base: string,
