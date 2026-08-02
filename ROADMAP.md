@@ -230,9 +230,18 @@ implementing anything — its PRs are expected to touch only this file.
 - [x] `gm`: when an accepted upgrade still carries a multi-loss grudge, keep the
       count in the accept reason; verify two -10 priors on a clear star-for-role
       deal include "after 2 prior lopsided trades".
-- [ ] `gm`: keep the multi-loss count after a contract-context clause on accepts;
+- [x] `gm`: keep the multi-loss count after a contract-context clause on accepts;
       verify star-for-role with two -10s plus an incoming overpay still ends with
       "after 2 prior lopsided trades" following the contract note.
+- [ ] `gm`: keep the multi-loss count after a contract-context clause on rejects;
+      verify a near-even contend deal with two -10s plus an incoming overpay still
+      places "after 2 prior lopsided trades" after the bad-salary note.
+- [ ] `gm`: keep the multi-loss count after an expiring-money contract clause on
+      accepts; verify star-for-role with two -10s plus an incoming $30M/1yr overpay
+      ends with "after 2 prior lopsided trades" following the expiring-money note.
+- [ ] `gm`: keep the multi-loss count after a clears-bad-salary contract clause on
+      accepts; verify sending a long-term overpay with two -10s still ends with
+      "after 2 prior lopsided trades" following the clears-salary note.
 - [ ] `gm`: include "after 3 prior lopsided trades" when a capped three-loss grudge
       still accepts a star-for-role upgrade; verify three -8 margins on contend.
 - [ ] `frontend`: show the counterparty grudge caution sentence on rejected
@@ -459,6 +468,7 @@ implementing anything — its PRs are expected to touch only this file.
 ## Shipped
 
 <!-- Add one line per completed item: `- YYYY-MM-DD: <what> (PR #N)` -->
+- 2026-08-02: Accepted upgrades keep multi-loss grudge count after contract-context clauses
 - 2026-08-02: Accepted upgrades that clear a multi-loss grudge keep the loss count in-reason
 - 2026-08-01: GM grudge caution reasons mention the compounded lopsided-loss count
 - 2026-08-01: GM trade eval compounds multiple lopsided losses up to the grudge cap
