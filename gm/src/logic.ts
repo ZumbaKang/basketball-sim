@@ -77,7 +77,8 @@ export function grudgeCautionContext(
 
 /**
  * Append contract then grudge fragments so multi-loss caution always follows
- * any contract-context clause on accept and reject reasons.
+ * any contract-context clause on accept and reject reasons — including
+ * expiring-money and long-term bad-salary notes.
  */
 export function appendTradeDecisionContexts(
   base: string,
