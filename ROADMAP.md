@@ -65,6 +65,14 @@ reprioritize job stop colliding on one giant markdown file.
 
 - **TIPOFF Iterate** (every ~3h): picks first open Now item, implements it,
   updates `roadmap/*.md` per steps 4–5, opens one PR.
+  Prompt must quote `roadmap/now.md` / `next.md` / `later.md` / `shipped.md`
+  ([automation](https://cursor.com/automations/6bdf2d4e-8614-11f1-a7d1-d6b4613131ce)).
 - **TIPOFF Roadmap Reprioritize** (every ~4 days): reorders unchecked items
   across/within `now.md` / `next.md` / `later.md` only. Does not touch code,
   does not edit `shipped.md`, does not check off items.
+  Prompt must quote the same split paths
+  ([automation](https://cursor.com/automations/fb625847-8642-11f1-a7d1-d6b4613131ce)).
+
+**Hard gate:** do not merge the split-layout change (or leave Iterate/Reprioritize
+enabled) until both Cursor automation prompts above have been updated to the
+split files. `ROADMAP.md` no longer contains the open checkbox backlog.

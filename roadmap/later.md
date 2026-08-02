@@ -1,9 +1,5 @@
 # Later
 
-- [ ] `qa`: update TIPOFF Iterate and TIPOFF Roadmap Reprioritize automation
-      prompts to edit `roadmap/now.md` / `next.md` / `later.md` / `shipped.md`
-      (not a monolithic `ROADMAP.md` backlog), and verify a dry-run prompt quotes
-      the split paths.
 - [ ] `sim`: playoff-intensity tuning (slightly different pace/foul rates in
       playoff games vs. regular season, matching real NBA tendencies).
 - [ ] `db`: multi-user leagues (more than one human-controlled team) — needs

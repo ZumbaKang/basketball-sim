@@ -1,5 +1,13 @@
 # Now
 
+- [ ] `qa`: **pre-merge gate** — update TIPOFF Iterate
+      (`https://cursor.com/automations/6bdf2d4e-8614-11f1-a7d1-d6b4613131ce`)
+      and TIPOFF Roadmap Reprioritize
+      (`https://cursor.com/automations/fb625847-8642-11f1-a7d1-d6b4613131ce`)
+      automation prompts to edit `roadmap/now.md` / `next.md` / `later.md` /
+      `shipped.md` (not a monolithic `ROADMAP.md` checkbox backlog). Keep both
+      automations **disabled/paused** until the prompt bodies quote those split
+      paths; verify with a dry-run that the agent reads `roadmap/now.md` first.
 - [ ] `db`: when day advance hits a short-handed scheduled game, leave that row
       `scheduled`, write a non-game news item naming the short team, and keep
       simulating sibling games that day; verify advance does not abort mid-slate.
