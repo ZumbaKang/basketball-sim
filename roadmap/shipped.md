@@ -1,0 +1,63 @@
+# Shipped
+
+<!-- Newest first. Feature PRs only PREPEND a new bullet under these comments. -->
+<!-- merge=union in .gitattributes so concurrent prepends auto-merge. -->
+
+- 2026-08-02: Split the roadmap into per-bucket files + union-merge shipped log to stop PR conflicts
+- 2026-08-02: Accepted upgrades keep multi-loss grudge count after expiring-money clauses
+- 2026-08-02: Accepted upgrades keep multi-loss grudge count after contract-context clauses
+- 2026-08-02: Accepted upgrades that clear a multi-loss grudge keep the loss count in-reason
+- 2026-08-01: GM grudge caution reasons mention the compounded lopsided-loss count
+- 2026-08-01: GM trade eval compounds multiple lopsided losses up to the grudge cap
+- 2026-08-01: GM trade eval raises the bar after prior lopsided losses to a partner
+- 2026-07-31: Moved keyboard focus to the play-alert after Play next failures
+- 2026-07-30: Extended persistResult rollback coverage past the scheduledGame update
+- 2026-07-30: Rejected a second persistResult against an already-final scheduled game
+- 2026-07-30: Wrapped persistResult in a Prisma transaction with mid-write rollback
+- 2026-07-30: Surfaced roster-shortage preflight errors on the league play flow
+- 2026-07-29: Distinguished empty vs all-injured sim preflight shortage messages
+- 2026-07-28: Failed short-handed scheduled games before persist (no injured substitution)
+- 2026-07-28: Asserted late CI workspace builds after Run tests fail coverage
+- 2026-07-28: Covered mixed named/nameless object-form workspaces by package name and path
+- 2026-07-28: Moved CI-build and root-test coverage assertion helpers into workspace-manifest
+- 2026-07-28: Treated `npm test -w` shorthand as covered in the shared workspace parser
+- 2026-07-28: Asserted nameless object-form packages still match CI/root coverage by path
+- 2026-07-27: Moved CI build and root-test workspace selector parsers into shared workspace-manifest helpers
+- 2026-07-27: Extracted shared workspace-manifest discovery for CI-build and root-test coverage
+- 2026-07-27: Rejected sub-five available-player game inputs before box-score generation
+- 2026-07-27: Validated trade player assets against declaring teams and guarded moves
+- 2026-07-22: Required the CI `test` check before merges to `main` (PR #10)
+- 2026-07-22: Added stamina-scaled back-to-back fatigue modeling (PR #11)
+- 2026-07-23: GM trade evaluation now values expiring/bad contracts (PR #16)
+- 2026-07-23: Added persistent navigation across league screens (PR #18)
+- 2026-07-23: Indexed and tightened league history lookups (PR #21)
+- 2026-07-23: Snapshotted a deterministic full-game box score in QA (PR #23)
+- 2026-07-23: Modeled clutch-time rotation and usage shifts for star players
+- 2026-07-23: Added the frontend Next.js production build to the CI merge gate
+- 2026-07-23: Scoped user next-game lookups to the current regular season
+- 2026-07-23: Added garbage-time starter-to-bench rotation shifts for blowouts
+- 2026-07-23: Made the league dashboard and trade builder mobile responsive
+- 2026-07-23: Excluded earlier-day schedule rows from next-game lookups
+- 2026-07-23: Added an owner-scoped current-season transaction log query API
+- 2026-07-24: Added direction-aware draft-pick trade valuation and protection discounts
+- 2026-07-24: Asserted standings and award-history reads use composite indexes
+- 2026-07-24: Made CI build-workspace coverage follow root package declarations
+- 2026-07-24: Made standings and history tables focusable and edge-to-edge on mobile
+- 2026-07-24: Shifted 1–2 garbage-time shot attempts from starters to reserves
+- 2026-07-24: Indexed current-season transaction-log filters
+- 2026-07-25: Added stable cursor pagination to season transaction-log reads
+- 2026-07-25: Made simulation rotations honor multi-game injuries and player returns
+- 2026-07-25: Added accessible horizontal-scroll instructions to standings and history tables
+- 2026-07-25: Added expectation-based GM coach firing and hiring intents
+- 2026-07-25: Made root test-workspace coverage follow package declarations
+- 2026-07-26: Covered combined garbage-time and back-to-back rotation invariants
+- 2026-07-26: Wired owned, unselected draft picks into atomic persisted trades
+- 2026-07-26: Capped five-to-seven-player injury rotations at 48 minutes per player
+- 2026-07-26: Added a compact, mobile-safe selected-assets trade summary
+- 2026-07-26: Bound transaction-log cursors to their issuing league and season
+- 2026-07-26: Persisted and resolved protected-pick conveyance during offseason draft ordering
+- 2026-07-26: Rebuilt the UI on a dark-first design system with a light theme toggle
+- 2026-07-26: Made table scroll hints appear only while columns are actually offscreen
+- 2026-07-26: Added a player detail page with attributes, contract, and recent game log
+- 2026-07-26: Locked trade actions while a request is in flight and focused the updated summary
+- 2026-07-26: Modernized the frontend (cool slate light theme, motion, brand-first auth)
